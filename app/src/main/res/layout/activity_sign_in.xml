@@ -9,7 +9,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:background="@drawable/bg"
-    tools:context=".MainActivity">
+    tools:context=".SignIn">
     <androidx.cardview.widget.CardView
         android:layout_width="155dp"
         android:layout_height="155dp"

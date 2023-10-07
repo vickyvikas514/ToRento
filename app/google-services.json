@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "539467914281",
+    "project_id": "torento-865ac",
+    "storage_bucket": "torento-865ac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:539467914281:android:7d09251c262a7980aa1038",
+        "android_client_info": {
+          "package_name": "com.example.torento"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQH8yyV_lorxQB8y_WAwAAEWnqvc-lpcw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
