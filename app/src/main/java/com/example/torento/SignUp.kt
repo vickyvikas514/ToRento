@@ -26,8 +26,10 @@ class SignUp : AppCompatActivity() {
         binding.signupText.setOnClickListener{
             val intent = Intent(this,SignIn::class.java)
             startActivity(intent)
+            finish()
         }
         firebaseAuth = FirebaseAuth.getInstance()
+
         binding.signupbtn.setOnClickListener{
             val name = binding.name.text.toString()
             val username = binding.username.text.toString()
@@ -71,7 +73,7 @@ class SignUp : AppCompatActivity() {
                             val editor:SharedPreferences.Editor = sharedPreferences.edit()
                             editor.putString("name","true")
                             editor.apply()
-                            val intent = Intent(this, MainActivity::class.java)
+                            val intent = Intent(this, owner_home_activity::class.java)
                             startActivity(intent)
                             finish()
                         } else {

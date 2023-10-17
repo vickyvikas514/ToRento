@@ -24,16 +24,16 @@
         </activity>
         <activity
             android:name=".SignUp"
-            android:exported="true" >
+            android:exported="false" >
 
         </activity>
 
         <activity
             android:name=".SignIn"
-            android:exported="true">
+            android:exported="false">
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".owner_home_activity"
             android:exported="false" />
     </application>
 

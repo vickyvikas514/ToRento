@@ -19,7 +19,7 @@ class LandingPage : AppCompatActivity() {
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val check:String? = sharedPreferences.getString("name" , "")
         if(check.equals("true")){
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, owner_home_activity::class.java)
             startActivity(intent)
             finish()
         }
@@ -30,11 +30,13 @@ class LandingPage : AppCompatActivity() {
             character=1
             val intent = Intent(this,SignUp::class.java)
             startActivity(intent)
+            finish()
         }
         binding.tenant.setOnClickListener{
             character=2
             val intent = Intent(this,SignUp::class.java)
             startActivity(intent)
+            finish()
         }
     }
 }

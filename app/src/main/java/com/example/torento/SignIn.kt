@@ -24,9 +24,11 @@ class SignIn : AppCompatActivity() {
             val intent = Intent(this,SignUp::class.java)
             startActivity(intent)
         }
+
         binding.loginButton.setOnClickListener{
             val email = binding.username.text.toString()
             val pass = binding.password.text.toString()
+
             if(email.isNotEmpty() && pass.isNotEmpty()){
                 firebaseAuth.signInWithEmailAndPassword(email,pass).addOnCompleteListener {
                     if(it.isSuccessful){
@@ -36,7 +38,7 @@ class SignIn : AppCompatActivity() {
                         val editor:SharedPreferences.Editor = sharedPreferences.edit()
                         editor.putString("name","true")
                         editor.apply()
-                        val intent = Intent(this,MainActivity::class.java)
+                        val intent = Intent(this,owner_home_activity::class.java)
                         startActivity(intent)
                         finish()
                     } else{
@@ -55,7 +57,7 @@ class SignIn : AppCompatActivity() {
         )
         val check:String?=sharedPreferences.getString("name","")
         if(check.equals("true")){
-            val intent = Intent(this,MainActivity::class.java)
+            val intent = Intent(this,owner_home_activity::class.java)
             startActivity(intent)
             finish()
         }
