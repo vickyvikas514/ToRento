@@ -6,20 +6,25 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import com.example.torento.SignUp.Companion.char
 import com.example.torento.databinding.ActivitySignUpBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 
 class SignUp : AppCompatActivity() {
+
     private lateinit var binding: ActivitySignUpBinding
     private lateinit var firebaseAuth: FirebaseAuth
 
         val SHARED_PREF:String = "sharedPrefs"
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
-        val char = LandingPage.character
+
         val db = Firebase.firestore
         binding = ActivitySignUpBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -29,6 +34,7 @@ class SignUp : AppCompatActivity() {
             finish()
         }
         firebaseAuth = FirebaseAuth.getInstance()
+        val userid = firebaseAuth.currentUser!!.uid
 
         binding.signupbtn.setOnClickListener{
             val name = binding.name.text.toString()
@@ -38,7 +44,8 @@ class SignUp : AppCompatActivity() {
             val pass = binding.pass.text.toString()
             val confpass = binding.confpass.text.toString()
             if (name.isNotEmpty() && phone.isNotEmpty() && username.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty() && confpass.isNotEmpty()) {
-                val user = hashMapOf(
+
+                val user1 = hashMapOf(
                     "name" to name,
                     "username" to username,
                     "phone" to phone,
@@ -46,22 +53,26 @@ class SignUp : AppCompatActivity() {
                     "password" to pass
                 )
                 if(char==1){
-                    db.collection("owners")
-                        .add(user)
-                        .addOnSuccessListener { documentReference ->
-                            Log.d("vikas","DocumentSnapshot added with ID: ${documentReference.id}")
+
+
+                    db.collection("users").document(userid).set(user1)
+                        .addOnSuccessListener {
+                            Toast.makeText( this,"Success", Toast.LENGTH_SHORT).show()
+
                         }
-                        .addOnFailureListener{
-                                e-> Log.w("vikas", "Error adding document",e)
+                        .addOnFailureListener {
+                            Toast.makeText( this,"Fail the save", Toast.LENGTH_SHORT).show()
                         }
                 }else{
-                    db.collection("users")
-                        .add(user)
-                        .addOnSuccessListener { documentReference ->
-                            Log.d("vikas","DocumentSnapshot added with ID: ${documentReference.id}")
+
+
+                    db.collection("owners").document(userid).set(user1)
+                        .addOnSuccessListener {
+                            Toast.makeText( this,"Success", Toast.LENGTH_SHORT).show()
+
                         }
-                        .addOnFailureListener{
-                                e-> Log.w("vikas", "Error adding document",e)
+                        .addOnFailureListener {
+                            Toast.makeText( this,"Fail the save", Toast.LENGTH_SHORT).show()
                         }
                 }
 
@@ -74,6 +85,7 @@ class SignUp : AppCompatActivity() {
                             editor.putString("name","true")
                             editor.apply()
                             val intent = Intent(this, owner_home_activity::class.java)
+                                intent.putExtra("key",userid)
                             startActivity(intent)
                             finish()
                         } else {
@@ -90,5 +102,11 @@ class SignUp : AppCompatActivity() {
             }
         }
 
+
     }
+    companion object{
+        val char = LandingPage.character
+
+    }
+
 }

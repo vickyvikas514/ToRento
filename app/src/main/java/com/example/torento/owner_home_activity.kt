@@ -2,13 +2,11 @@ package com.example.torento
 
 import android.content.Intent
 import android.content.SharedPreferences
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
 import com.example.torento.databinding.ActivityMainBinding
-import com.google.android.play.integrity.internal.l
-import com.google.android.play.integrity.internal.t
 
 class owner_home_activity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -30,10 +28,19 @@ class owner_home_activity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.logout-> logout()
+            R.id.profile->profile()
 
         }
         return super.onOptionsItemSelected(item)
     }
+
+    private fun profile() {
+        val key = intent.getStringExtra("KEY")
+        val intent = Intent(this,Profile::class.java)
+        intent.putExtra("Key",key)
+        startActivity(intent)
+    }
+
     private fun logout(){
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF,
             MODE_PRIVATE)
