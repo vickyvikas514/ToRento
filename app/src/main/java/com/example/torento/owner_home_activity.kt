@@ -35,9 +35,8 @@ class owner_home_activity : AppCompatActivity() {
     }
 
     private fun profile() {
-        val key = intent.getStringExtra("KEY")
+
         val intent = Intent(this,Profile::class.java)
-        intent.putExtra("Key",key)
         startActivity(intent)
     }
 
@@ -47,7 +46,7 @@ class owner_home_activity : AppCompatActivity() {
         val editor : SharedPreferences.Editor = sharedPreferences.edit()
         editor.putString("name","false")
         editor.apply()
-        val intent = Intent(this, SignIn::class.java)
+        val intent = Intent(this, LandingPage::class.java)
         startActivity(intent)
         finish()
     }

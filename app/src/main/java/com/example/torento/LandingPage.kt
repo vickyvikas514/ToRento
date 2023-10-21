@@ -11,6 +11,7 @@ class LandingPage : AppCompatActivity() {
     private lateinit var binding: ActivityLandingPageBinding
     companion object{
         var character : Int = 0
+        var id:String = ""
     }
     val SHARED_PREF:String = "sharedPrefs"
     override fun onCreate(savedInstanceState: Bundle?) {
