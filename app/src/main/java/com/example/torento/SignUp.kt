@@ -26,7 +26,7 @@ class SignUp : AppCompatActivity() {
             finish()
         }
         firebaseAuth = FirebaseAuth.getInstance()
-        val userid = firebaseAuth.currentUser!!.uid
+
 
 
 
@@ -52,7 +52,7 @@ class SignUp : AppCompatActivity() {
                     db.collection("owners").document(username)
                         .set(user)
                         .addOnSuccessListener {
-                            Log.d("vikas","DocumentSnapshot added with ID: $userid")
+                            Log.d("vikas","DocumentSnapshot added with ID: $")
                         }
                         .addOnFailureListener{
                                 e-> Log.w("vikas", "Error adding document",e)
@@ -61,7 +61,7 @@ class SignUp : AppCompatActivity() {
                     db.collection("users").document(username)
                         .set(user)
                         .addOnSuccessListener {
-                            Log.d("vikas","DocumentSnapshot added with ID: $userid")
+                            Log.d("vikas","DocumentSnapshot added with ID: $")
                         }
                         .addOnFailureListener{
                                 e-> Log.w("vikas", "Error adding document",e)

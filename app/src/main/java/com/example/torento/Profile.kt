@@ -15,18 +15,23 @@ import com.google.firebase.ktx.Firebase
 
 class Profile : AppCompatActivity() {
   private lateinit var binding: ActivityProfileBinding
-  private lateinit var fauth: FirebaseAuth
+
   private lateinit var namei:TextView
   private var  db = Firebase.firestore
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        fauth= FirebaseAuth.getInstance()
+
         namei = findViewById(R.id.name)
         super.onCreate(savedInstanceState)
 
         binding.back.setOnClickListener{
             val intent = Intent(this,owner_home_activity::class.java)
+            startActivity(intent)
+            finish()
+        }
+        binding.edit.setOnClickListener{
+            val intent = Intent(this,UpdateActivity::class.java)
             startActivity(intent)
             finish()
         }
