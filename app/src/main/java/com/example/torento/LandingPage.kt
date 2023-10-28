@@ -9,10 +9,7 @@ import com.example.torento.databinding.ActivityLandingPageBinding
 
 class LandingPage : AppCompatActivity() {
     private lateinit var binding: ActivityLandingPageBinding
-    companion object{
-        var character : Int = 0
-        var id:String = ""
-    }
+
     val SHARED_PREF:String = "sharedPrefs"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,13 +25,13 @@ class LandingPage : AppCompatActivity() {
             layoutInflater)
         setContentView(binding.root)
         binding.landlord.setOnClickListener{
-            character=1
+
             val intent = Intent(this,SignUp::class.java)
             startActivity(intent)
             finish()
         }
         binding.tenant.setOnClickListener{
-            character=2
+
             val intent = Intent(this,SignUp::class.java)
             startActivity(intent)
             finish()

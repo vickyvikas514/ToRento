@@ -29,7 +29,7 @@
         app:cardCornerRadius="250dp"
         android:layout_marginTop="30dp"
         >   <ImageView
-
+            android:id="@+id/dp"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:scaleType="centerCrop"
@@ -110,6 +110,29 @@
         android:text="BACK"
         android:padding = "24dp"
         />
+    <TextView
+        android:id="@+id/dpupdate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/back"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textSize="32dp"
+        android:textColor="@color/darkpurple"
+        android:text="UpdateDP"
+        android:padding = "24dp"
+        />
+  <TextView
+      android:id="@+id/dpupload"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      app:layout_constraintTop_toBottomOf="@id/edit"
+      app:layout_constraintEnd_toEndOf="parent"
+      android:textSize="32dp"
+      android:textColor="@color/darkpurple"
+      android:text="uploadDp"
+      android:padding = "24dp"
+      />
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

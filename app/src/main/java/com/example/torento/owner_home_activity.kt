@@ -11,6 +11,7 @@ import com.example.torento.databinding.ActivityMainBinding
 class owner_home_activity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     val SHARED_PREF : String = "sharedPrefs"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -45,6 +46,7 @@ class owner_home_activity : AppCompatActivity() {
             MODE_PRIVATE)
         val editor : SharedPreferences.Editor = sharedPreferences.edit()
         editor.putString("name","false")
+        editor.putString("username","")
         editor.apply()
         val intent = Intent(this, LandingPage::class.java)
         startActivity(intent)

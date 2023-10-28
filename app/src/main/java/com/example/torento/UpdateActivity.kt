@@ -13,7 +13,7 @@ import com.google.firebase.ktx.Firebase
 
 class UpdateActivity : AppCompatActivity() {
     private lateinit var binding: ActivityUpdateBinding
-
+    val SHARED_PREF:String = "sharedPrefs"
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -27,25 +27,15 @@ class UpdateActivity : AppCompatActivity() {
 
             val phone = binding.phone.text.toString()
 
-                val docRefowner = db.collection("owners").document(LandingPage.id)
-            val docRefUser = db.collection("users").document(LandingPage.id)
+            val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+            val userkey: String? = sharedPreferences.getString("username" , "")
+            val docRefUser = userkey?.let { it1 -> db.collection("users").document(it1) }
             if (name.isNotEmpty() && phone.isNotEmpty() ) {
-                val updateData = hashMapOf(
+                 val updateData = hashMapOf(
                     "name" to name,
                     "phone" to phone,
                 )
-                val char = LandingPage.character
-
-                if(char==1){
-                   docRefowner.update(updateData as Map<String, Any>)
-                       .addOnSuccessListener {
-                           Toast.makeText( this,"Success", Toast.LENGTH_SHORT).show()
-                       }
-                       .addOnFailureListener{
-                           Toast.makeText( this,"failure", Toast.LENGTH_SHORT).show()
-                       }
-
-                }else{
+                if (docRefUser != null) {
                     docRefUser.update(updateData as Map<String, Any>)
                         .addOnSuccessListener {
                             Toast.makeText( this,"Success", Toast.LENGTH_SHORT).show()
@@ -53,8 +43,6 @@ class UpdateActivity : AppCompatActivity() {
                         .addOnFailureListener{
                             Toast.makeText( this,"failure", Toast.LENGTH_SHORT).show()
                         }
-
-
                 }
 
             } else {
