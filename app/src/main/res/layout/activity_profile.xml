@@ -33,7 +33,7 @@
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/vikas" />
+            android:src="@drawable/demodp" />
   </androidx.cardview.widget.CardView>
     <TextView
         android:id="@+id/username"
@@ -87,6 +87,7 @@
         android:textSize="24dp"
 
         />
+
     </LinearLayout>
     <TextView
         android:id="@+id/edit"
