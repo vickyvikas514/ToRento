@@ -144,7 +144,7 @@ class Profile : AppCompatActivity() {
                     Toast.makeText(this, "Failed!!", Toast.LENGTH_SHORT).show()
                 }
         } else {
-            Toast.makeText(this, "VIKAS CHAUDHARY", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "DocRef is NULL", Toast.LENGTH_SHORT).show()
         }
 
 
