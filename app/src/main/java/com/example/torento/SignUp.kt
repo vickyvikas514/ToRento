@@ -92,7 +92,7 @@ class SignUp : AppCompatActivity() {
                             editor.putString("username", id)
                             editor.apply()
 
-                            val intent = Intent(this, owner_home_activity::class.java)
+                            val intent = Intent(this, user_home_activity::class.java)
                             startActivity(intent)
                             progress.visibility = View.GONE
 

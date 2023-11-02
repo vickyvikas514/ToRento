@@ -82,7 +82,7 @@ class SignIn : AppCompatActivity() {
                     editor.putString("name","true")
                     editor.putString("username",username)
                     editor.apply()
-                    val intent = Intent(this,owner_home_activity::class.java)
+                    val intent = Intent(this,user_home_activity::class.java)
                     startActivity(intent)
                     finish()
                 } else{
@@ -102,7 +102,7 @@ class SignIn : AppCompatActivity() {
         )
         val check:String?=sharedPreferences.getString("name","")
         if(check.equals("true")){
-            val intent = Intent(this,owner_home_activity::class.java)
+            val intent = Intent(this,user_home_activity::class.java)
             startActivity(intent)
             finish()
         }

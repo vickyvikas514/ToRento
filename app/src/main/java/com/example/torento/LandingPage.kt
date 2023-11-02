@@ -17,7 +17,7 @@ class LandingPage : AppCompatActivity() {
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val check:String? = sharedPreferences.getString("name" , "")
         if(check.equals("true")){
-            val intent = Intent(this, owner_home_activity::class.java)
+            val intent = Intent(this, user_home_activity::class.java)
             startActivity(intent)
             finish()
         }

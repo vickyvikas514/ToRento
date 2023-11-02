@@ -34,7 +34,7 @@ class Profile : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding.back.setOnClickListener {
-            val intent = Intent(this, owner_home_activity::class.java)
+            val intent = Intent(this, user_home_activity::class.java)
             startActivity(intent)
             finish()
         }
