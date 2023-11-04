@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.torento.databinding.ActivityMainBinding
@@ -26,6 +27,7 @@ class user_home_activity : AppCompatActivity() {
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)
+        /////////////////////
         val itemsCollection = db.collection("owners")
         val itemsList = mutableListOf<Room>()
         binding.Roomlist.adapter = RoomAdapter(
@@ -59,6 +61,8 @@ class user_home_activity : AppCompatActivity() {
 
         binding.Roomlist.addItemDecoration(CustomItemDecoration(maxVisibleItems, cardHeight))
         binding.Roomlist.setHasFixedSize(true)
+////////////////////////////////////////////////////////
+
 
     }
     class CustomItemDecoration(
@@ -109,6 +113,7 @@ class user_home_activity : AppCompatActivity() {
         val editor : SharedPreferences.Editor = sharedPreferences.edit()
         editor.putString("name","false")
         editor.putString("username","")
+        editor.putString("usertype","")
         editor.apply()
         val intent = Intent(this, LandingPage::class.java)
         startActivity(intent)

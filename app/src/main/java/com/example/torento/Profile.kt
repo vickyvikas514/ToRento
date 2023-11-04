@@ -34,9 +34,19 @@ class Profile : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding.back.setOnClickListener {
-            val intent = Intent(this, user_home_activity::class.java)
-            startActivity(intent)
-            finish()
+            if(LandingPage.usertype=="tenant"){
+                val intent = Intent(this, user_home_activity::class.java)
+                startActivity(intent)
+                // progress.visibility = View.GONE
+
+                finish()
+            }else{
+                val intent = Intent(this, owner_home_activity::class.java)
+                startActivity(intent)
+                //  progress.visibility = View.GONE
+
+                finish()
+            }
         }
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val userkey: String? = sharedPreferences.getString("username", "")

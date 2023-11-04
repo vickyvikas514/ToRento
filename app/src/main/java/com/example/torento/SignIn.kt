@@ -21,6 +21,7 @@ class SignIn : AppCompatActivity() {
     val SHARED_PREF:String = "sharedPrefs"
     private var db = Firebase.firestore
     private var Regemail:String="temp"
+
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,10 +82,17 @@ class SignIn : AppCompatActivity() {
                     val editor:SharedPreferences.Editor = sharedPreferences.edit()
                     editor.putString("name","true")
                     editor.putString("username",username)
+                    editor.putString("usertype",LandingPage.usertype)
                     editor.apply()
-                    val intent = Intent(this,user_home_activity::class.java)
-                    startActivity(intent)
-                    finish()
+                    if(LandingPage.usertype=="tenant"){
+                        val intent = Intent(this, user_home_activity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }else{
+                        val intent = Intent(this, owner_home_activity::class.java)
+                        startActivity(intent)
+                      finish()
+                    }
                 } else{
                     Toast.makeText(this,it.exception.toString(),Toast.LENGTH_SHORT).show()
                 }

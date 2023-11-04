@@ -21,7 +21,7 @@ class SignUp : AppCompatActivity() {
         lateinit var id: String
     }
 
-    private lateinit var progress: ProgressBar
+  //  private lateinit var progress: ProgressBar
 
     private lateinit var binding: ActivitySignUpBinding
     private lateinit var firebaseAuth: FirebaseAuth
@@ -30,7 +30,7 @@ class SignUp : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
 
-        progress = ProgressBar(this)
+        //progress = ProgressBar(this)
 
 
         val db = Firebase.firestore
@@ -64,7 +64,8 @@ class SignUp : AppCompatActivity() {
                     "phone" to phone,
                     "email" to email,
                     "password" to pass,
-                    "imageuri" to "temp"
+                    "imageuri" to "temp",
+                    "usertype" to LandingPage.usertype
                 )
                 if (username != null) {
                     id = username
@@ -90,13 +91,22 @@ class SignUp : AppCompatActivity() {
                             val editor: SharedPreferences.Editor = sharedPreferences.edit()
                             editor.putString("name", "true")
                             editor.putString("username", id)
+                            editor.putString("usertype",LandingPage.usertype)
                             editor.apply()
+                            if(LandingPage.usertype=="tenant"){
+                                val intent = Intent(this, user_home_activity::class.java)
+                                startActivity(intent)
+                               // progress.visibility = View.GONE
 
-                            val intent = Intent(this, user_home_activity::class.java)
-                            startActivity(intent)
-                            progress.visibility = View.GONE
+                                finish()
+                            }else{
+                                val intent = Intent(this, owner_home_activity::class.java)
+                                startActivity(intent)
+                              //  progress.visibility = View.GONE
 
-                            finish()
+                                finish()
+                            }
+
                         } else {
                             Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
                         }
