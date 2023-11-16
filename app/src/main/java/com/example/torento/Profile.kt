@@ -34,19 +34,7 @@ class Profile : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding.back.setOnClickListener {
-            if(LandingPage.usertype=="tenant"){
-                val intent = Intent(this, user_home_activity::class.java)
-                startActivity(intent)
-                // progress.visibility = View.GONE
-
-                finish()
-            }else{
-                val intent = Intent(this, owner_home_activity::class.java)
-                startActivity(intent)
-                //  progress.visibility = View.GONE
-
-                finish()
-            }
+           back()
         }
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val userkey: String? = sharedPreferences.getString("username", "")
@@ -74,6 +62,7 @@ class Profile : AppCompatActivity() {
         if (userkey != null) {
             set(userkey)
         }
+
         /* Upload image to storage and firestore*/
         storageRef = FirebaseStorage.getInstance()
         binding.dpupload.setOnClickListener {
@@ -158,5 +147,20 @@ class Profile : AppCompatActivity() {
         }
 
 
+    }
+    private fun back(){
+        if(LandingPage.usertype=="tenant"){
+            val intent = Intent(this, user_home_activity::class.java)
+            startActivity(intent)
+            // progress.visibility = View.GONE
+
+            finish()
+        }else{
+            val intent = Intent(this, owner_home_activity::class.java)
+            startActivity(intent)
+            //  progress.visibility = View.GONE
+
+            finish()
+        }
     }
 }

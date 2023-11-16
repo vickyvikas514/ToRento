@@ -13,14 +13,19 @@
         android:theme="@style/Theme.ToRento"
         tools:targetApi="31">
         <activity
-            android:name=".owner_home_activity"
+            android:name=".add_room"
             android:exported="false" />
+        <activity
+            android:name=".owner_home_activity"
+            android:exported="false"
+            />
+
         <activity
             android:name=".UpdateActivity"
             android:exported="false" />
         <activity
             android:name=".Profile"
-            android:exported="true"></activity>
+            android:exported="true" />
         <activity
             android:name=".LandingPage"
             android:exported="true">
@@ -34,10 +39,10 @@
         </activity>
         <activity
             android:name=".SignUp"
-            android:exported="true"></activity>
+            android:exported="true" />
         <activity
             android:name=".SignIn"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".user_home_activity"
             android:exported="false" />

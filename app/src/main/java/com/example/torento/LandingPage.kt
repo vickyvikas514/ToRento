@@ -24,7 +24,7 @@ class LandingPage : AppCompatActivity() {
             val intent = Intent(this, user_home_activity::class.java)
             startActivity(intent)
             finish()
-        }else{
+        }else if(check.equals("true") && checkusertype.equals("owner")){
             val intent = Intent(this, owner_home_activity::class.java)
             startActivity(intent)
             finish()

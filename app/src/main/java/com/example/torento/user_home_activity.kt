@@ -28,7 +28,7 @@ class user_home_activity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)
         /////////////////////
-        val itemsCollection = db.collection("owners")
+        val itemsCollection = db.collection("Rooms")
         val itemsList = mutableListOf<Room>()
         binding.Roomlist.adapter = RoomAdapter(
             applicationContext,
@@ -42,9 +42,11 @@ class user_home_activity : AppCompatActivity() {
             }
 
             snapshot?.forEach { document ->
-                val roomimage = document.getString("roomimage")?:""
-                val description = document.getString("roomdescription") ?: ""
-                val roomsize = document.getString("roomsize") ?: ""
+                val roomimage = document.getString("imageuri")?:""
+                val description = document.getString("location") ?: ""
+                val roomlength = document.getString("length") ?: ""
+                val roomwidth = document.getString("width") ?: ""
+                val roomsize:String = roomlength+"x"+roomwidth
                 val item = Room( roomsize, description,roomimage)
                 itemsList.add(item)
             }

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import com.example.torento.databinding.ActivitySignInBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -21,6 +22,7 @@ class SignIn : AppCompatActivity() {
     val SHARED_PREF:String = "sharedPrefs"
     private var db = Firebase.firestore
     private var Regemail:String="temp"
+    private var regusertype:String="temp"
 
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +45,7 @@ class SignIn : AppCompatActivity() {
             val email = binding.email.text.toString()
             val pass = binding.password.text.toString()
             val scope = CoroutineScope(Dispatchers.Main)
+            Log.d("username",username)
             scope.launch {
                 emailcheck(username)
                 delay(2000)
@@ -60,6 +63,7 @@ class SignIn : AppCompatActivity() {
                 if (it != null) {
                     Toast.makeText(this,"Regmail is initializing",Toast.LENGTH_SHORT).show()
                     Regemail = it.data?.get("email").toString()
+                    regusertype = it.data?.get("usertype").toString()
                 } else {
                     Toast.makeText(this, "Fail!!", Toast.LENGTH_SHORT).show()
                 }
@@ -84,7 +88,10 @@ class SignIn : AppCompatActivity() {
                     editor.putString("username",username)
                     editor.putString("usertype",LandingPage.usertype)
                     editor.apply()
-                    if(LandingPage.usertype=="tenant"){
+                    if(LandingPage.usertype!=regusertype){
+                        Toast.makeText(this,"User can't exist",Toast.LENGTH_SHORT)
+                    }
+                    else if(LandingPage.usertype=="tenant"){
                         val intent = Intent(this, user_home_activity::class.java)
                         startActivity(intent)
                         finish()
