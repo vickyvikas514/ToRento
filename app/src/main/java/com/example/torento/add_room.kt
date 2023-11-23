@@ -9,11 +9,12 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.torento.databinding.ActivityAddRoomBinding
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
-import kotlin.properties.Delegates
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
@@ -23,8 +24,69 @@ class add_room : AppCompatActivity() {
     private lateinit var width:String
     private lateinit var location:String
     var x=0
+    var count=0
     val SHARED_PREF: String = "sharedPrefs"
+
     private lateinit var dpuri:Uri
+    private val storage = FirebaseStorage.getInstance()
+    private val storageref: StorageReference = storage.reference
+
+    private val imagesList = mutableListOf<Uri>()
+
+    private val pickImages =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            if (uris.isNotEmpty()) {
+                imagesList.addAll(uris)
+                // Upload images to Firebase Storage
+                uploadImagesToFirebaseStorage()
+            }
+        }
+
+    private fun uploadImagesToFirebaseStorage()     {
+
+        for ((index, imageUri) in imagesList.withIndex()) {
+
+                val imageName = "image_$index.jpg"
+                val imageRef = storageref.child(imageName)
+
+                // Upload image to Firebase Storage
+                imageRef.putFile(imageUri)
+                    .addOnSuccessListener {
+                        it.metadata?.reference?.downloadUrl
+                            ?.addOnSuccessListener { imageuri ->
+                                saveImageUrlToFirestore(imageuri)
+                            }
+                            ?.addOnFailureListener {
+                                        //handle error
+                            }
+
+
+
+                    }
+                    .addOnFailureListener {
+                        // Handle the error
+                    }
+
+        }//for loop
+
+    }
+
+    private fun saveImageUrlToFirestore(imageUrl: Uri) {
+        val roomsCollection = db.collection("Rooms")
+        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+        val userkey: String? = sharedPreferences.getString("username", "")
+        // Replace 'roomId' with the actual ID of the room document
+        val roomId = userkey+"$x"
+
+        roomsCollection.document(roomId).update("imageuri", FieldValue.arrayUnion(imageUrl))
+            .addOnSuccessListener {
+                Log.d("Firestore", "Image URL added to the document successfully")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Firestore", "Error updating document with image URL", exception)
+            }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddRoomBinding.inflate(layoutInflater)
@@ -41,8 +103,18 @@ class add_room : AppCompatActivity() {
                 }
             }
         )
+        binding.picCard.setOnClickListener{
+            galleryimage.launch("image/*")
+            count++
+        }
+
         binding.updateRoompic.setOnClickListener {
-           galleryimage.launch("image/*")
+            if(count!=0){
+                pickImages.launch("image/*")
+            }else{
+                Toast.makeText(this, " firstly select the profile photo for your room", Toast.LENGTH_SHORT).show()
+            }
+
 
         }
         storageRef = FirebaseStorage.getInstance()
@@ -55,7 +127,8 @@ class add_room : AppCompatActivity() {
         if(dpuri==null){
             Toast.makeText(this, "select image", Toast.LENGTH_SHORT).show()
         }else{
-
+            val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+            val userkey: String? = sharedPreferences.getString("username", "")
             val collectionReference = db.collection("Rooms")
             collectionReference.get()
                 .addOnSuccessListener { querySnapshot ->
@@ -84,8 +157,7 @@ class add_room : AppCompatActivity() {
                                     "location" to location,
                                     "imageuri" to imageuri
                                 )
-                                val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-                                val userkey: String? = sharedPreferences.getString("username", "")
+
                                 if (userkey != null) {
                                     if (userkey.isNotEmpty()){
 
