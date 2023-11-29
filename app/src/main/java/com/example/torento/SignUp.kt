@@ -32,12 +32,7 @@ class SignUp : AppCompatActivity() {
     val SHARED_PREF: String = "sharedPrefs"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-        //progress = ProgressBar(this)
-
-
-        val db = Firebase.firestore
+       val db = Firebase.firestore
         binding = ActivitySignUpBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.signupText.setOnClickListener {

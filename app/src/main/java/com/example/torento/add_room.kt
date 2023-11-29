@@ -6,9 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import com.example.torento.LandingPage.Companion.num
 import com.example.torento.databinding.ActivityAddRoomBinding
+import com.google.android.play.integrity.internal.x
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -23,26 +24,15 @@ class add_room : AppCompatActivity() {
     private lateinit var length:String
     private lateinit var width:String
     private lateinit var location:String
-    var x=0
     var count=0
-    val SHARED_PREF: String = "sharedPrefs"
-
+    val SHARED_PREF : String = "sharedPrefs"
     private lateinit var dpuri:Uri
     private val storage = FirebaseStorage.getInstance()
     private val storageref: StorageReference = storage.reference
-
     private val imagesList = mutableListOf<Uri>()
 
-    private val pickImages =
-        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-            if (uris.isNotEmpty()) {
-                imagesList.addAll(uris)
-                // Upload images to Firebase Storage
-                uploadImagesToFirebaseStorage()
-            }
-        }
 
-    private fun uploadImagesToFirebaseStorage()     {
+    private fun uploadImagesToFirebaseStorage(userkey: String?) {
 
         for ((index, imageUri) in imagesList.withIndex()) {
 
@@ -54,10 +44,11 @@ class add_room : AppCompatActivity() {
                     .addOnSuccessListener {
                         it.metadata?.reference?.downloadUrl
                             ?.addOnSuccessListener { imageuri ->
-                                saveImageUrlToFirestore(imageuri)
+                                Toast.makeText(this, "part-a", Toast.LENGTH_SHORT).show()
+                                saveImageUrlToFirestore(imageuri,userkey)
                             }
                             ?.addOnFailureListener {
-                                        //handle error
+                                Toast.makeText(this, "part-af", Toast.LENGTH_SHORT).show()   //handle error
                             }
 
 
@@ -71,38 +62,93 @@ class add_room : AppCompatActivity() {
 
     }
 
-    private fun saveImageUrlToFirestore(imageUrl: Uri) {
+    private fun saveImageUrlToFirestore(imageUrl: Uri, userkey: String?) {
         val roomsCollection = db.collection("Rooms")
-        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username", "")
+        val ownercollection = userkey?.let { db.collection(it) }
         // Replace 'roomId' with the actual ID of the room document
-        val roomId = userkey+"$x"
+        val roomId = userkey+"${num-1}"
+        Log.d("chutiya",roomId)
+        length = binding.roomlength.text.toString()
+        width = binding.roomwidth.text.toString()
+        location = binding.locationDetail.text.toString()
+        if(length.isNotEmpty()&&width.isNotEmpty()&&dpuri.toString().isNotEmpty()){
+            val room = hashMapOf(
+                "length" to length,
+                "width" to width,
+                "location" to location,
+                "imageuri" to FieldValue.arrayUnion(imageUrl)
 
-        roomsCollection.document(roomId).update("imageuri", FieldValue.arrayUnion(imageUrl))
-            .addOnSuccessListener {
-                Log.d("Firestore", "Image URL added to the document successfully")
+            )
+            if(roomId!="temp"){
+                roomsCollection.document(roomId).update(room as Map<String, Any>)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "updated", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "error in updating", Toast.LENGTH_SHORT).show()
+                    }
+                if (ownercollection != null) {
+                    ownercollection.document(roomId).update(room as Map<String, Any>)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "updated", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "error in updating", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }else{
+                Toast.makeText(this, "userkey is equal to temp", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { exception ->
-                Log.e("Firestore", "Error updating document with image URL", exception)
-            }
+        }else{
+            Toast.makeText(this, "provide all the details", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddRoomBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        val collectionReference = db.collection("Rooms")
+        collectionReference.get()
+            .addOnSuccessListener { querySnapshot ->
+                // Get the count of documents in the collection
+
+                num = querySnapshot.size()+1
+
+            }
+            .addOnFailureListener { e ->
+                num=1
+
+                Toast.makeText(this, "fail in room count", Toast.LENGTH_SHORT).show()
+
+            }
+        Log.d("terabaap","$num")
         storageRef = FirebaseStorage.getInstance()
-        binding.upload.setOnClickListener{
-            uplaodimage()
-        }
-        val galleryimage = registerForActivityResult(
-            ActivityResultContracts.GetContent(), ActivityResultCallback {
+        ///////////////////////
+
+        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+        val userkey: String? = sharedPreferences.getString("username", "")
+        ///////////////////////
+        val pickImages =
+            registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+                if (uris.isNotEmpty()) {
+                    imagesList.addAll(uris)
+                    // Upload images to Firebase Storage
+                    uploadImagesToFirebaseStorage(userkey)
+                }
+            }
+        val galleryimage =
+            registerForActivityResult(ActivityResultContracts.GetContent()) {
                 binding.pic.setImageURI(it)
                 if (it != null) {
                     dpuri = it
                 }
+                uplaodimage(userkey)
             }
-        )
+        ////////////////////////
+
+        ////////////////////////
+
         binding.picCard.setOnClickListener{
             galleryimage.launch("image/*")
             count++
@@ -118,80 +164,32 @@ class add_room : AppCompatActivity() {
 
         }
         storageRef = FirebaseStorage.getInstance()
-        binding.upload.setOnClickListener{
-            uplaodimage()
-        }
+
 
     }
-    private fun uplaodimage(){
+
+
+
+    private fun uplaodimage(userkey: String?) {
         if(dpuri==null){
             Toast.makeText(this, "select image", Toast.LENGTH_SHORT).show()
         }else{
-            val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-            val userkey: String? = sharedPreferences.getString("username", "")
-            val collectionReference = db.collection("Rooms")
-            collectionReference.get()
-                .addOnSuccessListener { querySnapshot ->
-                    // Get the count of documents in the collection
-                    var itemCount = querySnapshot.size()
-                    x = itemCount+1
-                  }
-                .addOnFailureListener { e ->
-                    x=1
-                    Toast.makeText(this, "fail in room count", Toast.LENGTH_SHORT).show()
-                }
             storageRef.getReference("images").child(System.currentTimeMillis().toString())
                 .putFile(dpuri)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Part-1", Toast.LENGTH_SHORT).show()
                     it.metadata?.reference?.downloadUrl
                         ?.addOnSuccessListener { imageuri ->
-                            Toast.makeText(this, "Part-2", Toast.LENGTH_SHORT).show()
-                            length = binding.roomlength.text.toString()
-                            width = binding.roomwidth.text.toString()
-                            location = binding.locationDetail.text.toString()
-                            if(length.isNotEmpty()&&width.isNotEmpty()&&dpuri.toString().isNotEmpty()){
-                                val room = hashMapOf(
-                                    "length" to length,
-                                    "width" to width,
-                                    "location" to location,
-                                    "imageuri" to imageuri
-                                )
-
-                                if (userkey != null) {
-                                    if (userkey.isNotEmpty()){
-
-                                        db.collection("Rooms").document(userkey+"$x")
-                                            .set(room)
-                                            .addOnSuccessListener {
-                                                Toast.makeText(this, "Room is set", Toast.LENGTH_SHORT).show()
-                                                Log.d("vikas", "Success $userkey$x")
-                                            }
-                                            .addOnFailureListener { e ->
-                                                Log.w("vikas", "Error adding document", e)
-                                            }
-
-                                        db.collection(userkey).document(userkey+"$x")
-                                            .set(room)
-                                            .addOnSuccessListener {
-                                                Toast.makeText(this, "Room is set", Toast.LENGTH_SHORT).show()
-                                                Log.d("vikas", "Success $userkey$x")
-                                            }
-                                            .addOnFailureListener { e ->
-                                                Log.w("vikas", "Error adding document", e)
-                                            }
-                                    }else{
-                                        Toast.makeText(this, "userkey is empty", Toast.LENGTH_SHORT).show()
-                                    }
-
-                                }else{
-                                    Toast.makeText(this, "userkey is null", Toast.LENGTH_SHORT).show()
-                                }
-                            }else{
-                                Toast.makeText(this, "please fill all the details while selecting the image for the room", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Part-1a", Toast.LENGTH_SHORT).show()
+                            val roomsCollection = db.collection("Rooms")
+                            val ownercollection = userkey?.let { it1 -> db.collection(it1) }
+                            val roomId = userkey+"${num-1}"
+                            Log.d("terabaap1","${num-1}")
+                            Log.d("vicky4","$roomId")
+                            roomsCollection.document(roomId).update("dpuri" , imageuri)
+                            if (ownercollection != null) {
+                                ownercollection.document(roomId).update("dpuri" , imageuri)
                             }
-
-
                         }
                 }
                 .addOnFailureListener {
@@ -203,60 +201,5 @@ class add_room : AppCompatActivity() {
     }
 
 
-    private fun UpdateRoom(){
-        if(x!=0){
-             val collectionReference = db.collection("Rooms")
-            collectionReference.get()
-                .addOnSuccessListener { querySnapshot ->
-                    // Get the count of documents in the collection
-                    var itemCount = querySnapshot.size()
-                    x = itemCount+1
-                    //numberofitem = itemCount.toString()
-                    // Use itemCount as needed
 
-                }
-                .addOnFailureListener { e ->
-                    // Handle failure
-                    Toast.makeText(this, "fail in room count", Toast.LENGTH_SHORT).show()
-                }
-        }
-
-        length = binding.roomlength.text.toString()
-        width = binding.roomwidth.text.toString()
-        if(length.isNotEmpty()&&width.isNotEmpty()&&dpuri.toString().isNotEmpty()) {
-            val room1 = hashMapOf(
-                "length" to length,
-                "width" to width,
-                "imageuri" to dpuri
-            )
-            val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-            val userkey: String? = sharedPreferences.getString("username", "")
-            if (userkey != null) {
-
-                db.collection("Rooms").document(userkey+"$x")
-                    .set(room1)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Room is set", Toast.LENGTH_SHORT).show()
-                        Log.d("vikas", "Success $userkey$x")
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w("vikas", "Error adding document", e)
-                    }
-                db.collection(userkey).document("items"+"$x")
-                    .set(room1)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "User is set", Toast.LENGTH_SHORT).show()
-                        Log.d("vikas", "Success $userkey$x")
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w("vikas", "Error adding document", e)
-                    }
-            }
-
-
-        }else{
-            Toast.makeText(this, "please fill all the details while selecting the image for the room", Toast.LENGTH_SHORT).show()
-        }
-
-    }
 }
