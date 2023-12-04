@@ -42,7 +42,7 @@ class user_home_activity : AppCompatActivity() {
             }
 
             snapshot?.forEach { document ->
-                val roomimage = document.getString("imageuri")?:""
+                val roomimage = document.getString("dpuri")?:""
                 val description = document.getString("location") ?: ""
                 val roomlength = document.getString("length") ?: ""
                 val roomwidth = document.getString("width") ?: ""
