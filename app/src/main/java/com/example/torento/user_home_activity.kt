@@ -34,61 +34,38 @@ class user_home_activity : AppCompatActivity() {
             applicationContext,
             itemsList
         )
-
-        itemsCollection.addSnapshotListener { snapshot, exception ->
-            if (exception != null) {
-                // Handle the error
-                return@addSnapshotListener
-            }
-
-            snapshot?.forEach { document ->
-                val roomimage = document.getString("dpuri")?:""
-                val description = document.getString("location") ?: ""
-                val roomlength = document.getString("length") ?: ""
-                val roomwidth = document.getString("width") ?: ""
-                val roomsize:String = roomlength+"x"+roomwidth
-                val item = Room( roomsize, description,roomimage)
-                itemsList.add(item)
-            }
-
-            binding.Roomlist.adapter = RoomAdapter(
-                applicationContext,
-                itemsList
-            )
-        }
-        val spacingInPixels = resources.getDimensionPixelSize(R.dimen.spacing_between_cards) // Adjust the dimension as needed
-        val maxVisibleItems = 3 // Adjust the number of visible items as needed
-        val cardHeight = resources.getDimensionPixelSize(R.dimen.card_height) // Define in dimens.xml
-
-
-        binding.Roomlist.addItemDecoration(CustomItemDecoration(maxVisibleItems, cardHeight))
-        binding.Roomlist.setHasFixedSize(true)
-////////////////////////////////////////////////////////
-
-
-    }
-    class CustomItemDecoration(
-        private val maxVisibleItems:Int,
-        private val cardHeight:Int) : RecyclerView.ItemDecoration() {
-        override fun getItemOffsets(outRect: Rect, view: android.view.View, parent: RecyclerView, state: RecyclerView.State) {
-            val position = parent.getChildAdapterPosition(view)
-            if(position>=maxVisibleItems){
-                outRect.top = 0
-            }else{
-                val screenHeight = parent.height
-                val totalCardHeight = maxVisibleItems * cardHeight
-                val availableHeight = screenHeight - totalCardHeight
-                if (position == maxVisibleItems - 1) {
-                    // Last visible item gets the remaining space to fill the screen
-                    outRect.top = availableHeight
-                } else {
-                    // Margin for other visible items
-                    outRect.top = 0
+        if (itemsCollection != null) {
+            itemsCollection.addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    // Handle the error
+                    return@addSnapshotListener
                 }
+
+                snapshot?.forEach { document ->
+                    val roomimage = document.getString("dpuri") ?: ""
+                    val description = document.getString("location") ?: ""
+                    val roomlength = document.getString("length") ?: ""
+                    val roomwidth = document.getString("width") ?: ""
+                    val roomsize: String = roomlength + "x" + roomwidth
+                    val item = Room(roomsize, description, roomimage)
+                    itemsList.add(item)
+                }
+
+                binding.Roomlist.adapter = RoomAdapter(
+                    applicationContext,
+                    itemsList
+                )
             }
 
+            binding.Roomlist.setHasFixedSize(true)
         }
+////////////////////////////////////////////////////////
+        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+        val userkey: String? = sharedPreferences.getString("username", "")
+        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
+
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_bar,menu)

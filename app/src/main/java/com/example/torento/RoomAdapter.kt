@@ -11,7 +11,9 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.bumptech.glide.Glide
 
-class RoomAdapter(val context: Context,val rooms:List<Room>): Adapter<RoomAdapter.RoomViewHolder>() {
+class RoomAdapter(val context: Context, var rooms:List<Room>): Adapter<RoomAdapter.RoomViewHolder>() {
+
+
 
 
 

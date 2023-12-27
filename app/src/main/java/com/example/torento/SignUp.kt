@@ -32,7 +32,7 @@ class SignUp : AppCompatActivity() {
     val SHARED_PREF: String = "sharedPrefs"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-       val db = Firebase.firestore
+      // val db = Firebase.firestore
         binding = ActivitySignUpBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.signupText.setOnClickListener {
@@ -55,9 +55,10 @@ class SignUp : AppCompatActivity() {
             if (name.isNotEmpty() && phone.isNotEmpty() && username.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty() && confpass.isNotEmpty()) {
 
                 GlobalScope.launch() {
-                    writeUserToFirestore(name,username,phone,email,pass)
+
                     loginlate(pass,confpass, email)
-                    changethepage()
+                    writeUserToFirestore(name,username,phone,email,pass)
+                    //changethepage()
                 }
 
 
@@ -134,6 +135,7 @@ class SignUp : AppCompatActivity() {
                     .set(user)
                     .addOnSuccessListener { documentReference ->
                         Log.d("Firestore", "DocumentSnapshot written with ID: $")
+                        changethepage()
                     }
                     .addOnFailureListener { e ->
                         Log.e("Firestore", "Error adding document", e)
