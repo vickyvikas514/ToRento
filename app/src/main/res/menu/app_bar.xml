@@ -9,5 +9,9 @@
         android:id="@+id/logout"
         android:title="LOG OUT"
         />
+    <item
+        android:id="@+id/descrn"
+        android:title="Descrpition"
+        />
 
 </menu>

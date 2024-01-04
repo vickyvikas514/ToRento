@@ -52,10 +52,6 @@ class owner_home_activity : AppCompatActivity() {
 
         val itemsCollection = userkey?.let { db.collection(it) }
         val itemsList = mutableListOf<Room>()
-        binding.OwnerRoomlist.adapter = RoomAdapter(
-            applicationContext,
-            itemsList
-        )
 
         if (itemsCollection != null) {
             itemsCollection.addSnapshotListener { snapshot, exception ->
@@ -72,11 +68,19 @@ class owner_home_activity : AppCompatActivity() {
                     val item = Room( roomsize, description,roomimage)
                     itemsList.add(item)
                 }
-
-                binding.OwnerRoomlist.adapter = RoomAdapter(
+                var adapter = RoomAdapter(
                     applicationContext,
                     itemsList
                 )
+                binding.OwnerRoomlist.adapter = adapter
+                adapter.setOnItemClickListener(object :RoomAdapter.OnItemClickListener{
+                    override fun onItemClick(position: Int) {
+                        // Handle item click here
+                        // For example, navigate to another activity
+                        val intent = Intent(this@owner_home_activity, descripn::class.java)
+                        startActivity(intent)
+                    }
+                })
             }
 
             binding.OwnerRoomlist.setHasFixedSize(true)
@@ -96,9 +100,14 @@ class owner_home_activity : AppCompatActivity() {
         when(item.itemId){
             R.id.logout-> logout()
             R.id.profile->profile()
+            R.id.descrn->changetodescprn()
 
         }
         return super.onOptionsItemSelected(item)
+    }
+    private fun changetodescprn(){
+        val intent = Intent(this,descripn::class.java)
+        startActivity(intent)
     }
     private fun profile() {
 
@@ -203,4 +212,5 @@ class owner_home_activity : AppCompatActivity() {
         x = savedInstanceState.getInt("x", 0)
         num = savedInstanceState.getInt("num", 0)
     }
+
 }
