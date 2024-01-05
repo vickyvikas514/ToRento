@@ -30,10 +30,8 @@ class user_home_activity : AppCompatActivity() {
         /////////////////////
         val itemsCollection = db.collection("Rooms")
         val itemsList = mutableListOf<Room>()
-        binding.Roomlist.adapter = RoomAdapter(
-            applicationContext,
-            itemsList
-        )
+        val idlist = mutableListOf<String>()
+
         if (itemsCollection != null) {
             itemsCollection.addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
@@ -47,14 +45,29 @@ class user_home_activity : AppCompatActivity() {
                     val roomlength = document.getString("length") ?: ""
                     val roomwidth = document.getString("width") ?: ""
                     val roomsize: String = roomlength + "x" + roomwidth
+                    val Docid:String = document.id
                     val item = Room(roomsize, description, roomimage)
                     itemsList.add(item)
+                    idlist.add(Docid)
                 }
 
-                binding.Roomlist.adapter = RoomAdapter(
+                var adapter = RoomAdapter(
                     applicationContext,
-                    itemsList
+                    itemsList,
+                    idlist
                 )
+                binding.Roomlist.adapter = adapter
+                adapter.setOnItemClickListener(object :RoomAdapter.OnItemClickListener{
+                    override fun onItemClick(documentid:String,position: Int) {
+
+                        // Handle item click here
+                        // For example, navigate to another activity
+                        val intent = Intent(this@user_home_activity, descripn::class.java)
+                        intent.putExtra("documentid",documentid)
+                        startActivity(intent)
+                    }
+                })
+
             }
 
             binding.Roomlist.setHasFixedSize(true)

@@ -23,6 +23,7 @@ class owner_home_activity : AppCompatActivity() {
     var x=0
     private var db = Firebase.firestore
     private lateinit var job: Job
+    var id=""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +53,7 @@ class owner_home_activity : AppCompatActivity() {
 
         val itemsCollection = userkey?.let { db.collection(it) }
         val itemsList = mutableListOf<Room>()
+        val idlist = mutableListOf<String>()
 
         if (itemsCollection != null) {
             itemsCollection.addSnapshotListener { snapshot, exception ->
@@ -65,19 +67,25 @@ class owner_home_activity : AppCompatActivity() {
                     val roomlength = document.getString("length") ?: ""
                     val roomwidth = document.getString("width") ?: ""
                     val roomsize:String = roomlength+"x"+roomwidth
+                    val Docid:String = document.id
                     val item = Room( roomsize, description,roomimage)
+                    idlist.add(Docid)
                     itemsList.add(item)
                 }
+
                 var adapter = RoomAdapter(
                     applicationContext,
-                    itemsList
+                    itemsList,
+                    idlist
                 )
                 binding.OwnerRoomlist.adapter = adapter
                 adapter.setOnItemClickListener(object :RoomAdapter.OnItemClickListener{
-                    override fun onItemClick(position: Int) {
+                    override fun onItemClick(documentid:String,position: Int) {
+
                         // Handle item click here
                         // For example, navigate to another activity
                         val intent = Intent(this@owner_home_activity, descripn::class.java)
+                        intent.putExtra("documentid",documentid)
                         startActivity(intent)
                     }
                 })
@@ -110,7 +118,6 @@ class owner_home_activity : AppCompatActivity() {
         startActivity(intent)
     }
     private fun profile() {
-
         val intent = Intent(this,Profile::class.java)
         startActivity(intent)
     }
@@ -192,7 +199,6 @@ class owner_home_activity : AppCompatActivity() {
     }
     private fun changepage( num: Int) {
         val intent = Intent(this,add_room::class.java)
-
         startActivity(intent)
     }
     //to save values of x and num in changing configuration
