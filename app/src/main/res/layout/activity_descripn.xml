@@ -67,7 +67,7 @@
                     android:textColor="@color/black"
                     android:textSize="25dp"/>
                 <TextView
-                    android:id="@+id/size_description"
+                    android:id="@+id/full_locan_detsil"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:layout_constraintTop_toBottomOf="@id/amount"
@@ -78,10 +78,10 @@
                     android:textColor="@color/black"
                     android:textSize="25dp"/>
                 <TextView
-                    android:id="@+id/full_locan_detsil"
+                    android:id="@+id/breifDescription"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:layout_constraintTop_toBottomOf="@id/size_description"
+                    app:layout_constraintTop_toBottomOf="@id/full_locan_detsil"
                     app:layout_constraintStart_toStartOf="parent"
                     android:layout_marginHorizontal="8dp"
                     android:layout_marginTop="8dp"
@@ -93,6 +93,7 @@
 
         </androidx.cardview.widget.CardView>
         <Button
+            android:id="@+id/saveBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/descrn_card"

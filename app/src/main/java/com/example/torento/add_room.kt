@@ -24,6 +24,10 @@ class add_room : AppCompatActivity() {
     private lateinit var length:String
     private lateinit var width:String
     private lateinit var location:String
+    private lateinit var loaction_description:String
+    private lateinit var amount:String
+    private lateinit var owner_name:String
+    private lateinit var breif_description:String
     var count=0
     val SHARED_PREF : String = "sharedPrefs"
     private lateinit var dpuri:Uri
@@ -70,12 +74,20 @@ class add_room : AppCompatActivity() {
         Log.d("chutiya",roomId)
         length = binding.roomlength.text.toString()
         width = binding.roomwidth.text.toString()
-        location = binding.locationDetail.text.toString()
+        location = binding.Locality.text.toString()
+        loaction_description = binding.locationDescription.text.toString()
+        amount = binding.amount.text.toString()
+        owner_name = binding.OwnerName.text.toString()
+        breif_description = binding.RoomDescription.text.toString()
         if(length.isNotEmpty()&&width.isNotEmpty()&&dpuri.toString().isNotEmpty()){
             val room = hashMapOf(
                 "length" to length,
                 "width" to width,
                 "location" to location,
+                "location_detail" to loaction_description,
+                "owner_name" to owner_name,
+                "amount" to amount,
+                "breif_description" to breif_description,
                 "imageuri" to FieldValue.arrayUnion(imageUrl)
 
             )

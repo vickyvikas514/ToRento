@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.widget.Toast
 import com.example.torento.databinding.ActivitySignUpBinding
@@ -14,6 +15,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
@@ -58,7 +60,8 @@ class SignUp : AppCompatActivity() {
 
                     loginlate(pass,confpass, email)
                     writeUserToFirestore(name,username,phone,email,pass)
-                    //changethepage()
+                   // delay(5000)
+
                 }
 
 
@@ -134,8 +137,12 @@ class SignUp : AppCompatActivity() {
                 db.collection("users").document(id)
                     .set(user)
                     .addOnSuccessListener { documentReference ->
+                        Handler().postDelayed({
+                            changethepage()
+                        },3000)
+
                         Log.d("Firestore", "DocumentSnapshot written with ID: $")
-                        changethepage()
+
                     }
                     .addOnFailureListener { e ->
                         Log.e("Firestore", "Error adding document", e)

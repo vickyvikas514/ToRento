@@ -56,6 +56,9 @@ class descripn : AppCompatActivity() {
         if(imagearraylist[0]=="https://firebasestorage.googleapis.com/v0/b/torento-865ac.appspot.com/o/images%2F1703841827209?alt=media&token=ed6568b7-655f-4077-b194-6f5db7a76611") {
             Toast.makeText(this, "hii 1", Toast.LENGTH_SHORT).show()
         }
+        binding.saveBtn.setOnClickListener {
+            Toast.makeText(this, "Clicked", Toast.LENGTH_SHORT).show()
+        }
            }
 
 

@@ -145,7 +145,7 @@ class owner_home_activity : AppCompatActivity() {
 
                 Log.d("vicky","$x")
                 subaddtemproom(userkey,num)
-                changepage(num)
+                changepage()
 
             }
             .addOnFailureListener { e ->
@@ -165,7 +165,11 @@ class owner_home_activity : AppCompatActivity() {
             "width" to "temp",
             "location" to "temp",
             "imageuri" to "temp",
-            "dpuri" to "temp"
+            "dpuri" to "temp",
+            "location_detail" to "temp",
+            "owner_name" to "temp",
+            "amount" to "temp",
+            "breif_description" to "temp"
         )
         if (userkey != null) {
             if (userkey.isNotEmpty()){
@@ -197,7 +201,7 @@ class owner_home_activity : AppCompatActivity() {
             Toast.makeText(this, "userkey is null", Toast.LENGTH_SHORT).show()
         }
     }
-    private fun changepage( num: Int) {
+    private fun changepage() {
         val intent = Intent(this,add_room::class.java)
         startActivity(intent)
     }
