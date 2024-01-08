@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import com.example.torento.databinding.ActivitySignInBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -41,6 +42,7 @@ class SignIn : AppCompatActivity() {
 
 
         binding.loginButton.setOnClickListener{
+            binding.progressBar.visibility = View.VISIBLE
             val username = binding.username.text.toString()
             val email = binding.email.text.toString()
             val pass = binding.password.text.toString()
@@ -77,8 +79,10 @@ class SignIn : AppCompatActivity() {
 
     }
     private fun loginbtn(username: String, email: String, pass: String) {
+
              if(email.isNotEmpty() && pass.isNotEmpty() && username.isNotEmpty() && Regemail==email){
             firebaseAuth.signInWithEmailAndPassword(email,pass).addOnCompleteListener {
+                binding.progressBar.visibility = View.INVISIBLE
                 if(it.isSuccessful){
                     val sharedPreferences:SharedPreferences = getSharedPreferences(
                         SHARED_PREF, MODE_PRIVATE

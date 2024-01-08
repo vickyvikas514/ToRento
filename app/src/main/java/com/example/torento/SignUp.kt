@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import com.example.torento.databinding.ActivitySignUpBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -45,9 +46,7 @@ class SignUp : AppCompatActivity() {
         firebaseAuth = FirebaseAuth.getInstance()
         job = Job()
         binding.signupbtn.setOnClickListener {
-
-            //  progress.visibility = View.VISIBLE
-
+            binding.progressBar.visibility = View.VISIBLE
             val name = binding.name.text.toString()
             val username = binding.username.text.toString()
             val phone = binding.phone.text.toString()
@@ -99,6 +98,7 @@ class SignUp : AppCompatActivity() {
 
     }
     private fun changethepage() {
+        binding.progressBar.visibility = View.INVISIBLE
         // Your code to handle the result after the background work is finished
         if(LandingPage.usertype=="tenant"){
             val intent = Intent(this, user_home_activity::class.java)
@@ -115,7 +115,7 @@ class SignUp : AppCompatActivity() {
         }
     }
 
-    suspend fun writeUserToFirestore(name:String,username:String,phone:String,email:String,pass:String) {
+     suspend fun writeUserToFirestore(name:String, username:String, phone:String, email:String, pass:String) {
         try {
             withContext(Dispatchers.IO) {
                 val db = Firebase.firestore
