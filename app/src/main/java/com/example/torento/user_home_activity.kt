@@ -12,6 +12,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.torento.databinding.ActivityMainBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class user_home_activity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -28,17 +33,23 @@ class user_home_activity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)
         /////////////////////
+        DatatoRecyclerView()
+////////////////////////////////////////////////////////
+        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+        val userkey: String? = sharedPreferences.getString("username", "")
+        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
+
+    }
+   suspend fun retreivingdata() : Pair<List<Room>, List<String>> = withContext(Dispatchers.IO){
         val itemsCollection = db.collection("Rooms")
         val itemsList = mutableListOf<Room>()
         val idlist = mutableListOf<String>()
-
         if (itemsCollection != null) {
             itemsCollection.addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     // Handle the error
                     return@addSnapshotListener
                 }
-
                 snapshot?.forEach { document ->
                     val roomimage = document.getString("dpuri") ?: ""
                     val description = document.getString("location") ?: ""
@@ -50,35 +61,33 @@ class user_home_activity : AppCompatActivity() {
                     itemsList.add(item)
                     idlist.add(Docid)
                 }
-
-                var adapter = RoomAdapter(
+               }
+             }
+            kotlinx.coroutines.delay(1000)
+            return@withContext Pair(itemsList,idlist)
+    }
+    private fun DatatoRecyclerView(){
+        GlobalScope.launch {
+            val (rooms, ids) = async { retreivingdata() }.await()
+            withContext(Dispatchers.Main){
+                val adapter = RoomAdapter(
                     applicationContext,
-                    itemsList,
-                    idlist
+                    rooms,
+                    ids
                 )
                 binding.Roomlist.adapter = adapter
-                adapter.setOnItemClickListener(object :RoomAdapter.OnItemClickListener{
-                    override fun onItemClick(documentid:String,position: Int) {
-
-                        // Handle item click here
-                        // For example, navigate to another activity
+                binding.Roomlist.setHasFixedSize(true)
+                adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener {
+                    override fun onItemClick(documentId: String, position: Int) {
                         val intent = Intent(this@user_home_activity, descripn::class.java)
-                        intent.putExtra("documentid",documentid)
+                        intent.putExtra("documentid", documentId)
                         startActivity(intent)
                     }
                 })
-
             }
-
-            binding.Roomlist.setHasFixedSize(true)
         }
-////////////////////////////////////////////////////////
-        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username", "")
-        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
 
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_bar,menu)
