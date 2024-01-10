@@ -1,5 +1,6 @@
 package com.example.torento
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -8,65 +9,72 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.torento.databinding.ActivityDescripnBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class descripn : AppCompatActivity() {
     private lateinit var binding: ActivityDescripnBinding
     private var db = Firebase.firestore
-    private var imagearraylist :List<String> = listOf("https://firebasestorage.googleapis.com/v0/b/torento-865ac.appspot.com/o/images%2F1703841827209?alt=media&token=ed6568b7-655f-4077-b194-6f5db7a76611","https://firebasestorage.googleapis.com/v0/b/torento-865ac.appspot.com/o/images%2F1703841827209?alt=media&token=ed6568b7-655f-4077-b194-6f5db7a76611")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDescripnBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-    //fetchDataFromFirestore("uuu6")
-        retreivingdata()
+    //fetchDataFromFirestore
+      set()
 
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
 
 
-        if(imagearraylist[0]=="https://firebasestorage.googleapis.com/v0/b/torento-865ac.appspot.com/o/images%2F1703841827209?alt=media&token=ed6568b7-655f-4077-b194-6f5db7a76611") {
-            Toast.makeText(this, "hii 1", Toast.LENGTH_SHORT).show()
-        }
+
         binding.saveBtn.setOnClickListener {
             Toast.makeText(this, "Clicked", Toast.LENGTH_SHORT).show()
         }
            }
-    fun retreivingdata(){
-        val Id = intent.getStringExtra("documentid").toString()
-
-        val docref =  db.collection("Rooms").document(Id)
-
-        docref.get()
-            .addOnSuccessListener { documentSnapshot ->
-                Toast.makeText(this, "hello ji p1", Toast.LENGTH_SHORT).show()
-                if (documentSnapshot.exists()){
-                    Toast.makeText(this, "hello ji p9", Toast.LENGTH_SHORT).show()
-                    val imageUriList = documentSnapshot.get("imageuri") as? List<String> ?: emptyList()
-                    ///imageurilist se nhi ho paa raha hai
-
-                    binding.fullLocanDetsil.text = documentSnapshot.data?.get("location_detail").toString()
-                    binding.amount.text = documentSnapshot.data?.get("amount").toString()
-                    binding.ownerName.text = documentSnapshot.data?.get("owner_name").toString()
-                    binding.breifDescription.text = documentSnapshot.data?.get("breif_description").toString()
-
-                    // val newAdapter = PicsAdapter(this, imagearraylist)
-                    // Set the new adapter to the RecyclerView
-                    binding.listPhoto.adapter = PicsAdapter(this,imageUriList)
-
-
-                    // Notify the adapter that the data set has changed
-
-                    if(imageUriList[0]=="https://firebasestorage.googleapis.com/v0/b/torento-865ac.appspot.com/o/images%2F1703841827209?alt=media&token=ed6568b7-655f-4077-b194-6f5db7a76611"){
-                        Toast.makeText(this, "hello ji paagal", Toast.LENGTH_SHORT).show()
-                    }
-
-
-                } else {
-                    Toast.makeText(this, "hello ji p2", Toast.LENGTH_LONG).show()
-                    // Document does not exist
-                    Log.e("TAG", "Document $ does not exist.")
-                }
+    private fun set(){
+        GlobalScope.launch {
+            val (list, imagelist) = async { retreivingdataBG() }.await()
+            withContext(Dispatchers.Main){
+               retreivingdata(list,imagelist)
             }
+        }
+    }
+
+    private fun retreivingdata(list:MutableList<String>,imageUriList:List<String>){
+        binding.fullLocanDetsil.text = list[0]
+        binding.amount.text =list[1]
+        binding.ownerName.text =list[2]
+        binding.breifDescription.text =list[3]
+
+        // Set the new adapter to the RecyclerView
+        binding.listPhoto.adapter = PicsAdapter(this,imageUriList)
+    }
+   suspend fun retreivingdataBG() : Pair<MutableList<String>,List<String>>{
+        val Id = intent.getStringExtra("documentid").toString()
+        val list:MutableList<String> = mutableListOf<String>()
+       var imageUriList:List<String> = listOf<String>()
+       try {
+           val docref =  db.collection("Rooms").document(Id).get().await()
+           if (docref != null) {
+               docref.data?.let {
+                   list.add(it["location_detail"].toString())
+                   list.add(it["amount"].toString())
+                   list.add(it["owner_name"].toString())
+                   list.add(it["breif_description"].toString())
+                   imageUriList = it["imageuri"] as? List<String> ?: emptyList()
+               }
+               Log.d("chaudhary1", list.size.toString())
+           }
+           else { Toast.makeText(this, "DocRef is NULL", Toast.LENGTH_SHORT).show() }
+       } catch (e:Exception){
+           Log.e("descripn", "Error fetching data from Firestore: ${e.message}")
+       }
+
+       return Pair(list,imageUriList)
     }
 
 
