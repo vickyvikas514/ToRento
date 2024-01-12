@@ -29,27 +29,19 @@ class descripn : AppCompatActivity() {
 
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val userkey: String? = sharedPreferences.getString("username", "")
+        val usertype = intent.getStringExtra("usertype")
+        if(usertype=="owner"){
+            binding.saveBtn.text = "Change Room details"
+        }
     //fetchDataFromFirestore
       set()
         binding.saveBtn.setOnClickListener {
-            var usertype = ""
-
-            GlobalScope.launch(Dispatchers.IO) {
-                if (userkey != null) {
-                    usertype = getusertype(userkey)
-                }
-                withContext(Dispatchers.Main){
-                    if (usertype=="owner"){
-                        val Id = intent.getStringExtra("documentid").toString()
-                        val intent = Intent(this@descripn,EditRoom::class.java)
-                        intent.putExtra("documentid", Id)
-                        startActivity(intent)
-                    }else{
-                        Toast.makeText(this@descripn, "clicked", Toast.LENGTH_SHORT).show()
-                    }
-                }
+            if(usertype=="owner"){
+                startActivity(Intent(this@descripn,EditRoom::class.java))
+                finish()
+            }else{
+                Toast.makeText(this@descripn, "clicked", Toast.LENGTH_SHORT).show()
             }
-
         }
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
 

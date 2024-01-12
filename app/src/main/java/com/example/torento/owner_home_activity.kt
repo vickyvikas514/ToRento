@@ -86,6 +86,7 @@ class owner_home_activity : AppCompatActivity() {
                         // For example, navigate to another activity
                         val intent = Intent(this@owner_home_activity, descripn::class.java)
                         intent.putExtra("documentid",documentid)
+                        intent.putExtra("usertype","owner")
                         startActivity(intent)
                     }
                 })
@@ -108,15 +109,12 @@ class owner_home_activity : AppCompatActivity() {
         when(item.itemId){
             R.id.logout-> logout()
             R.id.profile->profile()
-            R.id.descrn->changetodescprn()
+
 
         }
         return super.onOptionsItemSelected(item)
     }
-    private fun changetodescprn(){
-        val intent = Intent(this,descripn::class.java)
-        startActivity(intent)
-    }
+
     private fun profile() {
         val intent = Intent(this,Profile::class.java)
         startActivity(intent)

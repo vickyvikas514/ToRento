@@ -80,7 +80,7 @@ class user_home_activity : AppCompatActivity() {
                 adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener {
                     override fun onItemClick(documentId: String, position: Int) {
                         val intent = Intent(this@user_home_activity, descripn::class.java)
-                        intent.putExtra("documentid", documentId)
+                        intent.putExtra("usertype","user")
                         startActivity(intent)
                     }
                 })
