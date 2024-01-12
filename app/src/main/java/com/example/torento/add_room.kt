@@ -124,15 +124,11 @@ class add_room : AppCompatActivity() {
         collectionReference.get()
             .addOnSuccessListener { querySnapshot ->
                 // Get the count of documents in the collection
-
                 num = querySnapshot.size()+1
-
             }
             .addOnFailureListener { e ->
                 num=1
-
                 Toast.makeText(this, "fail in room count", Toast.LENGTH_SHORT).show()
-
             }
         Log.d("terabaap","$num")
         storageRef = FirebaseStorage.getInstance()
@@ -180,8 +176,6 @@ class add_room : AppCompatActivity() {
 
     }
 
-
-
     private fun uplaodimage(userkey: String?) {
         if(dpuri==null){
             Toast.makeText(this, "select image", Toast.LENGTH_SHORT).show()
@@ -206,11 +200,7 @@ class add_room : AppCompatActivity() {
                 }
                 .addOnFailureListener {
                     Toast.makeText(this, "Part-3", Toast.LENGTH_SHORT).show()
-                }
-        }
-
-
-    }
+                } } }
 
 
 

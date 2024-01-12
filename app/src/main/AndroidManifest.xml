@@ -13,10 +13,11 @@
         android:theme="@style/Theme.ToRento"
         tools:targetApi="31">
         <activity
+            android:name=".EditRoom"
+            android:exported="false" />
+        <activity
             android:name=".descripn"
-            android:exported="false" >
-
-        </activity>
+            android:exported="false"></activity>
         <activity
             android:name=".add_room"
             android:exported="false" />
@@ -49,7 +50,6 @@
         <activity
             android:name=".user_home_activity"
             android:exported="false" />
-
     </application>
 
 </manifest>

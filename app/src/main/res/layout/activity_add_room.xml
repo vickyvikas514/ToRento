@@ -21,6 +21,16 @@
         android:layout_gravity="center_horizontal"
         android:padding="24dp">
 
+        <ProgressBar
+            android:id="@+id/progressBar"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scrollbarSize="30dp"
+            android:visibility="invisible" />
 
         <TextView
             android:id="@+id/addroomtext"

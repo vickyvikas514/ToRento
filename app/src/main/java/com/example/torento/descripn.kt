@@ -1,6 +1,7 @@
 package com.example.torento
 
 import android.content.Intent
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.torento.databinding.ActivityDescripnBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -19,24 +21,60 @@ import kotlinx.coroutines.withContext
 class descripn : AppCompatActivity() {
     private lateinit var binding: ActivityDescripnBinding
     private var db = Firebase.firestore
+    val SHARED_PREF: String = "sharedPrefs"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDescripnBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+        val userkey: String? = sharedPreferences.getString("username", "")
     //fetchDataFromFirestore
       set()
+        binding.saveBtn.setOnClickListener {
+            var usertype = ""
 
+            GlobalScope.launch(Dispatchers.IO) {
+                if (userkey != null) {
+                    usertype = getusertype(userkey)
+                }
+                withContext(Dispatchers.Main){
+                    if (usertype=="owner"){
+                        val Id = intent.getStringExtra("documentid").toString()
+                        val intent = Intent(this@descripn,EditRoom::class.java)
+                        intent.putExtra("documentid", Id)
+                        startActivity(intent)
+                    }else{
+                        Toast.makeText(this@descripn, "clicked", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+        }
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
 
-
-
-        binding.saveBtn.setOnClickListener {
-            Toast.makeText(this, "Clicked", Toast.LENGTH_SHORT).show()
-        }
            }
+    suspend fun getusertype(userkey:String): String = GlobalScope.async{
+
+        var usertype:String = ""
+        try {
+            val docref = db.collection("users").document(userkey).get().await()
+            if (docref != null) {
+                docref.data?.let {
+                    usertype = it["usertype"].toString()
+                }
+            }
+
+            else {
+                Toast.makeText(this@descripn, "DocRef is NULL", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: java.lang.Exception){
+            Log.e("Profile", "Error fetching data from Firestore: ${e.message}")
+        }
+        return@async usertype
+    }.await()
     private fun set(){
-        GlobalScope.launch {
+        GlobalScope.launch(Dispatchers.IO) {
             val (list, imagelist) = async { retreivingdataBG() }.await()
             withContext(Dispatchers.Main){
                retreivingdata(list,imagelist)
