@@ -1,4 +1,4 @@
-package com.example.torento
+package com.example.torento.OWNER
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.torento.databinding.ActivityAddRoomBinding
 import com.google.android.gms.tasks.Tasks
@@ -150,7 +149,7 @@ class EditRoom : AppCompatActivity() {
     }
     override fun onBackPressed(){
         super.onBackPressed()
-        val intent = Intent(this,owner_home_activity::class.java)
+        val intent = Intent(this, owner_home_activity::class.java)
         startActivity(intent)
         finish()
 

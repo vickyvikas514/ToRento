@@ -1,4 +1,4 @@
-package com.example.torento
+package com.example.torento.Adapter
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.torento.R
 
 class PicsAdapter(val context: Context, private var pics: List<String>): RecyclerView.Adapter<PicsAdapter.PicViewHolder>() {
     class PicViewHolder(itemView: View): RecyclerView.ViewHolder(itemView){

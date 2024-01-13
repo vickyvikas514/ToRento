@@ -1,15 +1,19 @@
-package com.example.torento
+package com.example.torento.USER
 
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.Rect
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
+import com.example.torento.Adapter.RoomAdapter
+import com.example.torento.DATACLASS.Room
+import com.example.torento.LOGIN.LandingPage
+import com.example.torento.COMMON.Profile
+import com.example.torento.R
 import com.example.torento.databinding.ActivityMainBinding
+import com.example.torento.COMMON.descripn
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
@@ -95,8 +99,8 @@ class user_home_activity : AppCompatActivity() {
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
-            R.id.logout-> logout()
-            R.id.profile->profile()
+            R.id.logout -> logout()
+            R.id.profile ->profile()
 
         }
         return super.onOptionsItemSelected(item)
@@ -104,7 +108,7 @@ class user_home_activity : AppCompatActivity() {
 
     private fun profile() {
 
-        val intent = Intent(this,Profile::class.java)
+        val intent = Intent(this, Profile::class.java)
         startActivity(intent)
     }
 

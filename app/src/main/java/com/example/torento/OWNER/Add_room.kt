@@ -1,4 +1,4 @@
-package com.example.torento
+package com.example.torento.OWNER
 
 import android.content.SharedPreferences
 import android.net.Uri
@@ -7,9 +7,8 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import com.example.torento.LandingPage.Companion.num
+import com.example.torento.LOGIN.LandingPage.Companion.num
 import com.example.torento.databinding.ActivityAddRoomBinding
-import com.google.android.play.integrity.internal.x
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase

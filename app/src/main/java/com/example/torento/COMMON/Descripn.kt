@@ -1,4 +1,4 @@
-package com.example.torento
+package com.example.torento.COMMON
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -7,10 +7,11 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.torento.Adapter.PicsAdapter
+import com.example.torento.OWNER.EditRoom
 import com.example.torento.databinding.ActivityDescripnBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -37,7 +38,7 @@ class descripn : AppCompatActivity() {
       set()
         binding.saveBtn.setOnClickListener {
             if(usertype=="owner"){
-                startActivity(Intent(this@descripn,EditRoom::class.java))
+                startActivity(Intent(this@descripn, EditRoom::class.java))
                 finish()
             }else{
                 Toast.makeText(this@descripn, "clicked", Toast.LENGTH_SHORT).show()

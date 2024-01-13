@@ -1,4 +1,4 @@
-package com.example.torento
+package com.example.torento.COMMON
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -9,8 +9,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat.startActivity
 import com.bumptech.glide.Glide
+import com.example.torento.LOGIN.LandingPage
+import com.example.torento.OWNER.owner_home_activity
+import com.example.torento.USER.user_home_activity
 import com.example.torento.databinding.ActivityProfileBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -56,7 +58,7 @@ class Profile : AppCompatActivity() {
             galleryimage.launch("image/*")
         }
         binding.edit.setOnClickListener {
-            val intent = Intent(this, UpdateActivity::class.java)
+            val intent = Intent(this, ChatActivity::class.java)
             startActivity(intent)
             finish()
         }

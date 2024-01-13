@@ -1,13 +1,11 @@
-package com.example.torento
+package com.example.torento.COMMON
 
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import com.example.torento.databinding.ActivityUpdateBinding
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -48,7 +46,7 @@ class UpdateActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Please provide all the details", Toast.LENGTH_SHORT).show()
             }
-            val intent = Intent(this,Profile::class.java)
+            val intent = Intent(this, Profile::class.java)
             startActivity(intent)
             finish()
         }

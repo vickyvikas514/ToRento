@@ -1,18 +1,16 @@
-package com.example.torento
+package com.example.torento.Adapter
 
 import android.content.Context
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.bumptech.glide.Glide
-import com.example.torento.SignUp.Companion.id
+import com.example.torento.R
+import com.example.torento.DATACLASS.Room
 
 
 class RoomAdapter(val context: Context, var rooms:List<Room>, var idlist:List<String>): Adapter<RoomAdapter.RoomViewHolder>() {
@@ -24,7 +22,7 @@ class RoomAdapter(val context: Context, var rooms:List<Room>, var idlist:List<St
     fun setOnItemClickListener(listener: OnItemClickListener) {
         itemClickListener = listener
     }
-    class RoomViewHolder(itemView: View,listner:OnItemClickListener,docidlist:List<String>):ViewHolder(itemView){
+    class RoomViewHolder(itemView: View, listner: OnItemClickListener, docidlist:List<String>):ViewHolder(itemView){
         val RoomImage = itemView.findViewById<ImageView>(R.id.pic)
         val RoomSizeText = itemView.findViewById<TextView>(R.id.textline1)
         val RoomDescripText = itemView.findViewById<TextView>(R.id.textline2)

@@ -1,10 +1,12 @@
-package com.example.torento
+package com.example.torento.LOGIN
 
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.torento.databinding.ActivityLandingPageBinding
+import com.example.torento.OWNER.owner_home_activity
+import com.example.torento.USER.user_home_activity
 
 
 class LandingPage : AppCompatActivity() {
@@ -35,14 +37,14 @@ class LandingPage : AppCompatActivity() {
             layoutInflater)
         setContentView(binding.root)
         binding.landlord.setOnClickListener{
-            usertype="owner"
-            val intent = Intent(this,SignUp::class.java)
+            usertype ="owner"
+            val intent = Intent(this, SignUp::class.java)
             startActivity(intent)
             finish()
         }
         binding.tenant.setOnClickListener{
             usertype = "tenant"
-            val intent = Intent(this,SignUp::class.java)
+            val intent = Intent(this, SignUp::class.java)
             startActivity(intent)
             finish()
         }

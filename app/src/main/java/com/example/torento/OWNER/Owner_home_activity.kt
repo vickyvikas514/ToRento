@@ -1,4 +1,4 @@
-package com.example.torento
+package com.example.torento.OWNER
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -8,9 +8,15 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-import com.example.torento.LandingPage.Companion.num
-import com.example.torento.LandingPage.Companion.userid
+import com.example.torento.Adapter.RoomAdapter
+import com.example.torento.LOGIN.LandingPage
+import com.example.torento.LOGIN.LandingPage.Companion.num
+import com.example.torento.LOGIN.LandingPage.Companion.userid
+import com.example.torento.COMMON.Profile
+import com.example.torento.R
+import com.example.torento.DATACLASS.Room
 import com.example.torento.databinding.ActivityOwnerHomeBinding
+import com.example.torento.COMMON.descripn
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.GlobalScope
@@ -79,7 +85,7 @@ class owner_home_activity : AppCompatActivity() {
                     idlist
                 )
                 binding.OwnerRoomlist.adapter = adapter
-                adapter.setOnItemClickListener(object :RoomAdapter.OnItemClickListener{
+                adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener{
                     override fun onItemClick(documentid:String,position: Int) {
 
                         // Handle item click here
@@ -107,8 +113,8 @@ class owner_home_activity : AppCompatActivity() {
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
-            R.id.logout-> logout()
-            R.id.profile->profile()
+            R.id.logout -> logout()
+            R.id.profile ->profile()
 
 
         }
@@ -116,7 +122,7 @@ class owner_home_activity : AppCompatActivity() {
     }
 
     private fun profile() {
-        val intent = Intent(this,Profile::class.java)
+        val intent = Intent(this, Profile::class.java)
         startActivity(intent)
     }
     private fun logout(){
@@ -200,7 +206,7 @@ class owner_home_activity : AppCompatActivity() {
         }
     }
     private fun changepage() {
-        val intent = Intent(this,add_room::class.java)
+        val intent = Intent(this, add_room::class.java)
         startActivity(intent)
     }
     //to save values of x and num in changing configuration

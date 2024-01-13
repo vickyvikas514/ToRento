@@ -1,12 +1,14 @@
 package com.example.torento
 
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import com.example.torento.LOGIN.LandingPage
+import com.example.torento.OWNER.owner_home_activity
+import com.example.torento.USER.user_home_activity
 
 class Splash_Activity : AppCompatActivity() {
     val SHARED_PREF:String = "sharedPrefs"

@@ -9,7 +9,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:background="@drawable/bg"
-    tools:context=".UpdateActivity">
+    tools:context=".COMMON.UpdateActivity">
 
 
 

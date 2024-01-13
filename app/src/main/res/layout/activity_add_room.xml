@@ -9,7 +9,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:background="@drawable/bg"
-    tools:context=".add_room">
+    tools:context=".OWNER.add_room">
 
 
 

@@ -1,4 +1,4 @@
-package com.example.torento
+package com.example.torento.LOGIN
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -9,6 +9,8 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import com.example.torento.databinding.ActivitySignUpBinding
+import com.example.torento.OWNER.owner_home_activity
+import com.example.torento.USER.user_home_activity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -16,7 +18,6 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
@@ -84,7 +85,7 @@ class SignUp : AppCompatActivity() {
                     val editor: SharedPreferences.Editor = sharedPreferences.edit()
                     editor.putString("name", "true")
                     editor.putString("username", id)
-                    editor.putString("usertype",LandingPage.usertype)
+                    editor.putString("usertype", LandingPage.usertype)
                     editor.apply()
 
 
@@ -100,7 +101,7 @@ class SignUp : AppCompatActivity() {
     private fun changethepage() {
         binding.progressBar.visibility = View.INVISIBLE
         // Your code to handle the result after the background work is finished
-        if(LandingPage.usertype=="tenant"){
+        if(LandingPage.usertype =="tenant"){
             val intent = Intent(this, user_home_activity::class.java)
             startActivity(intent)
             // progress.visibility = View.GONE

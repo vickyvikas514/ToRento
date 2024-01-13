@@ -9,7 +9,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:background="@drawable/bg"
-    tools:context=".SignUp">
+    tools:context=".LOGIN.SignUp">
 
 
 
