@@ -10,8 +10,8 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.torento.DATACLASS.Message
+import com.example.torento.DATACLASS.MessageOwner
 import com.example.torento.R
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -22,17 +22,32 @@ import com.google.firebase.database.ValueEventListener
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
-    private lateinit var database: DatabaseReference
+    private lateinit var messagesReferenceOwner: DatabaseReference
+    private lateinit var messagesReference: DatabaseReference
     private lateinit var adapter: ChatAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
+
+       // Toast.makeText(this@ChatActivity,temp , Toast.LENGTH_SHORT).show()
         auth = FirebaseAuth.getInstance()
-        database = FirebaseDatabase.getInstance().reference.child("messages")
-        addFirebaseConnectionListener()
+        val receiverUserId = intent.getStringExtra("userId") // Replace with the actual user ID of the other person
+        val senderId = "0D2bMnHrhcWCSkyRlklWMhY0NTS2"
+        val documentId =  intent.getStringExtra("documentid")
+        //Toast.makeText(this, documentId, Toast.LENGTH_SHORT).show()
+         messagesReference = FirebaseDatabase.getInstance().reference.child("messages")
+        messagesReferenceOwner = FirebaseDatabase.getInstance().reference.child(receiverUserId.toString())
+
+
+
+
+        addFirebaseConnectionListener()//to check the connection of firebase
+
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val layoutManager = LinearLayoutManager(this)
-        adapter = ChatAdapter()
+
+        adapter = ChatAdapter(senderId)
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
 
@@ -41,16 +56,26 @@ class ChatActivity : AppCompatActivity() {
         sendButton.setOnClickListener {
             val messageText = messageEditText.text.toString().trim()
             if (messageText.isNotEmpty()) {
-                sendMessage(messageText)
+                if (receiverUserId != null) {
+                    sendMessage(receiverUserId,messageText)
+                    sendMessageOwner(receiverUserId,documentId)
+                }
                 messageEditText.text.clear()
             }
         }
-        database.addChildEventListener(object : ChildEventListener {
+        val currentUserId = auth.currentUser?.uid ?: return
+        messagesReference.orderByChild("timestamp").addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 val message = snapshot.getValue(Message::class.java)
                 if (message != null) {
-                    adapter.addMessage(message)
-                    recyclerView.scrollToPosition(adapter.itemCount - 1)
+                    if (((message.senderId == currentUserId) && (message.receiverId == receiverUserId)) ||
+                        ((message.senderId == receiverUserId) && (message.receiverId == currentUserId))
+                    ) {
+                        // Display the message in your UI
+                        adapter.addMessage(message)
+                        recyclerView.scrollToPosition(adapter.itemCount - 1)
+                    }
+
                 }
             }
 
@@ -62,6 +87,44 @@ class ChatActivity : AppCompatActivity() {
 
             override fun onCancelled(error: DatabaseError) {}
         })
+
+    }
+        private fun sendMessageOwner(receiverId: String, documentId: String?){
+            val senderId = auth.currentUser?.uid ?: return
+            val messageOwner =
+
+                documentId?.let { MessageOwner(senderId,receiverId, it,"vikas",System.currentTimeMillis()) }
+            messagesReferenceOwner.push().setValue(messageOwner)
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        Toast.makeText(this, "3", Toast.LENGTH_SHORT).show()
+                        // Message sent successfully
+                        Log.d("CHAT","Message sent successfully")
+                    } else {
+                        // Handle the error
+                        Toast.makeText(this@ChatActivity, "Failed to send message", Toast.LENGTH_SHORT).show()
+                    }
+                }
+              }
+
+    private fun sendMessage(receiverId: String,messageText: String) {
+        Log.d("CHAT", "Sending message: $messageText")
+        val senderId = auth.currentUser?.uid ?: return
+        Log.d("CHAT", "Current user ID: $senderId")
+       val message = Message(senderId,receiverId,messageText,System.currentTimeMillis())
+        Log.d("CHAT", "Message created: $message")
+        messagesReference.push().setValue(message)
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    Toast.makeText(this, "4", Toast.LENGTH_SHORT).show()
+                    // Message sent successfully
+                    Log.d("CHAT","Message sent successfully")
+                } else {
+                    // Handle the error
+                    Toast.makeText(this@ChatActivity, "Failed to send message", Toast.LENGTH_SHORT).show()
+                }
+            }
+
     }
     private fun addFirebaseConnectionListener() {
         val connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected")
@@ -81,24 +144,5 @@ class ChatActivity : AppCompatActivity() {
                 Log.e("FirebaseConnection", "Listener was cancelled")
             }
         })
-    }
-    private fun sendMessage(messageText: String) {
-        Log.d("CHAT", "Sending message: $messageText")
-        val userId = auth.currentUser?.uid ?: return
-        Log.d("CHAT", "Current user ID: $userId")
-       val message = Message(userId,messageText,System.currentTimeMillis())
-        Log.d("CHAT", "Message created: $message")
-        database.push().setValue(message)
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    Toast.makeText(this, "3", Toast.LENGTH_SHORT).show()
-                    // Message sent successfully
-                    Log.d("CHAT","Message sent successfully")
-                } else {
-                    // Handle the error
-                    Toast.makeText(this@ChatActivity, "Failed to send message", Toast.LENGTH_SHORT).show()
-                }
-            }
-
     }
 }

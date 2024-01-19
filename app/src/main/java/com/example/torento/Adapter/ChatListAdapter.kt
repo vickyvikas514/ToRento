@@ -5,11 +5,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.torento.DATACLASS.Message
+import com.example.torento.DATACLASS.MessageOwner
 import com.example.torento.R
 
-class ChatAdapter(currentUserId: String) : RecyclerView.Adapter<ChatAdapter.MessageViewHolder>() {
+class ChatListAdapter(currentUserId: String) : RecyclerView.Adapter<ChatListAdapter.MessageOwnerViewHolder>() {
 
-    private val messages: MutableList<Message> = mutableListOf()
+    private val messages: MutableList<MessageOwner> = mutableListOf()
     val currentUserId = currentUserId
     private var itemClickListener: OnItemClickListener? = null
 
@@ -19,17 +20,18 @@ class ChatAdapter(currentUserId: String) : RecyclerView.Adapter<ChatAdapter.Mess
     fun setOnItemClickListener(listener: OnItemClickListener) {
         this.itemClickListener = listener
     }
-    fun addMessage(message: Message) {
+    fun addMessage(message: MessageOwner) {
         messages.add(message)
         notifyItemInserted(messages.size - 1)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatListAdapter.MessageOwnerViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_message, parent, false)
-        return MessageViewHolder(view,itemClickListener)
+        return MessageOwnerViewHolder(view,itemClickListener)
     }
 
-    override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
+
+    override fun onBindViewHolder(holder: ChatListAdapter.MessageOwnerViewHolder, position: Int) {
         val message = messages[position]
 
         holder.bind(message, currentUserId)
@@ -39,7 +41,7 @@ class ChatAdapter(currentUserId: String) : RecyclerView.Adapter<ChatAdapter.Mess
         return messages.size
     }
 
-    class MessageViewHolder(itemView: View, listner: OnItemClickListener?) : RecyclerView.ViewHolder(itemView) {
+    class MessageOwnerViewHolder(itemView: View, listner: OnItemClickListener?) : RecyclerView.ViewHolder(itemView) {
 
         init {
             itemView.setOnClickListener{
@@ -49,10 +51,10 @@ class ChatAdapter(currentUserId: String) : RecyclerView.Adapter<ChatAdapter.Mess
                 }
             }
         }
-        fun bind(message: Message,currentUserId:String) {
+        fun bind(message: MessageOwner,currentUserId:String) {
 
             val messageTextView: TextView = itemView.findViewById(R.id.messageTextView)
-            messageTextView.text = message.text
+            messageTextView.text = message.name
             if(message.senderId == currentUserId){
                 messageTextView.gravity = Gravity.END
             } else{

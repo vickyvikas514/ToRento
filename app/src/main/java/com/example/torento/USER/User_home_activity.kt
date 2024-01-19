@@ -1,12 +1,16 @@
 package com.example.torento.USER
 
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat.startActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.torento.Adapter.RoomAdapter
 import com.example.torento.DATACLASS.Room
 import com.example.torento.LOGIN.LandingPage
@@ -17,9 +21,12 @@ import com.example.torento.COMMON.descripn
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 class user_home_activity : AppCompatActivity() {
@@ -39,11 +46,26 @@ class user_home_activity : AppCompatActivity() {
         /////////////////////
         DatatoRecyclerView()
 ////////////////////////////////////////////////////////
-        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username", "")
-        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
-
     }
+    suspend fun getuserId(userkey:String): String = GlobalScope.async{
+
+        var userId:String = ""
+        try {
+            val docref = db.collection("Rooms").document(userkey).get().await()
+            if (docref != null) {
+                docref.data?.let {
+                    userId = it["ownerId"].toString()
+                }
+            }
+
+            else {
+                Toast.makeText(this@user_home_activity, "DocRef is NULL", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: java.lang.Exception){
+            Log.e("Profile", "Error fetching data from Firestore: ${e.message}")
+        }
+        return@async userId
+    }.await()
    suspend fun retreivingdata() : Pair<List<Room>, List<String>> = withContext(Dispatchers.IO){
         val itemsCollection = db.collection("Rooms")
         val itemsList = mutableListOf<Room>()
@@ -83,9 +105,20 @@ class user_home_activity : AppCompatActivity() {
                 binding.Roomlist.setHasFixedSize(true)
                 adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener {
                     override fun onItemClick(documentId: String, position: Int) {
-                        val intent = Intent(this@user_home_activity, descripn::class.java)
-                        intent.putExtra("usertype","user")
-                        startActivity(intent)
+                        lifecycleScope.launch {
+                            val Id = withContext(Dispatchers.IO) {
+                                getuserId(documentId)
+                            }
+
+                            withContext(Main) {
+                                val intent = Intent(this@user_home_activity, descripn::class.java)
+                                intent.putExtra("documentid", documentId)
+                                intent.putExtra("usertype", "user")
+                                intent.putExtra("userId", Id)
+                                startActivity(intent)
+                            }
+                        }
+
                     }
                 })
             }

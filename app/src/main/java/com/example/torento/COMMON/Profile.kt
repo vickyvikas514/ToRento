@@ -58,7 +58,7 @@ class Profile : AppCompatActivity() {
             galleryimage.launch("image/*")
         }
         binding.edit.setOnClickListener {
-            val intent = Intent(this, ChatActivity::class.java)
+            val intent = Intent(this, UpdateActivity::class.java)
             startActivity(intent)
             finish()
         }

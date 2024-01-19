@@ -1,18 +1,18 @@
 package com.example.torento.COMMON
 
 import android.content.Intent
-import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.torento.Adapter.PicsAdapter
-import com.example.torento.OWNER.EditRoom
 import com.example.torento.databinding.ActivityDescripnBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -28,44 +28,50 @@ class descripn : AppCompatActivity() {
         binding = ActivityDescripnBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username", "")
+       val documentid = intent.getStringExtra("documentid")
         val usertype = intent.getStringExtra("usertype")
+
         if(usertype=="owner"){
             binding.saveBtn.text = "Change Room details"
+            binding.delete.setOnClickListener {
+                GlobalScope.launch (IO){
+                    intent.getStringExtra("collection2")
+                        ?.let { it1 -> deleteRoom("Rooms", it1,
+                            intent.getStringExtra("documentid")!!
+                        ) }
+
+                }
+            }
+        }else{
+            binding.delete.visibility = View.INVISIBLE
         }
     //fetchDataFromFirestore
       set()
         binding.saveBtn.setOnClickListener {
             if(usertype=="owner"){
-                startActivity(Intent(this@descripn, EditRoom::class.java))
-                finish()
+                changetoChatbyOwner(intent.getStringExtra("userIdO"),documentid)
             }else{
-                Toast.makeText(this@descripn, "clicked", Toast.LENGTH_SHORT).show()
+              changetoChat(intent.getStringExtra("userId"),documentid)
             }
         }
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
 
-           }
-    suspend fun getusertype(userkey:String): String = GlobalScope.async{
 
-        var usertype:String = ""
-        try {
-            val docref = db.collection("users").document(userkey).get().await()
-            if (docref != null) {
-                docref.data?.let {
-                    usertype = it["usertype"].toString()
-                }
-            }
-
-            else {
-                Toast.makeText(this@descripn, "DocRef is NULL", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: java.lang.Exception){
-            Log.e("Profile", "Error fetching data from Firestore: ${e.message}")
-        }
-        return@async usertype
-    }.await()
+    }
+    private fun changetoChat(userId: String?, documentid: String?) {
+        val intent = Intent(this@descripn, ChatActivity::class.java)
+        intent.putExtra("userId",userId)
+        intent.putExtra("documentid",documentid)
+        Toast.makeText(this,documentid, Toast.LENGTH_SHORT).show()
+        startActivity(intent)
+    }
+    private fun changetoChatbyOwner(userId: String?, documentid: String?) {
+        val intent = Intent(this@descripn, ChatListActivity::class.java)
+        intent.putExtra("userId",userId)
+        intent.putExtra("documentid",documentid)
+        Toast.makeText(this, userId, Toast.LENGTH_SHORT).show()
+        startActivity(intent)
+    }
     private fun set(){
         GlobalScope.launch(Dispatchers.IO) {
             val (list, imagelist) = async { retreivingdataBG() }.await()
@@ -108,6 +114,28 @@ class descripn : AppCompatActivity() {
        return Pair(list,imageUriList)
     }
 
+suspend fun deleteRoom(collection1:String,collection2: String,document:String){
 
+    val docRef = db.collection(collection1).document(document)
+    val docRef2 = db.collection(collection2).document(document)
+    docRef.delete()
+        .addOnSuccessListener {
+            // Document successfully deleted
+            Toast.makeText(this, "DocumentSnapshot successfully deleted!", Toast.LENGTH_SHORT).show()
+        }
+        .addOnFailureListener { e ->
+            // Handle the error
+            println("Error deleting document: $e")
+        }
+    docRef2.delete()
+        .addOnSuccessListener {
+            // Document successfully deleted
+            println("DocumentSnapshot successfully deleted!")
+        }
+        .addOnFailureListener { e ->
+            // Handle the error
+            println("Error deleting document: $e")
+        }
+}
 
 }

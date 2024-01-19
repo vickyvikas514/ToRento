@@ -17,18 +17,24 @@ import com.example.torento.R
 import com.example.torento.DATACLASS.Room
 import com.example.torento.databinding.ActivityOwnerHomeBinding
 import com.example.torento.COMMON.descripn
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class owner_home_activity : AppCompatActivity() {
+    private lateinit var auth: FirebaseAuth
     private lateinit var binding: ActivityOwnerHomeBinding
     val SHARED_PREF : String = "sharedPrefs"
     var x=0
     private var db = Firebase.firestore
     private lateinit var job: Job
+
     var id=""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +44,7 @@ class owner_home_activity : AppCompatActivity() {
         job = Job()
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val userkey: String? = sharedPreferences.getString("username", "")
+        auth = FirebaseAuth.getInstance()
         binding.addButton.setOnClickListener{
             //made temp room
             if (savedInstanceState != null) {
@@ -90,10 +97,25 @@ class owner_home_activity : AppCompatActivity() {
 
                         // Handle item click here
                         // For example, navigate to another activity
-                        val intent = Intent(this@owner_home_activity, descripn::class.java)
-                        intent.putExtra("documentid",documentid)
-                        intent.putExtra("usertype","owner")
-                        startActivity(intent)
+                        GlobalScope.launch(Dispatchers.IO) {
+                            try {
+                                val userId = userkey?.let { it1 -> getuserId(it1) }
+
+                                launch (Dispatchers.Main){
+                                    val intent = Intent(this@owner_home_activity, descripn::class.java)
+                                    intent.putExtra("documentid",documentid)
+                                    intent.putExtra("usertype","owner")
+                                    intent.putExtra("collection2",userkey)
+                                    intent.putExtra("userIdO","0D2bMnHrhcWCSkyRlklWMhY0NTS2")
+                                    startActivity(intent)
+                                }
+
+                            }catch (e:Exception){
+                                e.printStackTrace()
+                            }
+
+                        }
+
                     }
                 })
             }
@@ -102,6 +124,25 @@ class owner_home_activity : AppCompatActivity() {
         }
 
         }
+    suspend fun getuserId(userkey:String): String = GlobalScope.async{
+
+        var userId:String = ""
+        try {
+            val docref = db.collection("users").document(userkey).get().await()
+            if (docref != null) {
+                docref.data?.let {
+                    userId = it["userId"].toString()
+                }
+            }
+
+            else {
+                Toast.makeText(this@owner_home_activity, "DocRef is NULL", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: java.lang.Exception){
+            Log.e("Profile", "Error fetching data from Firestore: ${e.message}")
+        }
+        return@async userId
+    }.await()
     override fun onDestroy() {
         super.onDestroy()
         // Cancel the job when the activity is destroyed
@@ -173,7 +214,8 @@ class owner_home_activity : AppCompatActivity() {
             "location_detail" to "temp",
             "owner_name" to "temp",
             "amount" to "temp",
-            "breif_description" to "temp"
+            "breif_description" to "temp",
+            "ownerId" to auth.currentUser?.uid ?: return
         )
         if (userkey != null) {
             if (userkey.isNotEmpty()){
