@@ -8,11 +8,8 @@
     tools:context=".COMMON.ChatListActivity">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/chatListRecyclerView"
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"
-        android:clipToPadding="false"
-        android:background="@android:color/background_light"
-        android:scrollbars="vertical"/>
+        android:padding="8dp"/>
 </RelativeLayout>

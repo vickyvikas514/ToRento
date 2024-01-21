@@ -4,17 +4,17 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="8dp">
-<RelativeLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentRight="true">
-    <TextView
-        android:id="@+id/messageTextView"
+    <RelativeLayout
         android:layout_width="wrap_content"
-        android:text="Sent Message"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:textSize="16sp"/>
-</RelativeLayout>
+        android:layout_alignParentLeft="true">
+        <TextView
+            android:id="@+id/receive_txt"
+            android:layout_width="wrap_content"
+            android:text="Receive Message"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:textSize="16sp"/>
+    </RelativeLayout>
 
 </RelativeLayout>

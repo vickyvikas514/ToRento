@@ -30,6 +30,7 @@ class descripn : AppCompatActivity() {
 
        val documentid = intent.getStringExtra("documentid")
         val usertype = intent.getStringExtra("usertype")
+        val username = intent.getStringExtra("username")
 
         if(usertype=="owner"){
             binding.saveBtn.text = "Change Room details"
@@ -51,17 +52,18 @@ class descripn : AppCompatActivity() {
             if(usertype=="owner"){
                 changetoChatbyOwner(intent.getStringExtra("userIdO"),documentid)
             }else{
-              changetoChat(intent.getStringExtra("userId"),documentid)
+              changetoChat(intent.getStringExtra("userId"),documentid,username)
             }
         }
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
 
 
     }
-    private fun changetoChat(userId: String?, documentid: String?) {
+    private fun changetoChat(userId: String?, documentid: String?, username: String?) {
         val intent = Intent(this@descripn, ChatActivity::class.java)
         intent.putExtra("userId",userId)
         intent.putExtra("documentid",documentid)
+        intent.putExtra("username",username)
         Toast.makeText(this,documentid, Toast.LENGTH_SHORT).show()
         startActivity(intent)
     }

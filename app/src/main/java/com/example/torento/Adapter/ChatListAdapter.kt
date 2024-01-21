@@ -4,7 +4,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.torento.DATACLASS.Message
 import com.example.torento.DATACLASS.MessageOwner
 import com.example.torento.R
 
@@ -15,7 +14,7 @@ class ChatListAdapter(currentUserId: String) : RecyclerView.Adapter<ChatListAdap
     private var itemClickListener: OnItemClickListener? = null
 
     interface OnItemClickListener {
-        fun onItemClick()
+        fun onItemClick(receivedId:String)
     }
     fun setOnItemClickListener(listener: OnItemClickListener) {
         this.itemClickListener = listener
@@ -26,8 +25,8 @@ class ChatListAdapter(currentUserId: String) : RecyclerView.Adapter<ChatListAdap
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatListAdapter.MessageOwnerViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_message, parent, false)
-        return MessageOwnerViewHolder(view,itemClickListener)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_chat, parent, false)
+        return MessageOwnerViewHolder(view,itemClickListener,messages)
     }
 
 
@@ -41,13 +40,18 @@ class ChatListAdapter(currentUserId: String) : RecyclerView.Adapter<ChatListAdap
         return messages.size
     }
 
-    class MessageOwnerViewHolder(itemView: View, listner: OnItemClickListener?) : RecyclerView.ViewHolder(itemView) {
+    class MessageOwnerViewHolder(
+        itemView: View,
+        listner: OnItemClickListener?,
+        messages: MutableList<MessageOwner>
+    ) : RecyclerView.ViewHolder(itemView) {
 
         init {
             itemView.setOnClickListener{
+                val position = adapterPosition
                 // Call the onItemClick method of the listener and pass the document ID
                 if (listner != null) {
-                    listner.onItemClick()
+                    listner.onItemClick(messages[position].senderId)
                 }
             }
         }

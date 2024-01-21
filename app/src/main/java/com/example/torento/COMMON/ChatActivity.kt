@@ -19,12 +19,21 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var messagesReferenceOwner: DatabaseReference
     private lateinit var messagesReference: DatabaseReference
     private lateinit var adapter: ChatAdapter
+    private var db = Firebase.firestore
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +44,7 @@ class ChatActivity : AppCompatActivity() {
         val receiverUserId = intent.getStringExtra("userId") // Replace with the actual user ID of the other person
         val senderId = "0D2bMnHrhcWCSkyRlklWMhY0NTS2"
         val documentId =  intent.getStringExtra("documentid")
+        val username = intent.getStringExtra("username")
         //Toast.makeText(this, documentId, Toast.LENGTH_SHORT).show()
          messagesReference = FirebaseDatabase.getInstance().reference.child("messages")
         messagesReferenceOwner = FirebaseDatabase.getInstance().reference.child(receiverUserId.toString())
@@ -53,15 +63,9 @@ class ChatActivity : AppCompatActivity() {
 
         val messageEditText = findViewById<EditText>(R.id.messageEditText)
         val sendButton = findViewById<Button>(R.id.sendButton)
-        sendButton.setOnClickListener {
-            val messageText = messageEditText.text.toString().trim()
-            if (messageText.isNotEmpty()) {
-                if (receiverUserId != null) {
-                    sendMessage(receiverUserId,messageText)
-                    sendMessageOwner(receiverUserId,documentId)
-                }
-                messageEditText.text.clear()
-            }
+        var name=""
+        GlobalScope.launch(Dispatchers.IO) {
+             name = username?.let { getname(it) }.toString()
         }
         val currentUserId = auth.currentUser?.uid ?: return
         messagesReference.orderByChild("timestamp").addChildEventListener(object : ChildEventListener {
@@ -87,14 +91,83 @@ class ChatActivity : AppCompatActivity() {
 
             override fun onCancelled(error: DatabaseError) {}
         })
+        getsize { size ->
+            if (size != -1) {
+                // Use the size here
+                Log.d("Firebase", "Size of messages collection: $size")
+            } else {
+                // Handle the error
+                Log.e("Firebase", "Failed to get the size of messages collection")
+            }
+        }
+        sendButton.setOnClickListener {
+            val messageText = messageEditText.text.toString().trim()
+            if (messageText.isNotEmpty()) {
+                if (receiverUserId != null) {
+                    getsize { size->
+                        if(size==0){
+                            sendMessage(receiverUserId,messageText)
+                            sendMessageOwner(receiverUserId,documentId,name)
+                        }else{
+                            sendMessage(receiverUserId,messageText)
+                        }
+                    }
+
+                }
+                messageEditText.text.clear()
+            }
+        }
+
 
     }
-        private fun sendMessageOwner(receiverId: String, documentId: String?){
+     fun getsize(callback: (Int) -> Unit){
+
+        val databaseReference = FirebaseDatabase.getInstance().getReference("messages")
+
+        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // The 'snapshot' contains the data at the 'messages' node
+
+                // Get the size of the collection
+                val collectionSize = snapshot.childrenCount.toInt()
+
+                callback(collectionSize)
+                // Now 'collectionSize' contains the number of items in the 'messages' node
+                // You can use this value as needed
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle the error
+                Log.e("Firebase", "Error reading messages: ${error.message}")
+                callback(-1)
+            }
+        })
+    }
+    suspend fun getname(username:String): String = GlobalScope.async{
+
+        var name:String = ""
+        try {
+            val docref = db.collection("users").document(username).get().await()
+            if (docref != null) {
+                docref.data?.let {
+                    name = it["name"].toString()
+                }
+            }
+
+            else {
+                Toast.makeText(this@ChatActivity, "DocRef is NULL", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: java.lang.Exception){
+            Log.e("Profile", "Error fetching data from Firestore: ${e.message}")
+        }
+        return@async name
+    }.await()
+        private fun sendMessageOwner(receiverId: String, documentId: String?,name:String){
             val senderId = auth.currentUser?.uid ?: return
             val messageOwner =
 
-                documentId?.let { MessageOwner(senderId,receiverId, it,"vikas",System.currentTimeMillis()) }
-            messagesReferenceOwner.push().setValue(messageOwner)
+                documentId?.let { MessageOwner(senderId,receiverId, it,name,System.currentTimeMillis()) }
+            messagesReferenceOwner.child(documentId.toString()).push().setValue(messageOwner)
                 .addOnCompleteListener {
                     if (it.isSuccessful) {
                         Toast.makeText(this, "3", Toast.LENGTH_SHORT).show()

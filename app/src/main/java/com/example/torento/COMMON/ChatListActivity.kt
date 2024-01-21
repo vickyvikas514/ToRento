@@ -14,6 +14,7 @@ import com.example.torento.DATACLASS.Message
 import com.example.torento.DATACLASS.MessageOwner
 
 import com.example.torento.R
+import com.example.torento.databinding.ActivityChatListBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -25,9 +26,11 @@ class ChatListActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var chatsReference: DatabaseReference
     private lateinit var adapter: ChatListAdapter
+    private lateinit var binding: ActivityChatListBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_chat)
+        binding = ActivityChatListBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         auth = FirebaseAuth.getInstance()
         val currentUserId = auth.currentUser?.uid ?: return
         val documentid = intent.getStringExtra("documentid")
@@ -41,14 +44,17 @@ class ChatListActivity : AppCompatActivity() {
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
 
-        chatsReference.orderByChild("timestamp").addChildEventListener(object : ChildEventListener {
+        chatsReference.child(documentid.toString()).orderByChild("timestamp").addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 val chat = snapshot.getValue(MessageOwner::class.java)
                 if (chat != null) {
+                        if(chat.text==documentid){
+                            // Display the message in your UI
+                            adapter.addMessage(chat)
+                            recyclerView.scrollToPosition(adapter.itemCount - 1)
+                        }
 
-                        // Display the message in your UI
-                        adapter.addMessage(chat)
-                        recyclerView.scrollToPosition(adapter.itemCount - 1)
+
 
                 }
             }
@@ -63,8 +69,9 @@ class ChatListActivity : AppCompatActivity() {
         })
 
         adapter.setOnItemClickListener(object : ChatListAdapter.OnItemClickListener{
-            override fun onItemClick() {
+            override fun onItemClick(receivedId:String) {
                 val intent = Intent(this@ChatListActivity,ChatActivity::class.java)
+                intent.putExtra("userId",receivedId)
                 startActivity(intent)
             }
 

@@ -1,6 +1,5 @@
 package com.example.torento.USER
 
-import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -9,7 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.torento.Adapter.RoomAdapter
 import com.example.torento.DATACLASS.Room
@@ -21,7 +19,6 @@ import com.example.torento.COMMON.descripn
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -43,8 +40,10 @@ class user_home_activity : AppCompatActivity() {
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)
+        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+        val username: String? = sharedPreferences.getString("username", "")
         /////////////////////
-        DatatoRecyclerView()
+        DatatoRecyclerView(username)
 ////////////////////////////////////////////////////////
     }
     suspend fun getuserId(userkey:String): String = GlobalScope.async{
@@ -92,7 +91,7 @@ class user_home_activity : AppCompatActivity() {
             kotlinx.coroutines.delay(1000)
             return@withContext Pair(itemsList,idlist)
     }
-    private fun DatatoRecyclerView(){
+    private fun DatatoRecyclerView(username: String?) {
         GlobalScope.launch {
             val (rooms, ids) = async { retreivingdata() }.await()
             withContext(Dispatchers.Main){
@@ -115,6 +114,7 @@ class user_home_activity : AppCompatActivity() {
                                 intent.putExtra("documentid", documentId)
                                 intent.putExtra("usertype", "user")
                                 intent.putExtra("userId", Id)
+                                intent.putExtra("username", username)
                                 startActivity(intent)
                             }
                         }
