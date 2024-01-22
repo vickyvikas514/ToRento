@@ -21,6 +21,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class ChatListActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
@@ -36,7 +37,7 @@ class ChatListActivity : AppCompatActivity() {
         val documentid = intent.getStringExtra("documentid")
         val receiverUserId = intent.getStringExtra("userId")
         Toast.makeText(this, receiverUserId, Toast.LENGTH_SHORT).show()
-        chatsReference = FirebaseDatabase.getInstance().reference.child(currentUserId)
+        chatsReference = FirebaseDatabase.getInstance().reference.child(currentUserId).child(documentid.toString())
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val layoutManager = LinearLayoutManager(this)
 
@@ -44,29 +45,55 @@ class ChatListActivity : AppCompatActivity() {
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
 
-        chatsReference.child(documentid.toString()).orderByChild("timestamp").addChildEventListener(object : ChildEventListener {
+
+        chatsReference.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                val chat = snapshot.getValue(MessageOwner::class.java)
-                if (chat != null) {
-                        if(chat.text==documentid){
-                            // Display the message in your UI
-                            adapter.addMessage(chat)
-                            recyclerView.scrollToPosition(adapter.itemCount - 1)
+                val memberId = snapshot.key
+                if (memberId != null) {
+                    val memberReference = chatsReference.child(memberId)
+                    memberReference.orderByChild("timestamp").addChildEventListener(object : ChildEventListener {
+                        override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                            val message = snapshot.getValue(MessageOwner::class.java)
+                            if (message != null) {
+                                if(message.text==documentid) {
+                                    // Display the message in your UI
+                                    adapter.addMessage(message)
+                                    recyclerView.scrollToPosition(adapter.itemCount - 1)
+                                }
+                            }else{
+                                Toast.makeText(this@ChatListActivity, "fail", Toast.LENGTH_SHORT).show()
+                            }
                         }
 
+                        override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
 
+                        override fun onChildRemoved(snapshot: DataSnapshot) {}
 
+                        override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
                 }
             }
 
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                // Handle child changed event
+            }
 
-            override fun onChildRemoved(snapshot: DataSnapshot) {}
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                // Handle child removed event
+            }
 
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                // Handle child moved event
+            }
 
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(error: DatabaseError) {
+                // Handle the error
+            }
         })
+
+
 
         adapter.setOnItemClickListener(object : ChatListAdapter.OnItemClickListener{
             override fun onItemClick(receivedId:String) {

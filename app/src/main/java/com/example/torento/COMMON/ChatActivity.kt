@@ -91,27 +91,23 @@ class ChatActivity : AppCompatActivity() {
 
             override fun onCancelled(error: DatabaseError) {}
         })
-        getsize { size ->
-            if (size != -1) {
-                // Use the size here
-                Log.d("Firebase", "Size of messages collection: $size")
-            } else {
-                // Handle the error
-                Log.e("Firebase", "Failed to get the size of messages collection")
-            }
-        }
+
         sendButton.setOnClickListener {
             val messageText = messageEditText.text.toString().trim()
             if (messageText.isNotEmpty()) {
                 if (receiverUserId != null) {
-                    getsize { size->
-                        if(size==0){
-                            sendMessage(receiverUserId,messageText)
-                            sendMessageOwner(receiverUserId,documentId,name)
-                        }else{
-                            sendMessage(receiverUserId,messageText)
+                    GlobalScope.launch (Dispatchers.Main){
+                        getsize(currentUserId,documentId.toString()) { size ->
+                            //Toast.makeText(this@ChatActivity, size.toString(), Toast.LENGTH_SHORT).show()
+                            if (size > 0) {
+                                sendMessage(receiverUserId, messageText)
+                            } else {
+                                sendMessage(receiverUserId, messageText)
+                                sendMessageOwner(receiverUserId, documentId, name)
+                            }
                         }
                     }
+
 
                 }
                 messageEditText.text.clear()
@@ -120,28 +116,37 @@ class ChatActivity : AppCompatActivity() {
 
 
     }
-     fun getsize(callback: (Int) -> Unit){
+    suspend fun getsize(senderId:String,documentId: String?, callback: (Int) -> Unit){
 
-        val databaseReference = FirebaseDatabase.getInstance().getReference("messages")
 
-        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                // The 'snapshot' contains the data at the 'messages' node
+        try {
+            val databaseReference = messagesReferenceOwner.child(documentId.toString()).child(senderId)
 
-                // Get the size of the collection
-                val collectionSize = snapshot.childrenCount.toInt()
+            databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    // The 'snapshot' contains the data at the 'messages' node
 
-                callback(collectionSize)
-                // Now 'collectionSize' contains the number of items in the 'messages' node
-                // You can use this value as needed
-            }
+                    // Get the size of the collection
+                    val collectionSize = snapshot.childrenCount.toInt()
+                    Toast.makeText(this@ChatActivity, collectionSize.toString(), Toast.LENGTH_SHORT).show()
+                    callback(collectionSize)
 
-            override fun onCancelled(error: DatabaseError) {
-                // Handle the error
-                Log.e("Firebase", "Error reading messages: ${error.message}")
-                callback(-1)
-            }
-        })
+                    // Now 'collectionSize' contains the number of items in the 'messages' node
+                    // You can use this value as needed
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Handle the error
+                    Log.e("Firebase", "Error reading messages: ${error.message}")
+                    callback(0)
+
+                }
+            })
+        } catch (e: java.lang.Exception){
+            Log.e("Profile", "Error fetching data from Firestore: ${e.message}")
+            callback(0)
+        }
+
     }
     suspend fun getname(username:String): String = GlobalScope.async{
 
@@ -167,7 +172,7 @@ class ChatActivity : AppCompatActivity() {
             val messageOwner =
 
                 documentId?.let { MessageOwner(senderId,receiverId, it,name,System.currentTimeMillis()) }
-            messagesReferenceOwner.child(documentId.toString()).push().setValue(messageOwner)
+            messagesReferenceOwner.child(documentId.toString()).child(senderId).push().setValue(messageOwner)
                 .addOnCompleteListener {
                     if (it.isSuccessful) {
                         Toast.makeText(this, "3", Toast.LENGTH_SHORT).show()
