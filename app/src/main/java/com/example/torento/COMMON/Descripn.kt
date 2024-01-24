@@ -52,18 +52,19 @@ class descripn : AppCompatActivity() {
             if(usertype=="owner"){
                 changetoChatbyOwner(intent.getStringExtra("userIdO"),documentid)
             }else{
-              changetoChat(intent.getStringExtra("userId"),documentid,username)
+              changetoChat(intent.getStringExtra("userId"),documentid,username,usertype.toString())
             }
         }
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
 
 
     }
-    private fun changetoChat(userId: String?, documentid: String?, username: String?) {
+    private fun changetoChat(userId: String?, documentid: String?, username: String?,usertype:String) {
         val intent = Intent(this@descripn, ChatActivity::class.java)
         intent.putExtra("userId",userId)
         intent.putExtra("documentid",documentid)
         intent.putExtra("username",username)
+        intent.putExtra("usertype",usertype)
         Toast.makeText(this,documentid, Toast.LENGTH_SHORT).show()
         startActivity(intent)
     }

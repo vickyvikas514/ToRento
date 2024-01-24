@@ -39,14 +39,14 @@ class ChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
-       // Toast.makeText(this@ChatActivity,temp , Toast.LENGTH_SHORT).show()
+       val usertype = intent.getStringExtra("usertype").toString()
         auth = FirebaseAuth.getInstance()
         val receiverUserId = intent.getStringExtra("userId") // Replace with the actual user ID of the other person
         val senderId = "0D2bMnHrhcWCSkyRlklWMhY0NTS2"
         val documentId =  intent.getStringExtra("documentid")
         val username = intent.getStringExtra("username")
         //Toast.makeText(this, documentId, Toast.LENGTH_SHORT).show()
-         messagesReference = FirebaseDatabase.getInstance().reference.child("messages")
+         messagesReference = FirebaseDatabase.getInstance().reference.child("messages").child(documentId.toString())
         messagesReferenceOwner = FirebaseDatabase.getInstance().reference.child(receiverUserId.toString())
 
 
@@ -92,27 +92,31 @@ class ChatActivity : AppCompatActivity() {
             override fun onCancelled(error: DatabaseError) {}
         })
 
-        sendButton.setOnClickListener {
-            val messageText = messageEditText.text.toString().trim()
-            if (messageText.isNotEmpty()) {
-                if (receiverUserId != null) {
-                    GlobalScope.launch (Dispatchers.Main){
-                        getsize(currentUserId,documentId.toString()) { size ->
-                            //Toast.makeText(this@ChatActivity, size.toString(), Toast.LENGTH_SHORT).show()
-                            if (size > 0) {
-                                sendMessage(receiverUserId, messageText)
-                            } else {
-                                sendMessage(receiverUserId, messageText)
-                                sendMessageOwner(receiverUserId, documentId, name)
+            sendButton.setOnClickListener {
+                val messageText = messageEditText.text.toString().trim()
+                if (messageText.isNotEmpty()) {
+                    if (receiverUserId != null) {
+                        GlobalScope.launch (Dispatchers.Main){
+                            getsize(currentUserId,documentId.toString()) { size ->
+                                if(usertype=="owner"){
+                                    sendMessage(receiverUserId, messageText)
+                                }
+                                else if (size > 0) {
+                                    sendMessage(receiverUserId, messageText)
+                                } else {
+                                    sendMessage(receiverUserId, messageText)
+                                    sendMessageOwner(receiverUserId, documentId, name)
+                                }
                             }
                         }
+
+
                     }
-
-
+                    messageEditText.text.clear()
                 }
-                messageEditText.text.clear()
             }
-        }
+
+
 
 
     }

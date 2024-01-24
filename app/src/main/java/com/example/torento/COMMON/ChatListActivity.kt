@@ -35,8 +35,6 @@ class ChatListActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         val currentUserId = auth.currentUser?.uid ?: return
         val documentid = intent.getStringExtra("documentid")
-        val receiverUserId = intent.getStringExtra("userId")
-        Toast.makeText(this, receiverUserId, Toast.LENGTH_SHORT).show()
         chatsReference = FirebaseDatabase.getInstance().reference.child(currentUserId).child(documentid.toString())
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val layoutManager = LinearLayoutManager(this)
@@ -99,6 +97,8 @@ class ChatListActivity : AppCompatActivity() {
             override fun onItemClick(receivedId:String) {
                 val intent = Intent(this@ChatListActivity,ChatActivity::class.java)
                 intent.putExtra("userId",receivedId)
+                intent.putExtra("documentid",documentid)
+                intent.putExtra("usertype","owner")
                 startActivity(intent)
             }
 
