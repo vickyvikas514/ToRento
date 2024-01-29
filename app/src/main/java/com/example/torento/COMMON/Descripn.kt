@@ -48,7 +48,7 @@ class descripn : AppCompatActivity() {
         }
     //fetchDataFromFirestore
       set()
-        binding.saveBtn.setOnClickListener {
+        binding.chatBtn.setOnClickListener {
             if(usertype=="owner"){
                 changetoChatbyOwner(intent.getStringExtra("userIdO"),documentid)
             }else{

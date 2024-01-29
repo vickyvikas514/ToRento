@@ -80,6 +80,7 @@
                 android:background="@drawable/custom_edit"
                 android:drawablePadding="8dp"
                 android:hint="Username"
+                android:inputType="text"
                 android:padding="8dp"
                 android:gravity="center"
                 android:textColor="@color/black"
