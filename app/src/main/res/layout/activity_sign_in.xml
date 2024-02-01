@@ -39,7 +39,9 @@
         app:cardCornerRadius="30dp"
         app:cardElevation="20dp"
         android:background="@drawable/custom_edit">
-
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -134,7 +136,7 @@
                 app:cornerRadius = "20dp"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
+</ScrollView>
     </androidx.cardview.widget.CardView>
 
     <TextView

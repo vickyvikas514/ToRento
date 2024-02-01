@@ -96,7 +96,7 @@
             android:drawablePadding="8dp"
             app:layout_constraintStart_toStartOf="parent"
             android:hint="Length"
-
+            android:inputType="numberDecimal"
             android:padding="8dp"
             android:gravity="center"
             android:layout_marginHorizontal="70dp"
@@ -116,7 +116,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginHorizontal="40dp"
             android:padding="8dp"
-
+            android:inputType="numberDecimal"
             android:gravity="center"
             android:textColor="@color/black"
             android:textColorHighlight="@color/black"
@@ -170,6 +170,7 @@
             android:hint="Amount of Rent in Rupees"
             android:padding="8dp"
             android:gravity="center"
+            android:inputType="number"
             android:textColor="@color/black"
             android:textColorHighlight="@color/cardview_dark_background"
             android:layout_marginTop="12dp"/>

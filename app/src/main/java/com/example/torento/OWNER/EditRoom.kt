@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 
@@ -31,6 +32,7 @@ class EditRoom : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAddRoomBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.addroomtext.text = "Edit your room details"
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val userkey: String? = sharedPreferences.getString("username", "")
         Toast.makeText(this@EditRoom, userkey, Toast.LENGTH_SHORT).show()
@@ -63,22 +65,53 @@ class EditRoom : AppCompatActivity() {
             }
 
         }
+        GlobalScope.launch (Dispatchers.IO){
+            retreivingdataBG(Id,userkey.toString())
+        }
     }
     private fun updateTheEdit(Id: String,userkey: String){
-        val length = binding.roomlength.text.toString()
-       val width = binding.roomwidth.text.toString()
-        val location = binding.Locality.text.toString()
-        val loaction_description = binding.locationDescription.text.toString()
-        val amount = binding.amount.text.toString()
-        val owner_name = binding.OwnerName.text.toString()
-        val breif_description = binding.RoomDescription.text.toString()
+        val length:String? = binding.roomlength.text.toString()
+       val width:String? = binding.roomwidth.text.toString()
+        val location:String? = binding.Locality.text.toString()
+        val loaction_description:String? = binding.locationDescription.text.toString()
+        val amount:String? = binding.amount.text.toString()
+        val owner_name:String? = binding.OwnerName.text.toString()
+        val breif_description:String? = binding.RoomDescription.text.toString()
+
         GlobalScope.launch (Dispatchers.IO){
-            val deferred1 = async { changeMeasurements(length, width, Id, userkey) }
-            val deferred2 = async { changeD(Id, breif_description, userkey) }
-            val deferred3 = async { changeL(Id, location, userkey) }
-            val deferred4 = async { changeLD(Id, loaction_description, userkey) }
-            val deferred5 = async { changeON(owner_name, Id, userkey) }
-            val deferred6 = async { changePrice(Id, amount, userkey) }
+
+            val deferred1 = async {
+
+
+                    Log.d("CHECKJIJI",length.toString())
+                        changeMeasurements(length, width, Id, userkey)
+
+            }
+            val deferred2 = async {
+
+                    changeD(Id, breif_description, userkey)
+
+            }
+            val deferred3 = async {
+
+                    changeL(Id, location, userkey)
+
+            }
+            val deferred4 = async {
+
+                    changeLD(Id, loaction_description, userkey)
+
+            }
+            val deferred5 = async {
+
+                    changeON(owner_name, Id, userkey)
+
+            }
+            val deferred6 = async {
+
+                    changePrice(Id, amount, userkey)
+
+            }
             deferred1.await()
             deferred2.await()
             deferred3.await()
@@ -93,31 +126,80 @@ class EditRoom : AppCompatActivity() {
         }
     }
 
-    suspend fun changeMeasurements(length:String,width:String,Id: String,userkey: String){
-       db.collection("Rooms").document(Id).update("length",length)
-       db.collection(userkey).document(Id).update("length",length)
-       db.collection("Rooms").document(Id).update("width" , width)
-       db.collection(userkey).document(Id).update("width" , width)
+    suspend fun changeMeasurements(length:String?,width:String?,Id: String,userkey: String){
+        length?.let { db.collection("Rooms").document(Id).update("length",length) }
+        length?.let{ db.collection(userkey).document(Id).update("length", length) }
+        width?.let{ db.collection("Rooms").document(Id).update("width", width) }
+        width?.let{ db.collection(userkey).document(Id).update("width", width) }
     }
-    suspend fun changeON(ON:String,Id: String,userkey:String){
-       db.collection(userkey).document(Id).update("owner_name" , ON)
-       db.collection("Rooms").document(Id).update("owner_name" , ON)
+    suspend fun changeON(ON:String?,Id: String,userkey:String){
+        ON?.let{
+            db.collection(userkey).document(Id).update("owner_name", ON)
+            db.collection("Rooms").document(Id).update("owner_name", ON)
+        }
     }
-    suspend fun changeL(Id: String,location:String,userkey:String){
-       db.collection(userkey).document(Id).update("location" , location)
-       db.collection("Rooms").document(Id).update("location" , location)
+
+    suspend fun retreivingdataBG(Id:String,userKey: String){
+        if (userKey != null) {
+            val roomRef = db.collection("Rooms").document(Id)
+            roomRef.get()
+                .addOnSuccessListener { documentSnapshot ->
+                    if (documentSnapshot.exists()) {
+                        val roomData = documentSnapshot.data
+                        // Update EditText fields with existing data
+                        GlobalScope.launch (Dispatchers.Main){
+                            updateEditTextFields(roomData)
+                        }
+
+                    } else {
+                        Toast.makeText(this@EditRoom, "Document not found", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this@EditRoom, "Failed to fetch data: $e", Toast.LENGTH_SHORT).show()
+                }
+        }
+
     }
-    suspend fun changeLD(Id: String,LD:String,userkey:String){
-       db.collection("Rooms").document(Id).update("location_detail" , LD)
-       db.collection(userkey).document(Id).update("location_detail" , LD)
+
+    private fun updateEditTextFields(roomData: Map<String, Any>?) {
+        if (roomData != null) {
+            // Example: Update length EditText field
+            val length = roomData["length"] as? String
+            binding.roomlength.setText(length)
+            binding.roomwidth.setText(roomData["width"] as? String)
+            binding.amount.setText(roomData["amount"] as? String)
+            binding.Locality.setText(roomData["location"] as? String)
+            binding.locationDescription.setText(roomData["location_detail"] as? String)
+            binding.OwnerName.setText(roomData["owner_name"] as? String)
+            binding.RoomDescription.setText(roomData["breif_description"] as? String)
+
+        }
     }
-    suspend fun changePrice(Id: String,price:String,userkey:String){
-       db.collection("Rooms").document(Id).update("amount" , price)
-       db.collection(userkey).document(Id).update("amount" , price)
+
+    suspend fun changeL(Id: String,location:String?,userkey:String){
+        location?.let{
+            db.collection(userkey).document(Id).update("location", location)
+            db.collection("Rooms").document(Id).update("location", location)
+        }
     }
-    suspend fun changeD(Id: String,descrpn:String,userkey:String){
-       db.collection("Rooms").document(Id).update("breif_description" , descrpn)
-       db.collection(userkey).document(Id).update("breif_description" , descrpn)
+    suspend fun changeLD(Id: String,LD:String?,userkey:String){
+       LD?.let {
+            db.collection("Rooms").document(Id).update("location_detail", LD)
+            db.collection(userkey).document(Id).update("location_detail", LD)
+        }
+    }
+    suspend fun changePrice(Id: String,price:String?,userkey:String){
+        price?.let{
+            db.collection("Rooms").document(Id).update("amount", price)
+            db.collection(userkey).document(Id).update("amount", price)
+        }
+    }
+    suspend fun changeD(Id: String,descrpn:String?,userkey:String){
+        descrpn?.let{
+            db.collection("Rooms").document(Id).update("breif_description", descrpn)
+            db.collection(userkey).document(Id).update("breif_description", descrpn)
+        }
     }
     suspend fun savechanges(uploadedImageUri:Uri,Id:String,userkey:String): Deferred<Unit> = GlobalScope.async{
        db.collection("Rooms").document(Id).update("dpuri" , uploadedImageUri)

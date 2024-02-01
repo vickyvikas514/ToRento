@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.torento.Adapter.PicsAdapter
+import com.example.torento.OWNER.EditRoom
 import com.example.torento.databinding.ActivityDescripnBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -34,6 +35,12 @@ class descripn : AppCompatActivity() {
 
         if(usertype=="owner"){
             binding.saveBtn.text = "Change Room details"
+            binding.saveBtn.setOnClickListener {
+                val intent = Intent(this@descripn,EditRoom::class.java)
+                intent.putExtra("documentid",documentid)
+                intent.putExtra("username",username)
+                startActivity(intent)
+            }
             binding.delete.setOnClickListener {
                 GlobalScope.launch (IO){
                     intent.getStringExtra("collection2")
@@ -44,6 +51,9 @@ class descripn : AppCompatActivity() {
                 }
             }
         }else{
+            binding.saveBtn.setOnClickListener {
+                Toast.makeText(this, "CLICKED", Toast.LENGTH_SHORT).show()
+            }
             binding.delete.visibility = View.INVISIBLE
         }
     //fetchDataFromFirestore
