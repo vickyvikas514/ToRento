@@ -15,6 +15,12 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
@@ -35,7 +41,7 @@ class add_room : AppCompatActivity() {
     private val imagesList = mutableListOf<Uri>()
 
 
-    private fun uploadImagesToFirebaseStorage(userkey: String?) {
+    /*private fun uploadImagesToFirebaseStorage(userkey: String?) {
 
         for ((index, imageUri) in imagesList.withIndex()) {
 
@@ -63,9 +69,29 @@ class add_room : AppCompatActivity() {
 
         }//for loop
 
+    }*/
+    private fun uploadImagesToFirebaseStorage(userkey: String?) {
+        GlobalScope.launch(Dispatchers.IO) {
+            for ((index, imageUri) in imagesList.withIndex()) {
+                try {
+                    val imageUrl = uploadImage(imageUri)
+                    saveImageUrlToFirestore(imageUrl, userkey)
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Log.d("Disha1",e.toString())
+                        Toast.makeText(this@add_room, "Error uploading image: $e", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
     }
 
-    private fun saveImageUrlToFirestore(imageUrl: Uri, userkey: String?) {
+    private suspend fun uploadImage(imageUri: Uri): Uri = GlobalScope.async {
+        return@async storageref.child("images/${System.currentTimeMillis()}").putFile(imageUri).await().metadata?.reference?.downloadUrl?.await()
+            ?: throw RuntimeException("Failed to upload image")
+    }.await()
+
+    /*private fun saveImageUrlToFirestore(imageUrl: Uri, userkey: String?) {
         val roomsCollection = db.collection("Rooms")
         val ownercollection = userkey?.let { db.collection(it) }
         // Replace 'roomId' with the actual ID of the room document
@@ -112,6 +138,48 @@ class add_room : AppCompatActivity() {
             }
         }else{
             Toast.makeText(this, "provide all the details", Toast.LENGTH_SHORT).show()
+        }
+    }*/
+    private suspend fun saveImageUrlToFirestore(imageUrl: Uri, userkey: String?) {
+        // Replace 'roomId' with the actual ID of the room document
+        length = binding.roomlength.text.toString()
+        width = binding.roomwidth.text.toString()
+        location = binding.Locality.text.toString()
+        loaction_description = binding.locationDescription.text.toString()
+        amount = binding.amount.text.toString()
+        owner_name = binding.OwnerName.text.toString()
+        breif_description = binding.RoomDescription.text.toString()
+        val roomId = userkey + "${num - 1}"
+        Log.d("chutiya",roomId)
+        val room = hashMapOf(
+            "length" to length,
+            "width" to width,
+            "location" to location,
+            "location_detail" to loaction_description,
+            "owner_name" to owner_name,
+            "amount" to amount,
+            "breif_description" to breif_description,
+            "imageuri" to FieldValue.arrayUnion(imageUrl)
+        )
+
+        if (roomId != "temp") {
+            try {
+                db.collection("Rooms").document(roomId).update(room as Map<String, Any>).await()
+                userkey?.let {
+                    db.collection(it).document(roomId).update(room as Map<String, Any>).await()
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@add_room, "Updated", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@add_room, "Error updating room: $e", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@add_room, "Userkey is equal to temp", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -175,7 +243,7 @@ class add_room : AppCompatActivity() {
 
     }
 
-    private fun uplaodimage(userkey: String?) {
+    /*private fun uplaodimage(userkey: String?) {
         if(dpuri==null){
             Toast.makeText(this, "select image", Toast.LENGTH_SHORT).show()
         }else{
@@ -199,7 +267,49 @@ class add_room : AppCompatActivity() {
                 }
                 .addOnFailureListener {
                     Toast.makeText(this, "Part-3", Toast.LENGTH_SHORT).show()
-                } } }
+                } } }*/
+    private fun uplaodimage(userkey: String?) {
+        if (dpuri == null) {
+            Toast.makeText(this, "Select an image", Toast.LENGTH_SHORT).show()
+        } else {
+            GlobalScope.launch(Dispatchers.IO) {
+                try {
+                    val imageUrl = uploadImage1(dpuri)
+                    saveDpUriToFirestore(imageUrl, userkey)
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Log.d("Disha2",e.toString())
+                        Toast.makeText(this@add_room, "Error uploading image: $e", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun uploadImage1(dpUri: Uri): Uri = GlobalScope.async {
+        return@async storageref.child("images/${System.currentTimeMillis()}").putFile(dpUri).await().metadata?.reference?.downloadUrl?.await()
+            ?: throw RuntimeException("Failed to upload image")
+    }.await()
+
+    private suspend fun saveDpUriToFirestore(imageUrl: Uri, userkey: String?) {
+        val roomId = userkey + "${num - 1}"
+        try {
+            val roomsCollection = db.collection("Rooms")
+            val ownercollection = userkey?.let { db.collection(it) }
+
+            roomsCollection.document(roomId).update("dpuri", imageUrl).await()
+            ownercollection?.document(roomId)?.update("dpuri", imageUrl)?.await()
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@add_room, "Image uploaded successfully", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Log.d("Disha3",e.toString())
+                Toast.makeText(this@add_room, "Error updating image in Firestore: $e", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
 
 
