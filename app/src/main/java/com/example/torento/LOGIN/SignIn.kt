@@ -15,6 +15,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -24,7 +25,7 @@ class SignIn : AppCompatActivity() {
     private lateinit var firebaseAuth : FirebaseAuth
     val SHARED_PREF:String = "sharedPrefs"
     private var db = Firebase.firestore
-    private var Regemail:String="temp"
+   // private var Regemail:String="temp"
     private var regusertype:String="temp"
 
     
@@ -48,26 +49,30 @@ class SignIn : AppCompatActivity() {
             val username = binding.username.text.toString()
             val email = binding.email.text.toString()
             val pass = binding.password.text.toString()
-            val scope = CoroutineScope(Dispatchers.Main)
+
             Log.d("username",username)
-            scope.launch {
-                emailcheck(username)
-                delay(2000)
-                loginbtn(username,email,pass)
+            if (username.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty()){
+                GlobalScope.launch(Dispatchers.Main) {
+                    Toast.makeText(this@SignIn, username.toString(), Toast.LENGTH_SHORT).show()
+                    emailcheck(username,email,pass)
+                    //loginbtn(username,email,pass)
+                }
             }
+
 
 
         }
 
     }
-    private fun emailcheck(username: String) {
+    private fun emailcheck(username: String,email: String,pass: String) {
         val docref = db.collection("users").document(username)
         if (docref != null) {
             docref.get().addOnSuccessListener {
                 if (it != null) {
                     Toast.makeText(this,"Regmail is initializing",Toast.LENGTH_SHORT).show()
-                    Regemail = it.data?.get("email").toString()
+                    val Regemail = it.data?.get("email").toString()
                     regusertype = it.data?.get("usertype").toString()
+                    loginbtn(username,email,pass,Regemail)
                 } else {
                     Toast.makeText(this, "Fail!!", Toast.LENGTH_SHORT).show()
                 }
@@ -80,7 +85,7 @@ class SignIn : AppCompatActivity() {
         }
 
     }
-    private fun loginbtn(username: String, email: String, pass: String) {
+    private fun loginbtn(username: String, email: String, pass: String,Regemail:String) {
 
              if(email.isNotEmpty() && pass.isNotEmpty() && username.isNotEmpty() && Regemail==email){
             firebaseAuth.signInWithEmailAndPassword(email,pass).addOnCompleteListener {

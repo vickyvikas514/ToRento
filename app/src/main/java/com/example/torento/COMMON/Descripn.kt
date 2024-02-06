@@ -1,14 +1,20 @@
 package com.example.torento.COMMON
 
 import android.content.Intent
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.torento.Adapter.PicsAdapter
+import com.example.torento.LOGIN.LandingPage.Companion.usertype
 import com.example.torento.OWNER.EditRoom
+import com.example.torento.R
+import com.example.torento.USER.Save
 import com.example.torento.databinding.ActivityDescripnBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -24,6 +30,8 @@ class descripn : AppCompatActivity() {
     private lateinit var binding: ActivityDescripnBinding
     private var db = Firebase.firestore
     val SHARED_PREF: String = "sharedPrefs"
+    private lateinit var heartButton: ImageView
+    private lateinit var sharedPreferences: SharedPreferences
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDescripnBinding.inflate(layoutInflater)
@@ -32,6 +40,7 @@ class descripn : AppCompatActivity() {
        val documentid = intent.getStringExtra("documentid")
         val usertype = intent.getStringExtra("usertype")
         val username = intent.getStringExtra("username")
+        sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
 
         if(usertype=="owner"){
             binding.saveBtn.text = "Change Room details"
@@ -52,8 +61,35 @@ class descripn : AppCompatActivity() {
             }
         }else{
             binding.saveBtn.setOnClickListener {
-                Toast.makeText(this, "CLICKED", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this,Save::class.java)
+                startActivity(intent)
             }
+            heartButton = findViewById(R.id.heartButton)
+
+            // Check if room is liked and update the heart button
+            updateHeartButtonState(isRoomLiked())
+
+
+
+                // Set click listener for the heart button
+                heartButton.setOnClickListener {
+                    // Toggle the like status
+                    val isLiked = toggleLikeStatus()
+                    // Update the heart button state
+                    updateHeartButtonState(isLiked)
+                    if(isLiked){
+                        GlobalScope.launch(Dispatchers.IO) {
+                            val data : MutableMap<String, Any> = retreivingdataBG().third
+                            save(data,username.toString(),documentid.toString())
+
+                        }
+                    }else
+                    {
+                        GlobalScope.launch (Dispatchers.IO){
+                            unsave(username.toString(),documentid.toString())
+                        }
+                    }
+                   }
             binding.delete.visibility = View.INVISIBLE
         }
     //fetchDataFromFirestore
@@ -68,6 +104,21 @@ class descripn : AppCompatActivity() {
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
 
 
+    }
+    private fun isRoomLiked(): Boolean {
+        // Retrieve the like status from SharedPreferences
+        return sharedPreferences.getBoolean("isLiked", false)
+    }
+    private fun toggleLikeStatus(): Boolean {
+        // Toggle the like status and save it to SharedPreferences
+        val isLiked = !isRoomLiked()
+        sharedPreferences.edit().putBoolean("isLiked", isLiked).apply()
+        return isLiked
+    }
+    private fun updateHeartButtonState(isLiked: Boolean) {
+        // Update the heart button drawable based on the like status
+        val heartDrawable = if (isLiked) R.drawable.empty_heart else R.drawable.black_heart
+        heartButton.setImageResource(heartDrawable)
     }
     private fun changetoChat(userId: String?, documentid: String?, username: String?,usertype:String) {
         val intent = Intent(this@descripn, ChatActivity::class.java)
@@ -103,12 +154,12 @@ class descripn : AppCompatActivity() {
         // Set the new adapter to the RecyclerView
         binding.listPhoto.adapter = PicsAdapter(this,imageUriList)
     }
-   suspend fun retreivingdataBG() : Pair<MutableList<String>,List<String>>{
+   suspend fun retreivingdataBG() : Triple<MutableList<String>,List<String>,MutableMap<String, Any>>{
         val Id = intent.getStringExtra("documentid").toString()
         val list:MutableList<String> = mutableListOf<String>()
        var imageUriList:List<String> = listOf<String>()
+       val docref =  db.collection("Rooms").document(Id).get().await()
        try {
-           val docref =  db.collection("Rooms").document(Id).get().await()
            if (docref != null) {
                docref.data?.let {
                    list.add(it["location_detail"].toString())
@@ -120,14 +171,34 @@ class descripn : AppCompatActivity() {
                Log.d("chaudhary1", list.size.toString())
            }
            else { Toast.makeText(this, "DocRef is NULL", Toast.LENGTH_SHORT).show() }
+
        } catch (e:Exception){
            Log.e("descripn", "Error fetching data from Firestore: ${e.message}")
        }
 
-       return Pair(list,imageUriList)
+       return Triple(list,imageUriList,docref.data!!)
     }
 
-suspend fun deleteRoom(collection1:String,collection2: String,document:String){
+    suspend fun save(data: MutableMap<String, Any>,userKey:String,Id:String,) {
+        // retrieve the user key (you may have this logic somewhere)
+            if (userKey != null) {
+                try {
+                    // Store room information in the user's collection
+                    val userRoomRef = db.collection(userKey).document(Id)
+                    userRoomRef.set(data)
+                        .addOnSuccessListener {
+                            Toast.makeText(this@descripn, "SAVE", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("descripn", "Error saving room information: $e")
+                        }
+                } catch (e: Exception) {
+                    Log.e("descripn", "Error saving room information: ${e.message}")
+                }
+            }
+    }
+
+    suspend fun deleteRoom(collection1:String,collection2: String,document:String){
 
     val docRef = db.collection(collection1).document(document)
     val docRef2 = db.collection(collection2).document(document)
@@ -150,5 +221,19 @@ suspend fun deleteRoom(collection1:String,collection2: String,document:String){
             println("Error deleting document: $e")
         }
 }
+    suspend fun unsave(collection1:String,document:String){
+
+        val docRef = db.collection(collection1).document(document)
+
+        docRef.delete()
+            .addOnSuccessListener {
+                // Document successfully deleted
+                Toast.makeText(this, "DocumentSnapshot successfully deleted!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                // Handle the error
+                println("Error deleting document: $e")
+            }
+    }
 
 }
