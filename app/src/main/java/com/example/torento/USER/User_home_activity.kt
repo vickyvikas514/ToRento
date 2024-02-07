@@ -134,11 +134,15 @@ class user_home_activity : AppCompatActivity() {
         when(item.itemId){
             R.id.logout -> logout()
             R.id.profile ->profile()
+            R.id.saveditems->SAVEDROOMS()
 
         }
         return super.onOptionsItemSelected(item)
     }
-
+        private fun SAVEDROOMS(){
+            val intent = Intent(this,Save::class.java)
+            startActivity(intent)
+        }
     private fun profile() {
 
         val intent = Intent(this, Profile::class.java)

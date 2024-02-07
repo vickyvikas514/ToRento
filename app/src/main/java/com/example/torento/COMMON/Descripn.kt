@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.torento.Adapter.PicsAdapter
@@ -60,10 +61,11 @@ class descripn : AppCompatActivity() {
                 }
             }
         }else{
-            binding.saveBtn.setOnClickListener {
-                val intent = Intent(this,Save::class.java)
-                startActivity(intent)
-            }
+            binding.saveBtn.visibility = View.GONE
+
+            // Adjust the layout to remove space occupied by the Save button
+            val params = binding.saveBtn.layoutParams as ConstraintLayout.LayoutParams
+            params.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             heartButton = findViewById(R.id.heartButton)
 
             // Check if room is liked and update the heart button
