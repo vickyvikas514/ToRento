@@ -150,6 +150,8 @@ class owner_home_activity : AppCompatActivity() {
     }
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_bar,menu)
+        val itemToHide = menu!!.findItem(R.id.saveditems)
+        itemToHide.setVisible(false)
         return super.onCreateOptionsMenu(menu)
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

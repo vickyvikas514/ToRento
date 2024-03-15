@@ -60,6 +60,7 @@ class descripn : AppCompatActivity() {
 
                 }
             }
+            binding.heartButton.visibility = View.GONE
         }else{
             binding.saveBtn.visibility = View.GONE
 
