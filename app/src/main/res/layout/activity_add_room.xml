@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@drawable/bg"
+    android:background="@color/maincolor"
     tools:context=".OWNER.add_room">
 
 
@@ -42,7 +42,7 @@
             android:textSize="36sp"
             android:textAlignment="center"
             android:textStyle="bold"
-            android:textColor="@color/darkpurple"/>
+            android:textColor="@color/brown"/>
 
         <androidx.cardview.widget.CardView
             android:id="@+id/picCard"
@@ -103,6 +103,16 @@
             android:textColor="@color/black"
             android:textColorHighlight="@color/black"
             />
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            app:layout_constraintStart_toEndOf="@id/roomlength"
+            app:layout_constraintEnd_toStartOf="@id/roomwidth"
+            android:text = "X"
+            android:textSize="30dp"
+            android:gravity="center"
+            android:textColor="@color/brown"
+            app:layout_constraintTop_toBottomOf="@id/roomsizetext"/>
         <com.google.android.material.textfield.TextInputEditText
 
             android:layout_width="wrap_content"
@@ -188,16 +198,30 @@
             android:textColorHighlight="@color/cardview_dark_background"
             android:layout_marginTop="12dp"/>
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/Room_description"
-            android:textSize="28dp"
+            android:textSize="22dp"
+            android:gravity="center"
+            android:layout_margin="8dp"
             android:id="@+id/updateRoompic"
             android:layout_marginTop="12dp"
             app:layout_constraintEnd_toEndOf="parent"
-            android:text="Add more pics for the room"
-            android:textColor="@color/black"/>
+            android:text="Add more pics"
+            android:background="@color/brown"
+            android:textColor="@color/white"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/uploadbtn"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/updateRoompic"
+            android:layout_margin="8dp"
+            android:text="UPLOAD THIS ROOM"
+            android:background="@color/black"
+            />
 
 
 

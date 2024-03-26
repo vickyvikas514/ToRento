@@ -2,7 +2,14 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.ToRento" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/brown</item>
+        <item name="android:toolbarStyle">@style/MyToolbar</item>
+
+
+    </style>
+    <style name="MyToolbar" parent="Widget.AppCompat.Toolbar">
+        <!-- Other toolbar attributes -->
+        <item name="android:background">#B8E0FF</item>
     </style>
     <style name="SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">#B8E0FF</item>

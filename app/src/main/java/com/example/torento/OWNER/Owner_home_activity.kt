@@ -1,13 +1,16 @@
 package com.example.torento.OWNER
 
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.example.torento.Adapter.RoomAdapter
 import com.example.torento.LOGIN.LandingPage
 import com.example.torento.LOGIN.LandingPage.Companion.num
@@ -63,6 +66,7 @@ class owner_home_activity : AppCompatActivity() {
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)
+        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
 
         val itemsCollection = userkey?.let { db.collection(it) }
         val itemsList = mutableListOf<Room>()

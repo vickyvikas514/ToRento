@@ -75,7 +75,7 @@ class add_room : AppCompatActivity() {
             for ((index, imageUri) in imagesList.withIndex()) {
                 try {
                     val imageUrl = uploadImage(imageUri)
-                    saveImageUrlToFirestore(imageUrl, userkey)
+                    uploadingmultipleimagesonfirestore(imageUrl,userkey)
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         Log.d("Disha1",e.toString())
@@ -90,6 +90,25 @@ class add_room : AppCompatActivity() {
         return@async storageref.child("images/${System.currentTimeMillis()}").putFile(imageUri).await().metadata?.reference?.downloadUrl?.await()
             ?: throw RuntimeException("Failed to upload image")
     }.await()
+    private suspend fun uploadingmultipleimagesonfirestore(imageUrl: Uri, userkey: String?){
+        val roomId = userkey + "${num - 1}"
+        try {
+            val roomsCollection = db.collection("Rooms")
+            val ownercollection = userkey?.let { db.collection(it) }
+            //"imageuri" to FieldValue.arrayUnion(imageUrl)
+            roomsCollection.document(roomId).update("imageuri", FieldValue.arrayUnion(imageUrl)).await()
+            ownercollection?.document(roomId)?.update("imageuri", FieldValue.arrayUnion(imageUrl))?.await()
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@add_room, "Image uploaded successfully", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Log.d("Disha3",e.toString())
+                Toast.makeText(this@add_room, "Error updating image in Firestore: $e", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     /*private fun saveImageUrlToFirestore(imageUrl: Uri, userkey: String?) {
         val roomsCollection = db.collection("Rooms")
@@ -140,7 +159,7 @@ class add_room : AppCompatActivity() {
             Toast.makeText(this, "provide all the details", Toast.LENGTH_SHORT).show()
         }
     }*/
-    private suspend fun saveImageUrlToFirestore(imageUrl: Uri, userkey: String?) {
+    private suspend fun uploadRoom( userkey: String?) {
         // Replace 'roomId' with the actual ID of the room document
         length = binding.roomlength.text.toString()
         width = binding.roomwidth.text.toString()
@@ -159,7 +178,7 @@ class add_room : AppCompatActivity() {
             "owner_name" to owner_name,
             "amount" to amount,
             "breif_description" to breif_description,
-            "imageuri" to FieldValue.arrayUnion(imageUrl)
+
         )
 
         if (roomId != "temp") {
@@ -223,6 +242,13 @@ class add_room : AppCompatActivity() {
         ////////////////////////
 
         ////////////////////////
+
+        binding.uploadbtn.setOnClickListener {
+            GlobalScope.launch (Dispatchers.Main){
+                uploadRoom(userkey)
+            }
+
+        }
 
         binding.picCard.setOnClickListener{
             galleryimage.launch("image/*")

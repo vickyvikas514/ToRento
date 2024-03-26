@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+
     tools:context=".COMMON.ChatActivity">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -27,14 +28,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textSize="30sp"
-            android:hint="Type a message"/>
+            android:hint="Type..."/>
 
         <Button
             android:id="@+id/sendButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="30sp"
-            android:text="Send"/>
+           android:background="@drawable/baseline_arrow_forward_24"/>
     </LinearLayout>
 
 </RelativeLayout>

@@ -12,8 +12,10 @@
             android:id="@+id/receive_txt"
             android:layout_width="wrap_content"
             android:text="Receive Message"
+            android:background="@color/brown"
             android:layout_height="wrap_content"
             android:padding="10dp"
+            android:textColor="@color/maincolor"
             android:textSize="16sp"/>
     </RelativeLayout>
 

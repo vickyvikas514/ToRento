@@ -4,4 +4,8 @@
     <color name="white">#FFFFFFFF</color>
     <color name="purple">#8692F7</color>
     <color name="darkpurple">#301934</color>
+    <color name="red">#f44336</color>
+    <color name = "brown">#452016</color>
+    <color name = "maincolor">#B8E0FF</color>
+
 </resources>

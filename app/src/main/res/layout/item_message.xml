@@ -10,6 +10,8 @@
     android:layout_alignParentRight="true">
     <TextView
         android:id="@+id/messageTextView"
+        android:background="@color/maincolor"
+        android:textColor="@color/brown"
         android:layout_width="wrap_content"
         android:text="Sent Message"
         android:layout_height="wrap_content"
