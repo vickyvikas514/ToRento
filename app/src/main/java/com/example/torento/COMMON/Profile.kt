@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,7 +30,7 @@ class Profile : AppCompatActivity() {
     val SHARED_PREF: String = "sharedPrefs"
     private var db = Firebase.firestore
     private var storageRef = Firebase.storage
-    private lateinit var uri: Uri
+   // private lateinit var uri: Uri
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,21 +43,10 @@ class Profile : AppCompatActivity() {
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val userkey: String? = sharedPreferences.getString("username", "")
 
-        binding.back.setOnClickListener {
-           back()
-        }
 
-        val galleryimage = registerForActivityResult(
-            ActivityResultContracts.GetContent(), ActivityResultCallback {
-                binding.dp.setImageURI(it)
-                if (it != null) {
-                    uri = it
-                }
-            }
-        )
-        binding.dpupdate.setOnClickListener {
-            galleryimage.launch("image/*")
-        }
+
+
+
         binding.edit.setOnClickListener {
             val intent = Intent(this, UpdateActivity::class.java)
             startActivity(intent)
@@ -68,21 +58,11 @@ class Profile : AppCompatActivity() {
         if (userkey != null) {
             set(userkey)
         }
-        if (userkey != null) {
-            upload(userkey)
-        }
+
 
 
     }
-    private fun upload(userkey: String){
-        GlobalScope.launch(Dispatchers.IO){
-            try {
-                uploadBG(userkey)
-            } catch (e:Exception){
-                e.printStackTrace()
-            }
-        }
-    }
+
     private fun set(userkey: String){
         GlobalScope.launch(Dispatchers.IO){
             try {
@@ -116,48 +96,6 @@ class Profile : AppCompatActivity() {
         }
     }
 
-    suspend fun uploadBG(userkey: String){
-        storageRef = FirebaseStorage.getInstance()
-        binding.dpupload.setOnClickListener {
-            //it takes time and check for uri!=null
-            storageRef.getReference("images").child(System.currentTimeMillis().toString())
-                .putFile(uri)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Part-1", Toast.LENGTH_SHORT).show()
-                    it.metadata?.reference?.downloadUrl
-                        ?.addOnSuccessListener { imageuri ->
-                            Toast.makeText(this, "Part-2", Toast.LENGTH_SHORT).show()
-                            // val imageUrl = imageuri.toString()
-
-
-                            val docRefUser = userkey?.let { it1 ->
-                                db.collection("users").document(
-                                    it1
-                                )
-                            }
-
-                            val updateData = hashMapOf(
-                                "imageuri" to imageuri,
-
-                                )
-                            if (docRefUser != null) {
-                                docRefUser.update(updateData as Map<String, Any>)
-                                    .addOnSuccessListener {
-                                        Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
-                                    }
-                                    .addOnFailureListener {
-                                        Toast.makeText(this, "failure", Toast.LENGTH_SHORT).show()
-                                    }
-                            }
-
-
-                        }
-                }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Part-3", Toast.LENGTH_SHORT).show()
-                }
-        }
-    }
 
    suspend fun setBG(userkey: String) : MutableList<String>{
        val list :MutableList<String> = mutableListOf()
@@ -185,19 +123,5 @@ class Profile : AppCompatActivity() {
     return list
 
     }
-    private fun back(){
-        if(LandingPage.usertype=="tenant"){
-            val intent = Intent(this, user_home_activity::class.java)
-            startActivity(intent)
-            // progress.visibility = View.GONE
 
-            finish()
-        }else{
-            val intent = Intent(this, owner_home_activity::class.java)
-            startActivity(intent)
-            //  progress.visibility = View.GONE
-
-            finish()
-        }
-    }
 }
