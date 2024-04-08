@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.example.torento.Adapter.RoomAdapter
 import com.example.torento.LOGIN.LandingPage
@@ -37,7 +38,7 @@ class owner_home_activity : AppCompatActivity() {
     var x=0
     private var db = Firebase.firestore
     private lateinit var job: Job
-
+    private var backPressedOnce = false
     var id=""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +56,9 @@ class owner_home_activity : AppCompatActivity() {
                 x = savedInstanceState.getInt("x", 0)
                 num = savedInstanceState.getInt("num", 0)
             }
+
+
+            
             GlobalScope.launch {
             if (userkey != null) {
                 userid = userkey
@@ -128,6 +132,22 @@ class owner_home_activity : AppCompatActivity() {
         }
 
         }
+    override fun onBackPressed() {
+        super.onBackPressed()
+        AlertDialog.Builder(this)
+            .setMessage("Are you sure you want to exit?")
+            .setPositiveButton("Yes") { _, _ -> finishAndRemoveTask() }
+            .setNegativeButton("No", null)
+            .show()
+    }
+    override fun onSupportNavigateUp(): Boolean {
+        AlertDialog.Builder(this)
+            .setMessage("Are you sure you want to exit?")
+            .setPositiveButton("Yes") { _, _ -> finishAndRemoveTask() }
+            .setNegativeButton("No", null)
+            .show()
+        return true
+    }
     suspend fun getuserId(userkey:String): String = GlobalScope.async{
 
         var userId:String = ""

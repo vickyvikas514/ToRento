@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.torento.Adapter.RoomAdapter
@@ -65,6 +66,24 @@ class user_home_activity : AppCompatActivity() {
         }
         return@async userId
     }.await()
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        AlertDialog.Builder(this)
+            .setMessage("Are you sure you want to exit?")
+            .setPositiveButton("Yes") { _, _ -> finishAndRemoveTask() }
+            .setNegativeButton("No", null)
+            .show()
+    }
+    override fun onSupportNavigateUp(): Boolean {
+        AlertDialog.Builder(this)
+            .setMessage("Are you sure you want to exit?")
+            .setPositiveButton("Yes") { _, _ -> finishAndRemoveTask() }
+            .setNegativeButton("No", null)
+            .show()
+        return true
+    }
+
    suspend fun retreivingdata() : Pair<List<Room>, List<String>> = withContext(Dispatchers.IO){
         val itemsCollection = db.collection("Rooms")
         val itemsList = mutableListOf<Room>()
