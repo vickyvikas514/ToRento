@@ -1,15 +1,22 @@
 package com.example.torento.LOGIN
 
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import com.example.torento.databinding.ActivitySignUpBinding
 import com.example.torento.OWNER.owner_home_activity
+import com.example.torento.R
 import com.example.torento.USER.user_home_activity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
@@ -24,16 +31,50 @@ import kotlinx.coroutines.launch
 class SignUp : AppCompatActivity() {
 
     private lateinit var job: Job
+    private lateinit var popupWindow: PopupWindow
     companion object {
 
         lateinit var id: String
     }
-
-  //  private lateinit var progress: ProgressBar
-
     private lateinit var binding: ActivitySignUpBinding
     private lateinit var firebaseAuth: FirebaseAuth
     val SHARED_PREF: String = "sharedPrefs"
+
+    private fun showPopup() {
+        // Check if the activity is finishing or has been destroyed
+        if (!isFinishing) {
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage("Your email is not verified, check your mails to verify the email")
+                .setPositiveButton("I verified my email") { dialog, _ ->
+                    // Dismiss the dialog
+                    dialog.dismiss()
+                    // Refresh the activity
+                    restartApp(this@SignUp)
+                }
+                .setNegativeButton("Send email verification link again") { dialog, _ ->
+                    // Dismiss the dialog
+                    dialog.dismiss()
+                    // Resend the verification email
+                    sendEmailVerification()
+                }
+                .setCancelable(false) // Prevent dismiss on outside touch or back button
+
+            // Create and show the dialog using the activity's context
+            val dialog = builder.create()
+            dialog.show()
+        }
+
+    }
+    private fun restartApp(context: Context) {
+        val packageManager = context.packageManager
+        val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+        val componentName = intent!!.component
+        val mainIntent = Intent.makeRestartActivityTask(componentName)
+        context.startActivity(mainIntent)
+        Runtime.getRuntime().exit(0)
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
       // val db = Firebase.firestore
@@ -63,64 +104,76 @@ class SignUp : AppCompatActivity() {
                    // delay(5000)
 
                 }
-
+                showPopup()
 
             } else {
                 Toast.makeText(this, "Please provide all the details", Toast.LENGTH_SHORT).show()
             }
         }
+
     }
+
     override fun onDestroy() {
         super.onDestroy()
         // Cancel the job when the activity is destroyed
         job.cancel()
     }
+
+
+    private fun sendEmailVerification(){
+        val user = firebaseAuth.currentUser
+        user?.sendEmailVerification()
+            ?.addOnCompleteListener{task->
+                if(task.isSuccessful){
+                    Toast.makeText(baseContext, "Verification email sent.",Toast.LENGTH_SHORT).show()
+
+                } else{
+                    Toast.makeText(baseContext, "Failed to send verification email.",
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
     private fun loginlate(pass: String,confpass:String,email: String){
         if (pass == confpass) {
             firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener {
                 if (it.isSuccessful) {
+                    sendEmailVerification()
                     val sharedPreferences: SharedPreferences = getSharedPreferences(
                         SHARED_PREF, MODE_PRIVATE
                     )
                     val editor: SharedPreferences.Editor = sharedPreferences.edit()
-                    editor.putString("name", "true")
+                        //editor.putString("name", "true")
                     editor.putString("username", id)
                     editor.putString("usertype", LandingPage.usertype)
                     editor.apply()
-
+                    runOnUiThread {
+                        Toast.makeText(this@SignUp, "Account created successfully", Toast.LENGTH_SHORT).show()
+                    }
 
                 } else {
-                    Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
-                }
+                    runOnUiThread{
+                        Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
+                    }
+                     }
             }
         } else {
-            Toast.makeText(this, "Password is not matching", Toast.LENGTH_SHORT).show()
+            runOnUiThread {
+                Toast.makeText(this, "Password is not matching", Toast.LENGTH_SHORT).show()
+            }
+
         }
 
     }
-    private fun changethepage() {
-        binding.progressBar.visibility = View.INVISIBLE
-        // Your code to handle the result after the background work is finished
-        if(LandingPage.usertype =="tenant"){
-            val intent = Intent(this, user_home_activity::class.java)
-            startActivity(intent)
-            // progress.visibility = View.GONE
-
-            finish()
-        }else{
-            val intent = Intent(this, owner_home_activity::class.java)
-            startActivity(intent)
-            //  progress.visibility = View.GONE
-
-            finish()
-        }
-    }
-
-     suspend fun writeUserToFirestore(name:String, username:String, phone:String, email:String, pass:String) {
+    suspend fun writeUserToFirestore(name:String, username:String, phone:String, email:String, pass:String) {
+         runOnUiThread {
+             Toast.makeText(this@SignUp, "writing data", Toast.LENGTH_SHORT).show()
+         }
         try {
             withContext(Dispatchers.IO) {
                 val db = Firebase.firestore
-
+                runOnUiThread {
+                    Toast.makeText(this@SignUp, "writing data yes", Toast.LENGTH_SHORT).show()
+                }
                     val user = hashMapOf(
                         "name" to name,
                         "username" to username,
@@ -138,10 +191,6 @@ class SignUp : AppCompatActivity() {
                 db.collection("users").document(id)
                     .set(user)
                     .addOnSuccessListener { documentReference ->
-                        Handler().postDelayed({
-                            changethepage()
-                        },3000)
-
                         Log.d("Firestore", "DocumentSnapshot written with ID: $")
 
                     }
@@ -150,6 +199,9 @@ class SignUp : AppCompatActivity() {
                     }
             }
         } catch (e: Exception) {
+            runOnUiThread {
+                Toast.makeText(this@SignUp, "writing data no", Toast.LENGTH_SHORT).show()
+            }
             Log.e("Firestore", "Exception: $e")
         }
     }

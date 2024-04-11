@@ -38,13 +38,13 @@ class LandingPage : AppCompatActivity() {
         setContentView(binding.root)
         binding.landlord.setOnClickListener{
             usertype ="owner"
-            val intent = Intent(this, SignUp::class.java)
+            val intent = Intent(this, SignIn::class.java)
             startActivity(intent)
             finish()
         }
         binding.tenant.setOnClickListener{
             usertype = "tenant"
-            val intent = Intent(this, SignUp::class.java)
+            val intent = Intent(this, SignIn::class.java)
             startActivity(intent)
             finish()
         }

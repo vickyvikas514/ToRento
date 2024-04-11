@@ -6,9 +6,15 @@ import android.content.SharedPreferences
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
+import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -37,101 +43,156 @@ class owner_home_activity : AppCompatActivity() {
     val SHARED_PREF : String = "sharedPrefs"
     var x=0
     private var db = Firebase.firestore
-    private lateinit var job: Job
+    private var job: Job = Job()
     private var backPressedOnce = false
     var id=""
+    private lateinit var popupWindow: PopupWindow
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOwnerHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        job = Job()
-        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username", "")
         auth = FirebaseAuth.getInstance()
-        binding.addButton.setOnClickListener{
-            //made temp room
-            if (savedInstanceState != null) {
-                // Restore the values from the saved state
-                x = savedInstanceState.getInt("x", 0)
-                num = savedInstanceState.getInt("num", 0)
-            }
-
-
-            
-            GlobalScope.launch {
-            if (userkey != null) {
-                userid = userkey
-            }
-              addtemproom()
+        auth.addAuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            user?.let {
+                if (user.isEmailVerified) {
+                    // If email is verified, update SharedPreferences
+                    updateVerificationStatusInSharedPreferences(true)
+                }
             }
         }
-        supportActionBar?.setTitle("Torento")
-        actionBar?.hide()
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayUseLogoEnabled(true)
-        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
+       // val isEmailVerified = getVerificationStatusFromSharedPreferences()
+       // Toast.makeText(this@owner_home_activity, auth.currentUser?.uid ?.toString(), Toast.LENGTH_SHORT).show()
+        val currentUser = auth.currentUser
+        currentUser?.let { user ->
+            if (!user.isEmailVerified) {
+                // User's email is not verified, prompt them to verify it
+                // You can show a dialog or display a message in your UI
+                showPopup()
+            }
+        }
 
-        val itemsCollection = userkey?.let { db.collection(it) }
-        val itemsList = mutableListOf<Room>()
-        val idlist = mutableListOf<String>()
 
-        if (itemsCollection != null) {
-            itemsCollection.addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    // Handle the error
-                    return@addSnapshotListener
+// Implement AuthStateListener to handle authentication state changes
+        val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            user?.let { currentUser ->
+                if (!currentUser.isEmailVerified) {
+                    // User's email is not verified, prompt them to verify it
+                    // You can show a dialog or display a message in your UI
+                    showPopup()
                 }
-                snapshot?.forEach { document ->
-                    val roomimage = document.getString("dpuri")?:""
-                    val description = document.getString("location") ?: ""
-                    val roomlength = document.getString("length") ?: ""
-                    val roomwidth = document.getString("width") ?: ""
-                    val roomsize:String = roomlength+"x"+roomwidth
-                    val Docid:String = document.id
-                    val item = Room( roomsize, description,roomimage)
-                    idlist.add(Docid)
-                    itemsList.add(item)
+            }
+        }
+
+// Add the AuthStateListener to the FirebaseAuth instance
+        auth.addAuthStateListener(authStateListener)
+            job = Job()
+            val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+            val userkey: String? = sharedPreferences.getString("username", "")
+
+            binding.addButton.setOnClickListener{
+                //made temp room
+                if (savedInstanceState != null) {
+                    // Restore the values from the saved state
+                    x = savedInstanceState.getInt("x", 0)
+                    num = savedInstanceState.getInt("num", 0)
                 }
 
-                var adapter = RoomAdapter(
-                    applicationContext,
-                    itemsList,
-                    idlist
-                )
-                binding.OwnerRoomlist.adapter = adapter
-                adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener{
-                    override fun onItemClick(documentid:String,position: Int) {
 
-                        // Handle item click here
-                        // For example, navigate to another activity
-                        GlobalScope.launch(Dispatchers.IO) {
-                            try {
-                                val userId = userkey?.let { it1 -> getuserId(it1) }
 
-                                launch (Dispatchers.Main){
-                                    val intent = Intent(this@owner_home_activity, descripn::class.java)
-                                    intent.putExtra("documentid",documentid)
-                                    intent.putExtra("usertype","owner")
-                                    intent.putExtra("collection2",userkey)
-                                    intent.putExtra("userIdO","0D2bMnHrhcWCSkyRlklWMhY0NTS2")
-                                    startActivity(intent)
+                GlobalScope.launch {
+                    if (userkey != null) {
+                        userid = userkey
+                    }
+                    addtemproom()
+                }
+            }
+            supportActionBar?.setTitle("Torento")
+            actionBar?.hide()
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            supportActionBar?.setDisplayUseLogoEnabled(true)
+            supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
+
+            val itemsCollection = userkey?.let { db.collection(it) }
+            val itemsList = mutableListOf<Room>()
+            val idlist = mutableListOf<String>()
+
+            if (itemsCollection != null) {
+                itemsCollection.addSnapshotListener { snapshot, exception ->
+                    if (exception != null) {
+                        // Handle the error
+                        return@addSnapshotListener
+                    }
+                    snapshot?.forEach { document ->
+                        val roomimage = document.getString("dpuri")?:""
+                        val description = document.getString("location") ?: ""
+                        val roomlength = document.getString("length") ?: ""
+                        val roomwidth = document.getString("width") ?: ""
+                        val roomsize:String = roomlength+"x"+roomwidth
+                        val Docid:String = document.id
+                        val item = Room( roomsize, description,roomimage)
+                        idlist.add(Docid)
+                        itemsList.add(item)
+                    }
+
+                    var adapter = RoomAdapter(
+                        applicationContext,
+                        itemsList,
+                        idlist
+                    )
+                    binding.OwnerRoomlist.adapter = adapter
+                    adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener{
+                        override fun onItemClick(documentid:String,position: Int) {
+
+                            // Handle item click here
+                            // For example, navigate to another activity
+                            GlobalScope.launch(Dispatchers.IO) {
+                                try {
+                                    val userId = userkey?.let { it1 -> getuserId(it1) }
+
+                                    launch (Dispatchers.Main){
+                                        val intent = Intent(this@owner_home_activity, descripn::class.java)
+                                        intent.putExtra("documentid",documentid)
+                                        intent.putExtra("usertype","owner")
+                                        intent.putExtra("collection2",userkey)
+                                        intent.putExtra("userIdO","0D2bMnHrhcWCSkyRlklWMhY0NTS2")
+                                        startActivity(intent)
+                                    }
+
+                                }catch (e:Exception){
+                                    e.printStackTrace()
                                 }
 
-                            }catch (e:Exception){
-                                e.printStackTrace()
                             }
 
                         }
+                    })
+                }
 
-                    }
-                })
+                binding.OwnerRoomlist.setHasFixedSize(true)
             }
 
-            binding.OwnerRoomlist.setHasFixedSize(true)
-        }
+
 
         }
+    private fun restartApp(context: Context) {
+        val packageManager = context.packageManager
+        val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+        val componentName = intent!!.component
+        val mainIntent = Intent.makeRestartActivityTask(componentName)
+        context.startActivity(mainIntent)
+        Runtime.getRuntime().exit(0)
+    }
+    private fun updateVerificationStatusInSharedPreferences(isEmailVerified: Boolean) {
+        val sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putBoolean("isEmailVerified", isEmailVerified)
+        editor.apply()
+    }
     override fun onBackPressed() {
         super.onBackPressed()
         AlertDialog.Builder(this)
@@ -294,5 +355,46 @@ class owner_home_activity : AppCompatActivity() {
         x = savedInstanceState.getInt("x", 0)
         num = savedInstanceState.getInt("num", 0)
     }
+    private fun showPopup() {
+        // Check if the activity is finishing or has been destroyed
+        if (!isFinishing) {
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage("Your email is not verified, check your mails to verify the email")
+                .setPositiveButton("I verified my email") { dialog, _ ->
+                    // Dismiss the dialog
+                    dialog.dismiss()
+                    // Refresh the activity
+                    restartApp(this@owner_home_activity)
+                }
+                .setNegativeButton("Send email verification link again") { dialog, _ ->
+                    // Dismiss the dialog
+                    dialog.dismiss()
+                    // Resend the verification email
+                    sendEmailVerification()
+                }
+                .setCancelable(false) // Prevent dismiss on outside touch or back button
+
+            // Create and show the dialog using the activity's context
+            val dialog = builder.create()
+            dialog.show()
+        }
+    }
+    private fun sendEmailVerification(){
+        val user = auth.currentUser
+        user?.sendEmailVerification()
+            ?.addOnCompleteListener{task->
+                if(task.isSuccessful){
+                    Toast.makeText(baseContext, "Verification email sent.",Toast.LENGTH_SHORT).show()
+
+                } else{
+                    Toast.makeText(baseContext, "Failed to send verification email.",
+                        Toast.LENGTH_SHORT).show()
+                }
+                //showPopup()
+            }
+    }
+    /*private fun dismissPopup() {
+        popupWindow.dismiss()
+    }*/
 
 }

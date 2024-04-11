@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- popup_verification.xml -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="200dp"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white"
+    android:layout_gravity="center"
+    android:padding="16dp">
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center">
+
+
+    <TextView
+        android:id="@+id/popuptext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Verification email sent."
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:layout_centerInParent="true" />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="send"
+        android:id="@+id/BTNSEND"
+        />
+</LinearLayout>
+
+</RelativeLayout>

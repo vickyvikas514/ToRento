@@ -1,5 +1,6 @@
 package com.example.torento.USER
 
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -17,6 +18,8 @@ import com.example.torento.COMMON.Profile
 import com.example.torento.R
 import com.example.torento.databinding.ActivityMainBinding
 import com.example.torento.COMMON.descripn
+import com.example.torento.OWNER.owner_home_activity
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
@@ -28,24 +31,72 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 class user_home_activity : AppCompatActivity() {
+    private lateinit var auth: FirebaseAuth
     private lateinit var binding: ActivityMainBinding
     val SHARED_PREF : String = "sharedPrefs"
 
     private var db = Firebase.firestore
 
+    private fun showPopup() {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage("Your email is not verified, check your mails to verify the email")
+            .setPositiveButton("I verfied my email") { dialog, _ ->
+                // Dismiss the dialog
+                dialog.dismiss()
+                // Refresh the activity
+                restartApp(this@user_home_activity)
+            }
+            .setNegativeButton("Send email verification link again") { dialog, _ ->
+                // Dismiss the dialog
+                sendEmailVerification()
+                Toast.makeText(this, "verification email sent", Toast.LENGTH_SHORT).show()
+            }
+            .setCancelable(false) // Prevent dismiss on outside touch or back button
+        val dialog = builder.create()
+        dialog.show()
+    }
+    private fun sendEmailVerification(){
+        val user = auth.currentUser
+        user?.sendEmailVerification()
+            ?.addOnCompleteListener{task->
+                if(task.isSuccessful){
+                    Toast.makeText(baseContext, "Verification email sent.",Toast.LENGTH_SHORT).show()
+
+                } else{
+                    Toast.makeText(baseContext, "Failed to send verification email.",
+                        Toast.LENGTH_SHORT).show()
+                }
+                showPopup()
+            }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.setTitle("Torento")
-        actionBar?.hide()
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayUseLogoEnabled(true)
-        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val username: String? = sharedPreferences.getString("username", "")
-        /////////////////////
-        DatatoRecyclerView(username)
+        auth = FirebaseAuth.getInstance()
+        if(auth.currentUser?.isEmailVerified==false){
+            showPopup()
+        }else{
+            supportActionBar?.setTitle("Torento")
+            actionBar?.hide()
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            supportActionBar?.setDisplayUseLogoEnabled(true)
+            val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
+            val username: String? = sharedPreferences.getString("username", "")
+            /////////////////////
+            DatatoRecyclerView(username)
+        }
+
 ////////////////////////////////////////////////////////
+    }
+    private fun restartApp(context: Context) {
+        val packageManager = context.packageManager
+        val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+        val componentName = intent!!.component
+        val mainIntent = Intent.makeRestartActivityTask(componentName)
+        context.startActivity(mainIntent)
+        Runtime.getRuntime().exit(0)
     }
     suspend fun getuserId(userkey:String): String = GlobalScope.async{
 
