@@ -1,5 +1,6 @@
 package com.example.torento.LOGIN
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -10,6 +11,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
@@ -89,6 +91,7 @@ class SignUp : AppCompatActivity() {
         job = Job()
         binding.signupbtn.setOnClickListener {
             binding.progressBar.visibility = View.VISIBLE
+            hideKeyboard(this@SignUp)
             val name = binding.name.text.toString()
             val username = binding.username.text.toString()
             val phone = binding.phone.text.toString()
@@ -112,7 +115,13 @@ class SignUp : AppCompatActivity() {
         }
 
     }
-
+    fun hideKeyboard(activity: Activity) {
+        val inputMethodManager = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        val currentFocus = activity.currentFocus
+        if (currentFocus != null) {
+            inputMethodManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
+        }
+    }
     override fun onDestroy() {
         super.onDestroy()
         // Cancel the job when the activity is destroyed

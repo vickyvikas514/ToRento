@@ -1,5 +1,6 @@
 package com.example.torento.LOGIN
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -10,6 +11,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
@@ -54,6 +56,7 @@ class SignIn : AppCompatActivity() {
 
         binding.loginButton.setOnClickListener{
             binding.progressBar.visibility = View.VISIBLE
+            hideKeyboard(this@SignIn)
             val username = binding.username.text.toString()
             val email = binding.email.text.toString()
             val pass = binding.password.text.toString()
@@ -66,6 +69,13 @@ class SignIn : AppCompatActivity() {
         }
        // Toast.makeText(this@SignIn, firebaseAuth.currentUser?.uid ?.toString(), Toast.LENGTH_SHORT).show()
 
+    }
+    fun hideKeyboard(activity: Activity) {
+        val inputMethodManager = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        val currentFocus = activity.currentFocus
+        if (currentFocus != null) {
+            inputMethodManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
+        }
     }
     private fun emailcheck(username: String, email: String, pass: String) {
         val docref = db.collection("users").document(username)
