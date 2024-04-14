@@ -5,8 +5,10 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -38,22 +40,37 @@ class user_home_activity : AppCompatActivity() {
     private var db = Firebase.firestore
 
     private fun showPopup() {
-        val builder = AlertDialog.Builder(this)
-        builder.setMessage("Your email is not verified, check your mails to verify the email")
-            .setPositiveButton("I verfied my email") { dialog, _ ->
-                // Dismiss the dialog
+        val inflater = LayoutInflater.from(this)
+        val customLayout = inflater.inflate(R.layout.popup, null)
+        // Check if the activity is finishing or has been destroyed
+        if (!isFinishing) {
+            val builder = AlertDialog.Builder(this)
+            builder.setView(customLayout)
+
+            builder.setTitle("Verification Required")
+            builder.setMessage("Please verify your email to continue.")
+            builder.setCancelable(false)
+            val logoutBtn = customLayout.findViewById<Button>(R.id.Logout)
+            val sendBtn = customLayout.findViewById<Button>(R.id.BTNSEND)
+            val VerifiedBtn = customLayout.findViewById<Button>(R.id.Verifiedemail)
+            val dialog = builder.create()
+            dialog.show()
+            logoutBtn.setOnClickListener{
+                logout()
                 dialog.dismiss()
-                // Refresh the activity
-                restartApp(this@user_home_activity)
             }
-            .setNegativeButton("Send email verification link again") { dialog, _ ->
-                // Dismiss the dialog
+            sendBtn.setOnClickListener {
                 sendEmailVerification()
-                Toast.makeText(this, "verification email sent", Toast.LENGTH_SHORT).show()
             }
-            .setCancelable(false) // Prevent dismiss on outside touch or back button
-        val dialog = builder.create()
-        dialog.show()
+            VerifiedBtn.setOnClickListener {
+                restartApp(this@user_home_activity)
+                dialog.dismiss()
+            }
+            // Prevent dismiss on outside touch or back button
+
+            // Create and show the dialog using the activity's context
+
+        }
     }
     private fun sendEmailVerification(){
         val user = auth.currentUser

@@ -4,29 +4,27 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.drawable.ColorDrawable
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.torento.Adapter.RoomAdapter
+import com.example.torento.COMMON.Profile
+import com.example.torento.COMMON.descripn
+import com.example.torento.DATACLASS.Room
 import com.example.torento.LOGIN.LandingPage
 import com.example.torento.LOGIN.LandingPage.Companion.num
 import com.example.torento.LOGIN.LandingPage.Companion.userid
-import com.example.torento.COMMON.Profile
 import com.example.torento.R
-import com.example.torento.DATACLASS.Room
 import com.example.torento.databinding.ActivityOwnerHomeBinding
-import com.example.torento.COMMON.descripn
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -66,6 +64,7 @@ class owner_home_activity : AppCompatActivity() {
         }
        // val isEmailVerified = getVerificationStatusFromSharedPreferences()
        // Toast.makeText(this@owner_home_activity, auth.currentUser?.uid ?.toString(), Toast.LENGTH_SHORT).show()
+
         val currentUser = auth.currentUser
         currentUser?.let { user ->
             if (!user.isEmailVerified) {
@@ -356,27 +355,36 @@ class owner_home_activity : AppCompatActivity() {
         num = savedInstanceState.getInt("num", 0)
     }
     private fun showPopup() {
+        val inflater = LayoutInflater.from(this)
+        val customLayout = inflater.inflate(R.layout.popup, null)
         // Check if the activity is finishing or has been destroyed
         if (!isFinishing) {
             val builder = AlertDialog.Builder(this)
-            builder.setMessage("Your email is not verified, check your mails to verify the email")
-                .setPositiveButton("I verified my email") { dialog, _ ->
-                    // Dismiss the dialog
-                    dialog.dismiss()
-                    // Refresh the activity
-                    restartApp(this@owner_home_activity)
-                }
-                .setNegativeButton("Send email verification link again") { dialog, _ ->
-                    // Dismiss the dialog
-                    dialog.dismiss()
-                    // Resend the verification email
-                    sendEmailVerification()
-                }
-                .setCancelable(false) // Prevent dismiss on outside touch or back button
+            builder.setView(customLayout)
 
-            // Create and show the dialog using the activity's context
+                builder.setTitle("Verification Required")
+                    builder.setMessage("Please verify your email to continue.")
+            builder.setCancelable(false)
+            val logoutBtn = customLayout.findViewById<Button>(R.id.Logout)
+            val sendBtn = customLayout.findViewById<Button>(R.id.BTNSEND)
+            val VerifiedBtn = customLayout.findViewById<Button>(R.id.Verifiedemail)
             val dialog = builder.create()
             dialog.show()
+            logoutBtn.setOnClickListener{
+                logout()
+                dialog.dismiss()
+            }
+            sendBtn.setOnClickListener {
+                sendEmailVerification()
+            }
+            VerifiedBtn.setOnClickListener {
+                restartApp(this@owner_home_activity)
+                dialog.dismiss()
+            }
+                  // Prevent dismiss on outside touch or back button
+
+            // Create and show the dialog using the activity's context
+
         }
     }
     private fun sendEmailVerification(){

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- popup_verification.xml -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="200dp"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@android:color/white"
     android:layout_gravity="center"
@@ -10,22 +10,35 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:padding="12dp">
 
 
     <TextView
         android:id="@+id/popuptext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Verification email sent."
+        android:text="VERIFICATION EMAIL"
         android:textSize="16sp"
         android:textColor="@android:color/black"
         android:layout_centerInParent="true" />
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="send"
+        android:text="SEND AGAIN"
         android:id="@+id/BTNSEND"
+        />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Already Verified"
+        android:id="@+id/Verifiedemail"
+        />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="LOGOUT"
+        android:id="@+id/Logout"
         />
 </LinearLayout>
 
