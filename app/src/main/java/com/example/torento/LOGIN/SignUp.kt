@@ -21,6 +21,7 @@ import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.R
 import com.example.torento.USER.user_home_activity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -102,8 +103,8 @@ class SignUp : AppCompatActivity() {
 
                 GlobalScope.launch() {
 
-                    loginlate(pass,confpass, email)
-                    writeUserToFirestore(name,username,phone,email,pass)
+                    loginlate(pass,confpass, email,name,username,phone)
+
                    // delay(5000)
 
                 }
@@ -142,7 +143,7 @@ class SignUp : AppCompatActivity() {
                 }
             }
     }
-    private fun loginlate(pass: String,confpass:String,email: String){
+    private fun loginlate(pass: String,confpass:String,email: String,name:String,username: String,phone: String){
         if (pass == confpass) {
             firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener {
                 if (it.isSuccessful) {
@@ -158,10 +159,22 @@ class SignUp : AppCompatActivity() {
                     runOnUiThread {
                         Toast.makeText(this@SignUp, "Account created successfully", Toast.LENGTH_SHORT).show()
                     }
+                    GlobalScope.launch (Dispatchers.IO){
+                        writeUserToFirestore(name,username,phone,email,pass)
+                    }
+
 
                 } else {
-                    runOnUiThread{
-                        Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
+                    val exception = it.exception
+                    if (exception is FirebaseAuthWeakPasswordException) {
+                        // Handle weak password exception
+                        runOnUiThread {
+                            Toast.makeText(this@SignUp, "Please use a stronger password", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        runOnUiThread {
+                            Toast.makeText(this@SignUp, exception?.message, Toast.LENGTH_SHORT).show()
+                        }
                     }
                      }
             }
