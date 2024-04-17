@@ -36,8 +36,7 @@ class SignUp : AppCompatActivity() {
     private lateinit var job: Job
     private lateinit var popupWindow: PopupWindow
     companion object {
-
-        lateinit var id: String
+        var id: String = ""
     }
     private lateinit var binding: ActivitySignUpBinding
     private lateinit var firebaseAuth: FirebaseAuth
@@ -151,6 +150,9 @@ class SignUp : AppCompatActivity() {
                     val sharedPreferences: SharedPreferences = getSharedPreferences(
                         SHARED_PREF, MODE_PRIVATE
                     )
+                    if (username != null) {
+                        id = username
+                    }
                     val editor: SharedPreferences.Editor = sharedPreferences.edit()
                         //editor.putString("name", "true")
                     editor.putString("username", id)
@@ -205,9 +207,7 @@ class SignUp : AppCompatActivity() {
                         "imageuri" to "temp",
                         "usertype" to LandingPage.usertype
                     )
-                    if (username != null) {
-                        id = username
-                    }
+
 
             // Perform Firestore write operation on the IO thread
                 db.collection("users").document(id)
