@@ -2,14 +2,19 @@ package com.example.torento.COMMON
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.res.ColorStateList
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import com.bumptech.glide.Glide
 import com.example.torento.databinding.ActivityUpdateBinding
 import com.google.firebase.firestore.DocumentReference
@@ -20,6 +25,7 @@ import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.lang.Exception
 
 class UpdateActivity : AppCompatActivity() {
@@ -27,6 +33,7 @@ class UpdateActivity : AppCompatActivity() {
     val SHARED_PREF:String = "sharedPrefs"
     private var db = com.google.firebase.ktx.Firebase.firestore
     private var storageRef = Firebase.storage
+    private var userkey: String? = ""
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -36,9 +43,8 @@ class UpdateActivity : AppCompatActivity() {
 
         val db = Firebase.firestore
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username" , "")
+        userkey = sharedPreferences.getString("username" , "")
         val docRefUser = userkey?.let { it1 -> db.collection("users").document(it1) }
-
         GlobalScope.launch (Dispatchers.IO){
             if (docRefUser != null) {
                 retreivingdataBG(userkey.toString())
@@ -83,16 +89,103 @@ class UpdateActivity : AppCompatActivity() {
                     if (userkey != null) {
                         Log.d("jiji","1")
                         binding.progressBar.visibility = View.VISIBLE
-                        upload(userkey,it)
+                        upload(userkey!!,it)
                     }
                     //
                 }
             }
         )
         binding.dpupdate.setOnClickListener {
-            galleryimage.launch("image/*")
+            showImageSourceOptions()
         }
 
+    }
+    private fun showImageSourceOptions() {
+        // Define options in an array
+        val options = arrayOf("Choose from Gallery", "Take Photo")
+
+        // Create a dialog for options
+        AlertDialog.Builder(this)
+            .setTitle("Select Image Source")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> {
+                        // Choose from Gallery option selected
+                        chooseFromGallery()
+                    }
+                    1 -> {
+                        // Take Photo option selected
+                        takePhoto()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+    private fun chooseFromGallery() {
+        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        galleryIntent.type = "image/*"
+        resultLauncherGallery.launch(galleryIntent)
+    }
+
+    private fun takePhoto() {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        resultLauncher.launch(cameraIntent)
+    }
+
+    private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data: Intent? = result.data
+            val imageBitmap = data?.extras?.get("data") as? Bitmap
+            imageBitmap?.let { handleImageBitmap(it) }
+        } else {
+            Toast.makeText(this, "Image capture cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private val resultLauncherGallery = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data: Intent? = result.data
+            val uri = data?.data
+            // Handle the selected image URI accordingly
+            uri?.let { handleImageUri(it) }
+        } else {
+            Toast.makeText(this, "Image selection cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun handleImageBitmap(bitmap: Bitmap) {
+        // Do something with the selected image URI
+        // For example, display the selected image in an ImageView
+        val uri = getImageUri(bitmap)
+        binding.dp.setImageURI(uri)
+        if (uri != null) {
+            if (userkey != "") {
+                Log.d("jiji","1")
+                binding.progressBar.visibility = View.VISIBLE
+                userkey?.let { it1 -> upload(it1,uri) }
+            }
+            //
+        }
+    }
+    private fun handleImageUri(uri: Uri) {
+        // Do something with the selected image URI
+        // For example, display the selected image in an ImageView
+        binding.dp.setImageURI(uri)
+        if (uri != null) {
+            if (userkey != "") {
+                Log.d("jiji","1")
+                binding.progressBar.visibility = View.VISIBLE
+                userkey?.let { it1 -> upload(it1,uri) }
+            }
+            //
+        }
+    }
+    private fun getImageUri(inImage: Bitmap): Uri {
+        val bytes = ByteArrayOutputStream()
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path: String = MediaStore.Images.Media.insertImage(contentResolver, inImage, "Title", null)
+        return Uri.parse(path)
     }
     private fun upload(userkey: String,uri: Uri){
         GlobalScope.launch(Dispatchers.IO){
