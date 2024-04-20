@@ -1,12 +1,17 @@
 package com.example.torento.OWNER
 
+import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import com.example.torento.LOGIN.LandingPage.Companion.num
 import com.example.torento.databinding.ActivityAddRoomBinding
 import com.google.firebase.firestore.FieldValue
@@ -21,6 +26,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
@@ -35,6 +41,7 @@ class add_room : AppCompatActivity() {
     private lateinit var breif_description:String
     var count=0
     val SHARED_PREF : String = "sharedPrefs"
+    private var userkey:String? = ""
     private lateinit var dpuri:Uri
     private val storage = FirebaseStorage.getInstance()
     private val storageref: StorageReference = storage.reference
@@ -221,7 +228,7 @@ class add_room : AppCompatActivity() {
         ///////////////////////
 
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username", "")
+        userkey = sharedPreferences.getString("username", "")
         ///////////////////////
         val pickImages =
             registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
@@ -239,9 +246,6 @@ class add_room : AppCompatActivity() {
                 }
                 uplaodimage(userkey)
             }
-        ////////////////////////
-
-        ////////////////////////
 
         binding.uploadbtn.setOnClickListener {
             GlobalScope.launch (Dispatchers.Main){
@@ -251,7 +255,7 @@ class add_room : AppCompatActivity() {
         }
 
         binding.picCard.setOnClickListener{
-            galleryimage.launch("image/*")
+           showImageSourceOptions()
             count++
         }
 
@@ -268,6 +272,99 @@ class add_room : AppCompatActivity() {
 
 
     }
+
+    private fun showImageSourceOptions() {
+        // Define options in an array
+        val options = arrayOf("Choose from Gallery", "Take Photo")
+
+        // Create a dialog for options
+        AlertDialog.Builder(this)
+            .setTitle("Select Image Source")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> {
+                        // Choose from Gallery option selected
+                        chooseFromGallery()
+                    }
+                    1 -> {
+                        // Take Photo option selected
+                        takePhoto()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+    private fun chooseFromGallery() {
+        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        galleryIntent.type = "image/*"
+        resultLauncherGallery.launch(galleryIntent)
+    }
+
+    private fun takePhoto() {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        resultLauncher.launch(cameraIntent)
+    }
+
+    private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data: Intent? = result.data
+            val imageBitmap = data?.extras?.get("data") as? Bitmap
+            imageBitmap?.let { handleImageBitmap(it) }
+        } else {
+            Toast.makeText(this, "Image capture cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private val resultLauncherGallery = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data: Intent? = result.data
+            val uri = data?.data
+            if (uri != null) {
+                dpuri = uri
+            }
+            // Handle the selected image URI accordingly
+            uri?.let { handleImageUri(it) }
+        } else {
+            Toast.makeText(this, "Image selection cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun handleImageBitmap(bitmap: Bitmap) {
+        // Do something with the selected image URI
+        // For example, display the selected image in an ImageView
+        val uri = getImageUri(bitmap)
+        dpuri = uri
+        binding.pic.setImageURI(uri)
+        if (uri != null) {
+            if (userkey != "") {
+                Log.d("jiji","1")
+                binding.progressBar.visibility = View.VISIBLE
+                uplaodimage(userkey)
+            }
+            //
+        }
+    }
+    private fun handleImageUri(uri: Uri) {
+        // Do something with the selected image URI
+        // For example, display the selected image in an ImageView
+        binding.pic.setImageURI(uri)
+        if (uri != null) {
+            if (userkey != "") {
+                Log.d("jiji","1")
+                binding.progressBar.visibility = View.VISIBLE
+                uplaodimage(userkey)
+            }
+            //
+        }
+    }
+    private fun getImageUri(inImage: Bitmap): Uri {
+        val bytes = ByteArrayOutputStream()
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path: String = MediaStore.Images.Media.insertImage(contentResolver, inImage, "Title", null)
+        return Uri.parse(path)
+    }
+
 
     /*private fun uplaodimage(userkey: String?) {
         if(dpuri==null){
