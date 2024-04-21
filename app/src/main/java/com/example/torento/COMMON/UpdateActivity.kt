@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.net.toUri
 import com.bumptech.glide.Glide
 import com.example.torento.databinding.ActivityUpdateBinding
 import com.google.firebase.firestore.DocumentReference
@@ -22,9 +23,14 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import java.lang.Exception
 
@@ -34,6 +40,7 @@ class UpdateActivity : AppCompatActivity() {
     private var db = com.google.firebase.ktx.Firebase.firestore
     private var storageRef = Firebase.storage
     private var userkey: String? = ""
+    private var dpuri:Uri = "".toUri()
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -51,50 +58,48 @@ class UpdateActivity : AppCompatActivity() {
             }
 
         }
-        binding.UpdateBtn.setOnClickListener{
+        binding.UpdateBtn.setOnClickListener {
+
             val name = binding.name.text.toString()
-
             val phone = binding.phone.text.toString()
-
-
-
-            if (name.isNotEmpty() && phone.isNotEmpty() ) {
-                val updateData = hashMapOf(
-                    "name" to name,
-                    "phone" to phone,
-                )
-                if (docRefUser != null) {
-                    docRefUser.update(updateData as Map<String, Any>)
-                        .addOnSuccessListener {
-                            val intent = Intent(this, Profile::class.java)
-                            startActivity(intent)
-                            finish()
-                            Toast.makeText( this,"Success", Toast.LENGTH_SHORT).show()
+            if (name.isNotEmpty() && phone.isNotEmpty()) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    userkey?.let { key ->
+                        if (dpuri != "".toUri()) {
+                            binding.progressBar.visibility = View.VISIBLE
+                            // Wait for the upload to complete
+                            uploadBG(key, dpuri)
                         }
-                        .addOnFailureListener{
-                            Toast.makeText( this,"failure", Toast.LENGTH_SHORT).show()
-                        }
+                    }
+                   // delay(2000)
+
+
+                    val updateData = hashMapOf(
+                        "name" to name,
+                        "phone" to phone,
+
+                        )
+                    if (docRefUser != null) {
+                        docRefUser.update(updateData as Map<String, Any>)
+                            .addOnSuccessListener {
+                                val intent = Intent(this@UpdateActivity, Profile::class.java)
+                                startActivity(intent)
+                                finish()
+                                Toast.makeText(this@UpdateActivity, "Success", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(this@UpdateActivity, "failure", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                    }
                 }
-
             } else {
                 Toast.makeText(this, "Please provide all the details", Toast.LENGTH_SHORT).show()
             }
 
         }
 
-        val galleryimage = registerForActivityResult(
-            ActivityResultContracts.GetContent(), ActivityResultCallback {
-                binding.dp.setImageURI(it)
-                if (it != null) {
-                    if (userkey != null) {
-                        Log.d("jiji","1")
-                        binding.progressBar.visibility = View.VISIBLE
-                        upload(userkey!!,it)
-                    }
-                    //
-                }
-            }
-        )
         binding.dpupdate.setOnClickListener {
             showImageSourceOptions()
         }
@@ -163,7 +168,7 @@ class UpdateActivity : AppCompatActivity() {
             if (userkey != "") {
                 Log.d("jiji","1")
                 binding.progressBar.visibility = View.VISIBLE
-                userkey?.let { it1 -> upload(it1,uri) }
+                dpuri = uri
             }
             //
         }
@@ -175,8 +180,8 @@ class UpdateActivity : AppCompatActivity() {
         if (uri != null) {
             if (userkey != "") {
                 Log.d("jiji","1")
-                binding.progressBar.visibility = View.VISIBLE
-                userkey?.let { it1 -> upload(it1,uri) }
+                //binding.progressBar.visibility = View.VISIBLE
+                dpuri = uri
             }
             //
         }
@@ -197,7 +202,20 @@ class UpdateActivity : AppCompatActivity() {
             }
         }
     }
-    suspend fun uploadBG(userkey: String,uri: Uri?){
+    private suspend fun uploadBG(userkey: String, uri: Uri?) {
+        storageRef = FirebaseStorage.getInstance()
+        if (uri != null) {
+            val reference = storageRef.getReference("images").child(System.currentTimeMillis().toString())
+            reference.putFile(uri).await() // Await the completion of the upload
+
+            val downloadUrl = reference.downloadUrl.await() // Await download URL
+            val docRefUser = db.collection("users").document(userkey)
+
+            val updateData = hashMapOf("imageuri" to downloadUrl.toString())
+            docRefUser.update(updateData as Map<String, Any>).await() // Await Firestore update
+        }
+    }
+    /*private suspend fun uploadBG(userkey: String,uri: Uri?)= GlobalScope.async{
         Log.d("jiji","3")
         storageRef = FirebaseStorage.getInstance()
         //it takes time and check for uri!=null
@@ -231,19 +249,20 @@ class UpdateActivity : AppCompatActivity() {
                                         //Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
                                     }
                                     .addOnFailureListener {
-                                        Toast.makeText(this, "failure", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(this@UpdateActivity, "failure", Toast.LENGTH_SHORT).show()
                                     }
                             }
-
-
                         }
                 }
                 .addOnFailureListener {
-                    Toast.makeText(this, "Part-3", Toast.LENGTH_SHORT).show()
+
+                        Toast.makeText(this@UpdateActivity, "Part-3", Toast.LENGTH_SHORT).show()
+
+
                 }
         }
 
-    }
+    }.await()*/
     suspend fun retreivingdataBG(userKey: String){
         Log.d("gum","${userKey}")
         val roomRef = userKey?.let { it1 -> db.collection("users").document(it1) }

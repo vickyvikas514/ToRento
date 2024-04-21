@@ -40,7 +40,7 @@
                 android:id="@+id/dp"
                 android:layout_width="155dp"
                 android:layout_height="155dp"
-                android:scaleType="fitXY"
+                android:scaleType="centerCrop"
                 android:src="@drawable/demodp" />
 
         </androidx.cardview.widget.CardView>
