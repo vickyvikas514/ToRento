@@ -167,7 +167,7 @@ class UpdateActivity : AppCompatActivity() {
         if (uri != null) {
             if (userkey != "") {
                 Log.d("jiji","1")
-                binding.progressBar.visibility = View.VISIBLE
+               //binding.progressBar.visibility = View.VISIBLE
                 dpuri = uri
             }
             //

@@ -52,105 +52,6 @@ class add_room : AppCompatActivity() {
 
 
 
-    private fun uploadImagesToFirebaseStorage(userkey: String?) {
-        GlobalScope.launch(Dispatchers.IO) {
-            for ((index, imageUri) in imagesList.withIndex()) {
-                try {
-                    val imageUrl = uploadImage(imageUri)
-                    uploadingmultipleimagesonfirestore(imageUrl,userkey)
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Log.d("Disha1",e.toString())
-                        Toast.makeText(this@add_room, "Error uploading image: $e", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun uploadImage(imageUri: Uri): Uri = GlobalScope.async {
-        return@async storageref.child("images/${System.currentTimeMillis()}").putFile(imageUri).await().metadata?.reference?.downloadUrl?.await()
-            ?: throw RuntimeException("Failed to upload image")
-    }.await()
-    private suspend fun uploadingmultipleimagesonfirestore(imageUrl: Uri, userkey: String?){
-        val roomId = userkey + "${num - 1}"
-        try {
-            val roomsCollection = db.collection("Rooms")
-            val ownercollection = userkey?.let { db.collection(it) }
-            //"imageuri" to FieldValue.arrayUnion(imageUrl)
-            roomsCollection.document(roomId).update("imageuri", FieldValue.arrayUnion(imageUrl)).await()
-            ownercollection?.document(roomId)?.update("imageuri", FieldValue.arrayUnion(imageUrl))?.await()
-
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@add_room, "Image uploaded successfully", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                Log.d("Disha3",e.toString())
-                Toast.makeText(this@add_room, "Error updating image in Firestore: $e", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-
-    private suspend fun uploadRoom( ):Boolean {
-        // Replace 'roomId' with the actual ID of the room document
-        length = binding.roomlength.text.toString()
-        width = binding.roomwidth.text.toString()
-        location = binding.Locality.text.toString()
-        loaction_description = binding.locationDescription.text.toString()
-        amount = binding.amount.text.toString()
-        owner_name = binding.OwnerName.text.toString()
-        breif_description = binding.RoomDescription.text.toString()
-        Log.d("chutiya",roomId)
-        if (length.isEmpty() || width.isEmpty() || location.isEmpty() || loaction_description.isEmpty() || amount.isEmpty() || owner_name.isEmpty() || breif_description.isEmpty()) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@add_room, "Please fill all the fields", Toast.LENGTH_SHORT).show()
-            }
-            showDeleteRoomConfirmationDialog()
-            return false
-        }else{
-            val room = hashMapOf(
-                "length" to length,
-                "width" to width,
-                "location" to location,
-                "location_detail" to loaction_description,
-                "owner_name" to owner_name,
-                "amount" to amount,
-                "breif_description" to breif_description,
-
-                )
-
-            if (roomId != "temp") {
-                try {
-                    db.collection("Rooms").document(roomId).update(room as Map<String, Any>).await()
-                    userkey?.let {
-                        db.collection(it).document(roomId).update(room as Map<String, Any>).await()
-                    }
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@add_room, "Updated", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this@add_room,owner_home_activity::class.java)
-                        startActivity(intent)
-                        finish()
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@add_room, "Error updating room: $e", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this@add_room,owner_home_activity::class.java)
-                        startActivity(intent)
-                        finish()
-                    }
-                }
-            } else {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@add_room, "Userkey is equal to temp", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            return true
-        }
-
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -211,7 +112,6 @@ class add_room : AppCompatActivity() {
     override fun onBackPressed() {
         showDeleteRoomConfirmationDialog() // Call the confirmation dialog when the back button is pressed
     }
-
     private fun showDeleteRoomConfirmationDialog() {
         AlertDialog.Builder(this)
             .setTitle("Confirmation")
@@ -287,12 +187,10 @@ class add_room : AppCompatActivity() {
         galleryIntent.type = "image/*"
         resultLauncherGallery.launch(galleryIntent)
     }
-
     private fun takePhoto() {
         val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         resultLauncher.launch(cameraIntent)
     }
-
     private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             val data: Intent? = result.data
@@ -349,9 +247,6 @@ class add_room : AppCompatActivity() {
         val path: String = MediaStore.Images.Media.insertImage(contentResolver, inImage, "Title", null)
         return Uri.parse(path)
     }
-
-
-
     private fun uplaodimage(userkey: String?) {
         if (dpuri == null) {
             Toast.makeText(this, "Select an image", Toast.LENGTH_SHORT).show()
@@ -369,12 +264,10 @@ class add_room : AppCompatActivity() {
             }
         }
     }
-
     private suspend fun uploadImage1(dpUri: Uri): Uri = GlobalScope.async {
         return@async storageref.child("images/${System.currentTimeMillis()}").putFile(dpUri).await().metadata?.reference?.downloadUrl?.await()
             ?: throw RuntimeException("Failed to upload image")
     }.await()
-
     private suspend fun saveDpUriToFirestore(imageUrl: Uri, userkey: String?) {
         val roomId = userkey + "${num - 1}"
         try {
@@ -393,6 +286,121 @@ class add_room : AppCompatActivity() {
                 Toast.makeText(this@add_room, "Error updating image in Firestore: $e", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+    private fun uploadImagesToFirebaseStorage(userkey: String?) {
+        GlobalScope.launch(Dispatchers.IO) {
+            for ((index, imageUri) in imagesList.withIndex()) {
+                try {
+                    val imageUrl = uploadImage(imageUri)
+                    uploadingmultipleimagesonfirestore(imageUrl,userkey)
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Log.d("Disha1",e.toString())
+                        Toast.makeText(this@add_room, "Error uploading image: $e", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+    private suspend fun uploadImage(imageUri: Uri): Uri = GlobalScope.async {
+        return@async storageref.child("images/${System.currentTimeMillis()}").putFile(imageUri).await().metadata?.reference?.downloadUrl?.await()
+            ?: throw RuntimeException("Failed to upload image")
+    }.await()
+    private suspend fun uploadingmultipleimagesonfirestore(imageUrl: Uri, userkey: String?){
+        val roomId = userkey + "${num - 1}"
+        try {
+            val roomsCollection = db.collection("Rooms")
+            val ownercollection = userkey?.let { db.collection(it) }
+            //"imageuri" to FieldValue.arrayUnion(imageUrl)
+            roomsCollection.document(roomId).update("imageuri", FieldValue.arrayUnion(imageUrl)).await()
+            ownercollection?.document(roomId)?.update("imageuri", FieldValue.arrayUnion(imageUrl))?.await()
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@add_room, "Image uploaded successfully", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Log.d("Disha3",e.toString())
+                Toast.makeText(this@add_room, "Error updating image in Firestore: $e", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private suspend fun uploadRoom( ):Boolean {
+        // Replace 'roomId' with the actual ID of the room document
+        length = binding.roomlength.text.toString()
+        width = binding.roomwidth.text.toString()
+        location = binding.Locality.text.toString()
+        loaction_description = binding.locationDescription.text.toString()
+        amount = binding.amount.text.toString()
+        owner_name = binding.OwnerName.text.toString()
+        breif_description = binding.RoomDescription.text.toString()
+        Log.d("chutiya",roomId)
+        if (length.isEmpty() || width.isEmpty() || location.isEmpty() || loaction_description.isEmpty() || amount.isEmpty() || owner_name.isEmpty() || breif_description.isEmpty()) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@add_room, "Please fill all the fields", Toast.LENGTH_SHORT).show()
+            }
+            showDeleteRoomConfirmationDialog()
+            return false
+        }else{
+            val room = hashMapOf(
+                "length" to length,
+                "width" to width,
+                "location" to location,
+                "location_detail" to loaction_description,
+                "owner_name" to owner_name,
+                "amount" to amount,
+                "breif_description" to breif_description,
+                "roomId" to roomId,
+                )
+
+            if (roomId != "temp") {
+                try {
+                    db.collection("Rooms").document(roomId).update(room as Map<String, Any>).await()
+                    userkey?.let {
+                        db.collection(it).document(roomId).update(room as Map<String, Any>).await()
+                    }
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@add_room, "Updated", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this@add_room,owner_home_activity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@add_room, "Error updating room: $e", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this@add_room,owner_home_activity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@add_room, "Userkey is equal to temp", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            return true
+        }
+
+    }
+    override fun onStop() {
+        super.onStop()
+        // If user exits without saving, delete the temporary room
+        GlobalScope.launch(Dispatchers.IO) {
+            if (!checkIfAllDetailsFilled()) {
+                userkey?.let { deleteRoom("Rooms", it) }
+            }
+        }
+    }
+    private suspend fun checkIfAllDetailsFilled(): Boolean {
+        val length = binding.roomlength.text.toString()
+        val width = binding.roomwidth.text.toString()
+        val location = binding.Locality.text.toString()
+        val loaction_description = binding.locationDescription.text.toString()
+        val amount = binding.amount.text.toString()
+        val owner_name = binding.OwnerName.text.toString()
+        val breif_description = binding.RoomDescription.text.toString()
+        return !(length.isEmpty() || width.isEmpty() || location.isEmpty() || loaction_description.isEmpty() || amount.isEmpty() || owner_name.isEmpty() || breif_description.isEmpty())
     }
 
 
