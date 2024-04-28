@@ -1,5 +1,6 @@
 package com.example.torento.OWNER
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -21,6 +22,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -40,6 +42,7 @@ class add_room : AppCompatActivity() {
     private lateinit var owner_name:String
     private lateinit var breif_description:String
     var count=0
+    private var roomId:String=""
     val SHARED_PREF : String = "sharedPrefs"
     private var userkey:String? = ""
     private lateinit var dpuri:Uri
@@ -48,35 +51,7 @@ class add_room : AppCompatActivity() {
     private val imagesList = mutableListOf<Uri>()
 
 
-    /*private fun uploadImagesToFirebaseStorage(userkey: String?) {
 
-        for ((index, imageUri) in imagesList.withIndex()) {
-
-                val imageName = "image_$index.jpg"
-                val imageRef = storageref.child(imageName)
-
-                // Upload image to Firebase Storage
-                imageRef.putFile(imageUri)
-                    .addOnSuccessListener {
-                        it.metadata?.reference?.downloadUrl
-                            ?.addOnSuccessListener { imageuri ->
-                                Toast.makeText(this, "part-a", Toast.LENGTH_SHORT).show()
-                                saveImageUrlToFirestore(imageuri,userkey)
-                            }
-                            ?.addOnFailureListener {
-                                Toast.makeText(this, "part-af", Toast.LENGTH_SHORT).show()   //handle error
-                            }
-
-
-
-                    }
-                    .addOnFailureListener {
-                        // Handle the error
-                    }
-
-        }//for loop
-
-    }*/
     private fun uploadImagesToFirebaseStorage(userkey: String?) {
         GlobalScope.launch(Dispatchers.IO) {
             for ((index, imageUri) in imagesList.withIndex()) {
@@ -117,12 +92,9 @@ class add_room : AppCompatActivity() {
         }
     }
 
-    /*private fun saveImageUrlToFirestore(imageUrl: Uri, userkey: String?) {
-        val roomsCollection = db.collection("Rooms")
-        val ownercollection = userkey?.let { db.collection(it) }
+
+    private suspend fun uploadRoom( ):Boolean {
         // Replace 'roomId' with the actual ID of the room document
-        val roomId = userkey+"${num-1}"
-        Log.d("chutiya",roomId)
         length = binding.roomlength.text.toString()
         width = binding.roomwidth.text.toString()
         location = binding.Locality.text.toString()
@@ -130,7 +102,14 @@ class add_room : AppCompatActivity() {
         amount = binding.amount.text.toString()
         owner_name = binding.OwnerName.text.toString()
         breif_description = binding.RoomDescription.text.toString()
-        if(length.isNotEmpty()&&width.isNotEmpty()&&dpuri.toString().isNotEmpty()){
+        Log.d("chutiya",roomId)
+        if (length.isEmpty() || width.isEmpty() || location.isEmpty() || loaction_description.isEmpty() || amount.isEmpty() || owner_name.isEmpty() || breif_description.isEmpty()) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@add_room, "Please fill all the fields", Toast.LENGTH_SHORT).show()
+            }
+            showDeleteRoomConfirmationDialog()
+            return false
+        }else{
             val room = hashMapOf(
                 "length" to length,
                 "width" to width,
@@ -139,74 +118,38 @@ class add_room : AppCompatActivity() {
                 "owner_name" to owner_name,
                 "amount" to amount,
                 "breif_description" to breif_description,
-                "imageuri" to FieldValue.arrayUnion(imageUrl)
 
-            )
-            if(roomId!="temp"){
-                roomsCollection.document(roomId).update(room as Map<String, Any>)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "updated", Toast.LENGTH_SHORT).show()
+                )
+
+            if (roomId != "temp") {
+                try {
+                    db.collection("Rooms").document(roomId).update(room as Map<String, Any>).await()
+                    userkey?.let {
+                        db.collection(it).document(roomId).update(room as Map<String, Any>).await()
                     }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "error in updating", Toast.LENGTH_SHORT).show()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@add_room, "Updated", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@add_room,owner_home_activity::class.java)
+                        startActivity(intent)
+                        finish()
                     }
-                if (ownercollection != null) {
-                    ownercollection.document(roomId).update(room as Map<String, Any>)
-                        .addOnSuccessListener {
-                            Toast.makeText(this, "updated", Toast.LENGTH_SHORT).show()
-                        }
-                        .addOnFailureListener {
-                            Toast.makeText(this, "error in updating", Toast.LENGTH_SHORT).show()
-                        }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@add_room, "Error updating room: $e", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this@add_room,owner_home_activity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
                 }
-            }else{
-                Toast.makeText(this, "userkey is equal to temp", Toast.LENGTH_SHORT).show()
-            }
-        }else{
-            Toast.makeText(this, "provide all the details", Toast.LENGTH_SHORT).show()
-        }
-    }*/
-    private suspend fun uploadRoom( userkey: String?) {
-        // Replace 'roomId' with the actual ID of the room document
-        length = binding.roomlength.text.toString()
-        width = binding.roomwidth.text.toString()
-        location = binding.Locality.text.toString()
-        loaction_description = binding.locationDescription.text.toString()
-        amount = binding.amount.text.toString()
-        owner_name = binding.OwnerName.text.toString()
-        breif_description = binding.RoomDescription.text.toString()
-        val roomId = userkey + "${num - 1}"
-        Log.d("chutiya",roomId)
-        val room = hashMapOf(
-            "length" to length,
-            "width" to width,
-            "location" to location,
-            "location_detail" to loaction_description,
-            "owner_name" to owner_name,
-            "amount" to amount,
-            "breif_description" to breif_description,
-
-        )
-
-        if (roomId != "temp") {
-            try {
-                db.collection("Rooms").document(roomId).update(room as Map<String, Any>).await()
-                userkey?.let {
-                    db.collection(it).document(roomId).update(room as Map<String, Any>).await()
-                }
+            } else {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@add_room, "Updated", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@add_room, "Error updating room: $e", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@add_room, "Userkey is equal to temp", Toast.LENGTH_SHORT).show()
                 }
             }
-        } else {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@add_room, "Userkey is equal to temp", Toast.LENGTH_SHORT).show()
-            }
+
+            return true
         }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -229,6 +172,7 @@ class add_room : AppCompatActivity() {
 
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         userkey = sharedPreferences.getString("username", "")
+        roomId = userkey + "${num - 1}"
         ///////////////////////
         val pickImages =
             registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
@@ -238,18 +182,9 @@ class add_room : AppCompatActivity() {
                     uploadImagesToFirebaseStorage(userkey)
                 }
             }
-        val galleryimage =
-            registerForActivityResult(ActivityResultContracts.GetContent()) {
-                binding.pic.setImageURI(it)
-                if (it != null) {
-                    dpuri = it
-                }
-                uplaodimage(userkey)
-            }
-
         binding.uploadbtn.setOnClickListener {
             GlobalScope.launch (Dispatchers.Main){
-                uploadRoom(userkey)
+                uploadRoom()
             }
 
         }
@@ -272,7 +207,57 @@ class add_room : AppCompatActivity() {
 
 
     }
+    //@SuppressLint("MissingSuperCall")
+    override fun onBackPressed() {
+        showDeleteRoomConfirmationDialog() // Call the confirmation dialog when the back button is pressed
+    }
 
+    private fun showDeleteRoomConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmation")
+            .setMessage("Are you sure you want to discard the room?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                // Delete the room and navigate back
+                GlobalScope.launch (IO){
+                    userkey?.let { deleteRoom("Rooms", it) }
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+    suspend fun deleteRoom(collection1:String,collection2: String){
+        val document = intent.getStringExtra("documentId")
+        val docRef = document?.let { db.collection(collection1).document(it) }
+        val docRef2 = document?.let { db.collection(collection2).document(it) }
+        if (docRef != null) {
+            docRef.delete()
+                .addOnSuccessListener {
+                    // Document successfully deleted
+                    Toast.makeText(this, "DocumentSnapshot successfully deleted!", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener { e ->
+                    // Handle the error
+                    println("Error deleting document: $e")
+                }
+        }
+        if (docRef2 != null) {
+            docRef2.delete()
+                .addOnSuccessListener {
+                    // Document successfully deleted
+                    val intent = Intent(this,owner_home_activity::class.java)
+                    startActivity(intent)
+                    finish()
+                    println("DocumentSnapshot successfully deleted!")
+                }
+                .addOnFailureListener { e ->
+                    // Handle the error
+                    println("Error deleting document: $e")
+                }
+        }
+    }
     private fun showImageSourceOptions() {
         // Define options in an array
         val options = arrayOf("Choose from Gallery", "Take Photo")
@@ -366,31 +351,7 @@ class add_room : AppCompatActivity() {
     }
 
 
-    /*private fun uplaodimage(userkey: String?) {
-        if(dpuri==null){
-            Toast.makeText(this, "select image", Toast.LENGTH_SHORT).show()
-        }else{
-            storageRef.getReference("images").child(System.currentTimeMillis().toString())
-                .putFile(dpuri)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Part-1", Toast.LENGTH_SHORT).show()
-                    it.metadata?.reference?.downloadUrl
-                        ?.addOnSuccessListener { imageuri ->
-                            Toast.makeText(this, "Part-1a", Toast.LENGTH_SHORT).show()
-                            val roomsCollection = db.collection("Rooms")
-                            val ownercollection = userkey?.let { it1 -> db.collection(it1) }
-                            val roomId = userkey+"${num-1}"
-                            Log.d("terabaap1","${num-1}")
-                            Log.d("vicky4","$roomId")
-                            roomsCollection.document(roomId).update("dpuri" , imageuri)
-                            if (ownercollection != null) {
-                                ownercollection.document(roomId).update("dpuri" , imageuri)
-                            }
-                        }
-                }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Part-3", Toast.LENGTH_SHORT).show()
-                } } }*/
+
     private fun uplaodimage(userkey: String?) {
         if (dpuri == null) {
             Toast.makeText(this, "Select an image", Toast.LENGTH_SHORT).show()

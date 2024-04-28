@@ -100,10 +100,7 @@ class owner_home_activity : AppCompatActivity() {
                     x = savedInstanceState.getInt("x", 0)
                     num = savedInstanceState.getInt("num", 0)
                 }
-
-
-
-                GlobalScope.launch {
+                    GlobalScope.launch {
                     if (userkey != null) {
                         userid = userkey
                     }
@@ -193,7 +190,7 @@ class owner_home_activity : AppCompatActivity() {
         editor.apply()
     }
     override fun onBackPressed() {
-        super.onBackPressed()
+
         AlertDialog.Builder(this)
             .setMessage("Are you sure you want to exit?")
             .setPositiveButton("Yes") { _, _ -> finishAndRemoveTask() }
@@ -264,63 +261,41 @@ class owner_home_activity : AppCompatActivity() {
         finish()
     }
     private fun addtemproom(){
-
-        val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username", "")
-        val collectionReference = db.collection("Rooms")
-        collectionReference.get()
-            .addOnSuccessListener { querySnapshot ->
-                // Get the count of documents in the collection
-
-                num = querySnapshot.size()+1
-
-                Log.d("vicky","$x")
-                subaddtemproom(userkey,num)
-                changepage()
-
-            }
-            .addOnFailureListener { e ->
-                num=1
-                x=1
-                Toast.makeText(this, "fail in room count", Toast.LENGTH_SHORT).show()
-
-            }
-        Log.d("vicky1","$num")
-       
-
-
-    }
-    private fun subaddtemproom(userkey: String?, x: Int) {
+        subaddtemproom(userid)
+      }
+    private fun subaddtemproom(userkey: String?) {
+        var documentId: String? = null
         val room = hashMapOf(
-            "length" to "temp",
-            "width" to "temp",
-            "location" to "temp",
-            "imageuri" to "temp",
-            "dpuri" to "temp",
-            "location_detail" to "temp",
-            "owner_name" to "temp",
-            "amount" to "temp",
-            "breif_description" to "temp",
+            "length" to "",
+            "width" to "",
+            "location" to "",
+            "imageuri" to "",
+            "dpuri" to "",
+            "location_detail" to "",
+            "owner_name" to "",
+            "amount" to "",
+            "breif_description" to "",
             "ownerId" to auth.currentUser?.uid ?: return
         )
         if (userkey != null) {
             if (userkey.isNotEmpty()){
                 Log.d("vicky2","$x")
-                db.collection("Rooms").document(userkey+"$x")
-                    .set(room)
+               val collectionReference =  db.collection("Rooms")
+                    collectionReference.add(room)
                     .addOnSuccessListener {
-                        Toast.makeText(this, "Temp Room is set", Toast.LENGTH_SHORT).show()
-                        Log.d("vikas", "Success $userkey$x")
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w("vikas", "Error adding document", e)
-                    }
-
-                db.collection(userkey).document(userkey+"$x")
-                    .set(room)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Temp Room is set for owner", Toast.LENGTH_SHORT).show()
-                        Log.d("vikas", "Success $userkey$x")
+                        documentId = it.id
+                        Toast.makeText(this, it.id, Toast.LENGTH_SHORT).show()
+                        db.collection(userkey).document(documentId.toString())
+                            .set(room)
+                            .addOnSuccessListener {
+                            changepage(documentId!!)
+                                Toast.makeText(this, "Temp Room is set for owner", Toast.LENGTH_SHORT).show()
+                                Log.d("vikas", "Success $userkey$x")
+                            }
+                            .addOnFailureListener { e ->
+                                Log.w("vikas", "Error adding document", e)
+                            }
+                        
                     }
                     .addOnFailureListener { e ->
                         Log.w("vikas", "Error adding document", e)
@@ -333,8 +308,9 @@ class owner_home_activity : AppCompatActivity() {
             Toast.makeText(this, "userkey is null", Toast.LENGTH_SHORT).show()
         }
     }
-    private fun changepage() {
+    private fun changepage(documentId:String) {
         val intent = Intent(this, add_room::class.java)
+        intent.putExtra("documentId",documentId)
         startActivity(intent)
     }
     //to save values of x and num in changing configuration
