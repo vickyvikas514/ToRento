@@ -7,6 +7,8 @@ import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -42,6 +44,92 @@ class SignUp : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     val SHARED_PREF: String = "sharedPrefs"
 
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+      // val db = Firebase.firestore
+        binding = ActivitySignUpBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.signupText.setOnClickListener {
+            val intent = Intent(this, SignIn::class.java)
+            startActivity(intent)
+            finish()
+        }
+        firebaseAuth = FirebaseAuth.getInstance()
+        job = Job()
+
+        binding.phone.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action required here
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s?.length == 10) {
+                    hideKeyboard(this@SignUp)
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                if (s?.length ?: 0 > 10) {
+                    // Truncate the input to 10 digits if exceeded
+                    binding.phone.setText(s?.subSequence(0, 10))
+                    binding.phone.setSelection(10) // Move cursor to the end
+                }
+            }
+        })
+
+        binding.signupbtn.setOnClickListener {
+            binding.progressBar.visibility = View.VISIBLE
+            hideKeyboard(this@SignUp)
+            val name = binding.name.text.toString()
+            val username = binding.username.text.toString()
+            val phone = binding.phone.text.toString()
+            val email = binding.email.text.toString()
+            val pass = binding.pass.text.toString()
+            val confpass = binding.confpass.text.toString()
+            if (name.isNotEmpty() && username.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty() && confpass.isNotEmpty()) {
+                if (phone.length != 10) {
+                    Toast.makeText(this, "Please enter a valid 10-digit phone number", Toast.LENGTH_SHORT).show()
+                    binding.progressBar.visibility = View.GONE
+                } else if (!isValidPassword(pass)) {
+                    Toast.makeText(this, "Password must contain at least 1 lowercase, 1 uppercase, 1 digit, and 1 special character.", Toast.LENGTH_SHORT).show()
+                    binding.progressBar.visibility = View.GONE
+                } else if (confpass != pass) {
+                    Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                    binding.progressBar.visibility = View.GONE
+                } else {
+                    GlobalScope.launch {
+                        loginlate(pass, confpass, email, name, username, phone)
+                    }
+                    showPopup()
+                }
+            } else {
+                Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+                binding.progressBar.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun isValidPassword(password: String): Boolean {
+        val hasLowercase = password.any { it.isLowerCase() }
+        val hasUppercase = password.any { it.isUpperCase() }
+        val hasDigit = password.any { it.isDigit() }
+        val hasSpecialChar = password.any { !it.isLetterOrDigit() }
+
+        return hasLowercase && hasUppercase && hasDigit && hasSpecialChar
+    }
+    fun hideKeyboard(activity: Activity) {
+        val inputMethodManager = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        val currentFocus = activity.currentFocus
+        if (currentFocus != null) {
+            inputMethodManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
+        }
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        // Cancel the job when the activity is destroyed
+        job.cancel()
+    }
     private fun showPopup() {
         // Check if the activity is finishing or has been destroyed
         if (!isFinishing) {
@@ -75,60 +163,6 @@ class SignUp : AppCompatActivity() {
         context.startActivity(mainIntent)
         Runtime.getRuntime().exit(0)
     }
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-      // val db = Firebase.firestore
-        binding = ActivitySignUpBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        binding.signupText.setOnClickListener {
-            val intent = Intent(this, SignIn::class.java)
-            startActivity(intent)
-            finish()
-        }
-        firebaseAuth = FirebaseAuth.getInstance()
-        job = Job()
-        binding.signupbtn.setOnClickListener {
-            binding.progressBar.visibility = View.VISIBLE
-            hideKeyboard(this@SignUp)
-            val name = binding.name.text.toString()
-            val username = binding.username.text.toString()
-            val phone = binding.phone.text.toString()
-            val email = binding.email.text.toString()
-            val pass = binding.pass.text.toString()
-            val confpass = binding.confpass.text.toString()
-            if (name.isNotEmpty() && phone.isNotEmpty() && username.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty() && confpass.isNotEmpty()) {
-
-                GlobalScope.launch() {
-
-                    loginlate(pass,confpass, email,name,username,phone)
-
-                   // delay(5000)
-
-                }
-                showPopup()
-
-            } else {
-                Toast.makeText(this, "Please provide all the details", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-    }
-    fun hideKeyboard(activity: Activity) {
-        val inputMethodManager = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        val currentFocus = activity.currentFocus
-        if (currentFocus != null) {
-            inputMethodManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
-        }
-    }
-    override fun onDestroy() {
-        super.onDestroy()
-        // Cancel the job when the activity is destroyed
-        job.cancel()
-    }
-
-
     private fun sendEmailVerification(){
         val user = firebaseAuth.currentUser
         user?.sendEmailVerification()
