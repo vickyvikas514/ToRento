@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.torento.Adapter.PicsAdapter
 import com.example.torento.LOGIN.LandingPage.Companion.usertype
 import com.example.torento.OWNER.EditRoom
+import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.R
 import com.example.torento.USER.Save
 import com.example.torento.databinding.ActivityDescripnBinding
@@ -208,21 +209,25 @@ class descripn : AppCompatActivity() {
     docRef.delete()
         .addOnSuccessListener {
             // Document successfully deleted
+            docRef2.delete()
+                .addOnSuccessListener {
+                    // Document successfully deleted
+                    println("DocumentSnapshot successfully deleted!")
+                }
+                .addOnFailureListener { e ->
+                    // Handle the error
+                    println("Error deleting document: $e")
+                }
+            val intent = Intent(this@descripn, owner_home_activity::class.java)
+            startActivity(intent)
+            finish()
             Toast.makeText(this, "DocumentSnapshot successfully deleted!", Toast.LENGTH_SHORT).show()
         }
         .addOnFailureListener { e ->
             // Handle the error
             println("Error deleting document: $e")
         }
-    docRef2.delete()
-        .addOnSuccessListener {
-            // Document successfully deleted
-            println("DocumentSnapshot successfully deleted!")
-        }
-        .addOnFailureListener { e ->
-            // Handle the error
-            println("Error deleting document: $e")
-        }
+
 }
     suspend fun unsave(collection1:String,document:String){
 

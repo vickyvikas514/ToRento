@@ -95,16 +95,12 @@ class owner_home_activity : AppCompatActivity() {
 
             binding.addButton.setOnClickListener{
                 //made temp room
-                if (savedInstanceState != null) {
-                    // Restore the values from the saved state
-                    x = savedInstanceState.getInt("x", 0)
-                    num = savedInstanceState.getInt("num", 0)
-                }
+
                     GlobalScope.launch {
                     if (userkey != null) {
                         userid = userkey
                     }
-                    addtemproom()
+                    changepage()
                 }
             }
             supportActionBar?.setTitle("Torento")
@@ -206,7 +202,6 @@ class owner_home_activity : AppCompatActivity() {
         return true
     }
     suspend fun getuserId(userkey:String): String = GlobalScope.async{
-
         var userId:String = ""
         try {
             val docref = db.collection("users").document(userkey).get().await()
@@ -260,57 +255,8 @@ class owner_home_activity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
-    private fun addtemproom(){
-        subaddtemproom(userid)
-      }
-    private fun subaddtemproom(userkey: String?) {
-        var documentId: String? = null
-        val room = hashMapOf(
-            "length" to "",
-            "width" to "",
-            "location" to "",
-            "imageuri" to "",
-            "dpuri" to "",
-            "location_detail" to "",
-            "owner_name" to "",
-            "amount" to "",
-            "breif_description" to "",
-            "ownerId" to auth.currentUser?.uid ?: return
-        )
-        if (userkey != null) {
-            if (userkey.isNotEmpty()){
-                Log.d("vicky2","$x")
-               val collectionReference =  db.collection("Rooms")
-                    collectionReference.add(room)
-                    .addOnSuccessListener {
-                        documentId = it.id
-                        Toast.makeText(this, it.id, Toast.LENGTH_SHORT).show()
-                        db.collection(userkey).document(documentId.toString())
-                            .set(room)
-                            .addOnSuccessListener {
-                            changepage(documentId!!)
-                                Toast.makeText(this, "Temp Room is set for owner", Toast.LENGTH_SHORT).show()
-                                Log.d("vikas", "Success $userkey$x")
-                            }
-                            .addOnFailureListener { e ->
-                                Log.w("vikas", "Error adding document", e)
-                            }
-                        
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w("vikas", "Error adding document", e)
-                    }
-            }else{
-                Toast.makeText(this, "userkey is empty", Toast.LENGTH_SHORT).show()
-            }
-
-        }else{
-            Toast.makeText(this, "userkey is null", Toast.LENGTH_SHORT).show()
-        }
-    }
-    private fun changepage(documentId:String) {
+    private fun changepage() {
         val intent = Intent(this, add_room::class.java)
-        intent.putExtra("documentId",documentId)
         startActivity(intent)
     }
     //to save values of x and num in changing configuration

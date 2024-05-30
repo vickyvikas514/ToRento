@@ -38,7 +38,7 @@ class EditRoom : AppCompatActivity() {
         Toast.makeText(this@EditRoom, userkey, Toast.LENGTH_SHORT).show()
         val Id = intent.getStringExtra("documentid").toString()
         Toast.makeText(this@EditRoom, Id, Toast.LENGTH_SHORT).show()
-        binding.updateRoompic.text = "Save the changes"
+        binding.AddMorePics.text = "Save the changes"
         val galleryImage = registerForActivityResult(ActivityResultContracts.GetContent()) {
             binding.pic.setImageURI(it)
             if (it != null) {
@@ -58,7 +58,7 @@ class EditRoom : AppCompatActivity() {
         binding.picCard.setOnClickListener {
             binding.progressBar.visibility = View.VISIBLE
             galleryImage.launch("image/*") }
-        binding.updateRoompic.setOnClickListener {
+        binding.AddMorePics.setOnClickListener {
             binding.progressBar.visibility = View.VISIBLE
             if (userkey != null) {
                 updateTheEdit(Id,userkey)
