@@ -1,6 +1,5 @@
 package com.example.torento.OWNER
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -14,10 +13,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
-import com.example.torento.COMMON.Profile
-import com.example.torento.LOGIN.LandingPage.Companion.num
+import androidx.transition.Visibility
 import com.example.torento.databinding.ActivityAddRoomBinding
-import com.google.firebase.firestore.FieldValue
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -54,6 +52,7 @@ class add_room : AppCompatActivity() {
     private val storageref: StorageReference = storage.reference
     private val imagesList = mutableListOf<Uri>()
     private val imagesListforFirebaseUris = mutableListOf<Uri>()
+    private lateinit var auth: FirebaseAuth
 
 
 
@@ -70,10 +69,12 @@ class add_room : AppCompatActivity() {
                 if (uris.isNotEmpty()) {
                     imagesList.addAll(uris)
                     // Upload images to Firebase Storage
-                    uploadImagesToFirebaseStorage(userkey)
+                    uploadImagesToFirebaseStorage()
                 }}
 
         binding.uploadbtn.setOnClickListener {
+            //Toast.makeText(this, "HELLO", Toast.LENGTH_SHORT).show()
+
             GlobalScope.launch (Dispatchers.Main){
                 UploadTheRoom()
             }
@@ -197,7 +198,7 @@ class add_room : AppCompatActivity() {
         val path: String = MediaStore.Images.Media.insertImage(contentResolver, inImage, "Title", null)
         return Uri.parse(path)
     }
-    private suspend fun uploadBG(uri: Uri?) {
+    private suspend fun uploadBG(uri: Uri?){
         storageRef = FirebaseStorage.getInstance()
         return try{
             val reference = storageRef.getReference("images").child(System.currentTimeMillis().toString())
@@ -210,7 +211,7 @@ class add_room : AppCompatActivity() {
         }
 
     }
-    private fun uploadImagesToFirebaseStorage(userkey: String?) {
+    private fun uploadImagesToFirebaseStorage() {
         showProgressOverlay(true)
         GlobalScope.launch(Dispatchers.IO) {
             for ((index, imageUri) in imagesList.withIndex()) {
@@ -243,7 +244,8 @@ class add_room : AppCompatActivity() {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
     }
     private fun UploadTheRoom(){
-        var documentId = ""
+        showProgressOverlay(true)
+        auth = FirebaseAuth.getInstance()
         length = binding.roomlength.text.toString()
         width = binding.roomwidth.text.toString()
         location = binding.Locality.text.toString()
@@ -270,8 +272,9 @@ class add_room : AppCompatActivity() {
                         "amount" to amount,
                         "breif_description" to breif_description,
                         "roomId" to roomId,
-                        "dpuri" to dpuri.toString(),
+                        "dpuri" to dpUri,
                         "imageuri" to imagesListforFirebaseUris,
+                        "ownerId" to auth.currentUser?.uid.toString()
 
                     )
                     saveRoomData(updateData)
@@ -281,6 +284,7 @@ class add_room : AppCompatActivity() {
 
             }
         } else {
+            showProgressOverlay(false)
             Toast.makeText(this, "Please provide all the details", Toast.LENGTH_SHORT).show()
         }
     }
@@ -299,23 +303,29 @@ class add_room : AppCompatActivity() {
                     roomId = documentId
                     val docRefUser = db.collection("Rooms").document(documentId)
                     if (docRefUser != null) {
-                        docRefUser.set(updateData)
+
+                        updateData["roomId"] = documentId
+                        docref2.document(documentId).update(updateData)
                             .addOnSuccessListener {
-                                binding.progressBar.visibility = View.GONE
-                                Toast.makeText(
-                                    this@add_room, "Success", Toast.LENGTH_SHORT
-                                )
-                                    .show()
-                                backtoHome()
+                                docRefUser.set(updateData)
+                                    .addOnSuccessListener {
+                                        showProgressOverlay(false)
+                                        Toast.makeText(
+                                            this@add_room, "Success", Toast.LENGTH_SHORT
+                                        )
+                                            .show()
+                                        backtoHome()
+                                    }
+                                    .addOnFailureListener {
+                                        Toast.makeText(
+                                            this@add_room,
+                                            "failure",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                            .show()
+                                    }
                             }
-                            .addOnFailureListener {
-                                Toast.makeText(
-                                    this@add_room,
-                                    "failure",
-                                    Toast.LENGTH_SHORT
-                                )
-                                    .show()
-                            }
+
                     }
                     Toast.makeText(this@add_room, "Success", Toast.LENGTH_SHORT)
                         .show()
