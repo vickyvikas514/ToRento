@@ -50,7 +50,7 @@ class Save  : AppCompatActivity() {
                     val roomwidth = document.getString("width") ?: ""
                     val roomsize: String = roomlength + "x" + roomwidth
                     val Docid:String = document.id
-                    val item = Room(roomsize, description, roomimage)
+                    val item = Room(roomsize, description, roomimage, roomOwnerDpUrl = document.getString("dpuri") ?: "")
                     itemsList.add(item)
                     idlist.add(Docid)
                 }

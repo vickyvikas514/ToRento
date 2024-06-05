@@ -168,8 +168,9 @@ class user_home_activity : AppCompatActivity() {
                     val roomlength = document.getString("length") ?: ""
                     val roomwidth = document.getString("width") ?: ""
                     val roomsize: String = roomlength + "x" + roomwidth
+                    val roomOwnerDpUrl = document.getString("ownerDpUrl") ?: ""
                     val Docid:String = document.id
-                    val item = Room(roomsize, description, roomimage)
+                    val item = Room(roomsize, description, roomimage, roomOwnerDpUrl)
                     itemsList.add(item)
                     idlist.add(Docid)
                 }

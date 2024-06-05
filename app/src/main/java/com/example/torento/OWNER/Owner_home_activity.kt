@@ -31,6 +31,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -45,6 +46,7 @@ class owner_home_activity : AppCompatActivity() {
     private var backPressedOnce = false
     var id=""
     private lateinit var popupWindow: PopupWindow
+    private var test = ""
 
 
 
@@ -119,14 +121,16 @@ class owner_home_activity : AppCompatActivity() {
                         // Handle the error
                         return@addSnapshotListener
                     }
+
                     snapshot?.forEach { document ->
                         val roomimage = document.getString("dpuri")?:""
                         val description = document.getString("location") ?: ""
                         val roomlength = document.getString("length") ?: ""
                         val roomwidth = document.getString("width") ?: ""
-                        val roomsize:String = roomlength+"x"+roomwidth
+                        val roomsize:String = roomlength+" ft"+" x "+roomwidth+" ft"
+                        val roomOwnerDpUrl:String = document.getString("ownerDpUrl")?:""
                         val Docid:String = document.id
-                        val item = Room( roomsize, description,roomimage)
+                        val item = Room( roomsize, description,roomimage, roomOwnerDpUrl)
                         idlist.add(Docid)
                         itemsList.add(item)
                     }
@@ -139,14 +143,12 @@ class owner_home_activity : AppCompatActivity() {
                     binding.OwnerRoomlist.adapter = adapter
                     adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener{
                         override fun onItemClick(documentid:String,position: Int) {
-
                             // Handle item click here
                             // For example, navigate to another activity
                             GlobalScope.launch(Dispatchers.IO) {
                                 try {
-                                    val userId = userkey?.let { it1 -> getuserId(it1) }
-
                                     launch (Dispatchers.Main){
+                                        Toast.makeText(this@owner_home_activity, test, Toast.LENGTH_SHORT).show()
                                         val intent = Intent(this@owner_home_activity, descripn::class.java)
                                         intent.putExtra("documentid",documentid)
                                         intent.putExtra("usertype","owner")
@@ -171,6 +173,28 @@ class owner_home_activity : AppCompatActivity() {
 
 
         }
+
+   /*suspend fun getDpUrl(OwnerId: String) : String{
+       val docref =  db.collection("users").document("ddd").get().await()
+       var Url = ""
+       try {
+           docref.data?.let {
+               Url = it["imageuri"].toString()
+           }
+           GlobalScope.launch(Dispatchers.Main){
+               Toast.makeText(this@owner_home_activity, OwnerId, Toast.LENGTH_SHORT).show()
+           }
+
+       } catch(e:Exception) {
+           Log.e("descripn", "Error fetching data from Firestore: ${e.message}")
+       }
+       GlobalScope.launch(Dispatchers.Main){
+           Toast.makeText(this@owner_home_activity, Url, Toast.LENGTH_SHORT).show()
+       }
+
+       return Url
+    }*/
+
     private fun restartApp(context: Context) {
         val packageManager = context.packageManager
         val intent = packageManager.getLaunchIntentForPackage(context.packageName)

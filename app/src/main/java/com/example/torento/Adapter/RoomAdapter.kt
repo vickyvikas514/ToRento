@@ -26,6 +26,7 @@ class RoomAdapter(val context: Context, var rooms:List<Room>, var idlist:List<St
         val RoomImage = itemView.findViewById<ImageView>(R.id.pic)
         val RoomSizeText = itemView.findViewById<TextView>(R.id.textline1)
         val RoomDescripText = itemView.findViewById<TextView>(R.id.textline2)
+        val RoomOwnerDpImage = itemView.findViewById<ImageView>(R.id.dp)
         init {
             itemView.setOnClickListener{
                  // Call the onItemClick method of the listener and pass the document ID
@@ -48,6 +49,12 @@ class RoomAdapter(val context: Context, var rooms:List<Room>, var idlist:List<St
         holder.RoomSizeText.text = room.sizeofroom
         holder.RoomDescripText.text = room.roomdescriptiontext
         Glide.with(context).load(room.roomimageurl).into(holder.RoomImage)
+        if(room.roomOwnerDpUrl=="temp" || room.roomOwnerDpUrl==null){
+            holder.RoomOwnerDpImage.setImageResource(R.drawable.demodp)
+        }else{
+            Glide.with(context).load(room.roomOwnerDpUrl).into(holder.RoomOwnerDpImage)
+        }
+
 
     }
 

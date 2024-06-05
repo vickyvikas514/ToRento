@@ -53,6 +53,7 @@ class add_room : AppCompatActivity() {
     private val imagesList = mutableListOf<Uri>()
     private val imagesListforFirebaseUris = mutableListOf<Uri>()
     private lateinit var auth: FirebaseAuth
+    private lateinit var roomOwnerDpUrl:String
 
 
 
@@ -64,6 +65,12 @@ class add_room : AppCompatActivity() {
         storageRef = FirebaseStorage.getInstance()
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         userkey = sharedPreferences.getString("username", "")
+        GlobalScope.launch(Dispatchers.IO) {
+            GlobalScope.launch(Dispatchers.Main){
+                Toast.makeText(this@add_room, "11", Toast.LENGTH_SHORT).show()
+            }
+            roomOwnerDpUrl = getOwnerDp()
+        }
         val pickImages =
             registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
                 if (uris.isNotEmpty()) {
@@ -92,6 +99,25 @@ class add_room : AppCompatActivity() {
 
         }
     }
+    private suspend fun getOwnerDp():String = GlobalScope.async{
+        GlobalScope.launch(Dispatchers.Main){
+            Toast.makeText(this@add_room, "12", Toast.LENGTH_SHORT).show()
+        }
+        val docRef = db.collection("users").document(userkey.toString()).get().await()
+        var Url = ""
+        try {
+            docRef.data?.let {
+                Url = it["imageuri"].toString()
+            }
+        } catch(e:Exception) {
+            Log.e("descripn", "Error fetching data from Firestore: ${e.message}")
+        }
+        GlobalScope.launch(Dispatchers.Main){
+            Toast.makeText(this@add_room, Url, Toast.LENGTH_SHORT).show()
+        }
+
+        return@async Url
+    }.await()
     override fun onBackPressed() {
         showDeleteRoomConfirmationDialog() // Call the confirmation dialog when the back button is pressed
     }
@@ -274,7 +300,8 @@ class add_room : AppCompatActivity() {
                         "roomId" to roomId,
                         "dpuri" to dpUri,
                         "imageuri" to imagesListforFirebaseUris,
-                        "ownerId" to auth.currentUser?.uid.toString()
+                        "ownerId" to auth.currentUser?.uid.toString(),
+                        "ownerDpUrl" to roomOwnerDpUrl,
 
                     )
                     saveRoomData(updateData)
