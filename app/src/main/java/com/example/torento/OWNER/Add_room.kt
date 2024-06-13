@@ -87,6 +87,7 @@ class add_room : AppCompatActivity() {
             }
 
         }
+        binding.dpupdate.visibility = View.GONE
         binding.picCard.setOnClickListener{
            showImageSourceOptions()
         }

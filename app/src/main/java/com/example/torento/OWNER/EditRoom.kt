@@ -9,13 +9,18 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import com.bumptech.glide.Glide
 import com.example.torento.databinding.ActivityAddRoomBinding
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -28,17 +33,26 @@ class EditRoom : AppCompatActivity() {
     private var storageRef = Firebase.storage
     val SHARED_PREF: String = "sharedPrefs"
     private var db = com.google.firebase.ktx.Firebase.firestore
+    private lateinit var Id:String
+    private val imagesList = mutableListOf<Uri>()
+    private val imagesListforFirebaseUris = mutableListOf<Uri>()
+    private val storage = FirebaseStorage.getInstance()
+    private val storageref: StorageReference = storage.reference
+    private lateinit var userkey: String
+    private var check:Int = 0
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddRoomBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.addroomtext.text = "Edit your room details"
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        val userkey: String? = sharedPreferences.getString("username", "")
-        Toast.makeText(this@EditRoom, userkey, Toast.LENGTH_SHORT).show()
-        val Id = intent.getStringExtra("documentid").toString()
+        userkey = sharedPreferences.getString("username", "").toString()
+
+        Id = intent.getStringExtra("documentid").toString()
         Toast.makeText(this@EditRoom, Id, Toast.LENGTH_SHORT).show()
-        binding.AddMorePics.text = "Save the changes"
+        binding.uploadbtn.text = "Save the changes"
         val galleryImage = registerForActivityResult(ActivityResultContracts.GetContent()) {
             binding.pic.setImageURI(it)
             if (it != null) {
@@ -55,20 +69,123 @@ class EditRoom : AppCompatActivity() {
             }
         }
 
-        binding.picCard.setOnClickListener {
+        binding.dpupdate.setOnClickListener {
             binding.progressBar.visibility = View.VISIBLE
             galleryImage.launch("image/*") }
-        binding.AddMorePics.setOnClickListener {
+        binding.uploadbtn.setOnClickListener {
             binding.progressBar.visibility = View.VISIBLE
             if (userkey != null) {
                 updateTheEdit(Id,userkey)
+            }else{
+                Toast.makeText(this, "username is not found", Toast.LENGTH_SHORT).show()
             }
-
+            changetohome()
         }
         GlobalScope.launch (Dispatchers.IO){
             retreivingdataBG(Id,userkey.toString())
         }
+        val pickImages =
+            registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+                if (uris.isNotEmpty()) {
+                    imagesList.addAll(uris)
+                    // Upload images to Firebase Storage
+                    uploadImagesToFirebaseStorage()
+                }}
+        binding.AddMorePics.setOnClickListener{
+            val options = arrayOf("Remove all the previous images and add new images", "Add some new images to the existing images")
+
+            // Create a dialog for options
+            AlertDialog.Builder(this)
+                .setTitle("Select Image Source")
+                .setItems(options) { dialog, which ->
+                    when (which) {
+                        0 -> {
+                            // Choose from Gallery option selected
+                            pickImages.launch("image/*")
+                        }
+                        1 -> {
+                            // Take Photo option selected
+                            check = 1
+                            pickImages.launch("image/*")
+                            AddSomeNewImages()
+                        }
+                    }
+                }
+                .setNegativeButton("Cancel") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
+        }
     }
+    /*private fun ShowDialogForAddmorePics(){
+        // Define options in an array
+        val options = arrayOf("Remove all the previous images and add new images", "Add some new images to the existing images")
+
+        // Create a dialog for options
+        AlertDialog.Builder(this)
+            .setTitle("Select Image Source")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> {
+                        // Choose from Gallery option selected
+                        RemoveAllImages()
+                    }
+                    1 -> {
+                        // Take Photo option selected
+                        AddSomeNewImages()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }*/
+    private fun RemoveAllImages(){
+
+        GlobalScope.launch (Dispatchers.IO){
+            AddAlltheNewImages()
+        }
+    }
+    private suspend fun AddAlltheNewImages() = GlobalScope.async{
+
+
+    }.await()
+    private fun AddSomeNewImages(){
+
+    }
+    private fun uploadImagesToFirebaseStorage() {
+        showProgressOverlay(true)
+        GlobalScope.launch(Dispatchers.IO) {
+            for ((index, imageUri) in imagesList.withIndex()) {
+                try {
+                    val imageUrl = uploadImage(imageUri)
+                    imagesListforFirebaseUris.add(imageUrl)
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Log.d("ExceptionInAddingMoreImages",e.toString())
+                        Toast.makeText(this@EditRoom, "Error uploading image: $e", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            withContext(Dispatchers.Main) {
+                showProgressOverlay(false)
+                Toast.makeText(this@EditRoom, "All images uploaded successfully", Toast.LENGTH_SHORT).show()
+            }
+
+        }
+
+    }
+    private fun showProgressOverlay(show: Boolean) {
+        binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        binding.root.isClickable = show
+        binding.root.isFocusable = show
+        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
+    }
+    private suspend fun uploadImage(imageUri: Uri): Uri = GlobalScope.async {
+        return@async storageref.child("images/${System.currentTimeMillis()}").putFile(imageUri).await().metadata?.reference?.downloadUrl?.await()
+            ?: throw RuntimeException("Failed to upload image")
+    }.await()
     private fun updateTheEdit(Id: String,userkey: String){
         val length:String? = binding.roomlength.text.toString()
        val width:String? = binding.roomwidth.text.toString()
@@ -81,11 +198,8 @@ class EditRoom : AppCompatActivity() {
         GlobalScope.launch (Dispatchers.IO){
 
             val deferred1 = async {
-
-
                     Log.d("CHECKJIJI",length.toString())
                         changeMeasurements(length, width, Id, userkey)
-
             }
             val deferred2 = async {
 
@@ -112,12 +226,21 @@ class EditRoom : AppCompatActivity() {
                     changePrice(Id, amount, userkey)
 
             }
+            val deferred7 = async {
+            if(check==1){
+                appendImagesToFirestore()
+            }
+            else {
+                changeMorePics()
+            }
+            }
             deferred1.await()
             deferred2.await()
             deferred3.await()
             deferred4.await()
             deferred5.await()
             deferred6.await()
+            deferred7.await()
 
             withContext(Dispatchers.Main){
                 binding.progressBar.visibility = View.INVISIBLE
@@ -173,7 +296,10 @@ class EditRoom : AppCompatActivity() {
             binding.locationDescription.setText(roomData["location_detail"] as? String)
             binding.OwnerName.setText(roomData["owner_name"] as? String)
             binding.RoomDescription.setText(roomData["breif_description"] as? String)
-
+            //Toast.makeText(this@EditRoom, roomData["imageuri"] as? String, Toast.LENGTH_SHORT).show()
+            Glide.with(this)
+                .load(roomData["dpuri"] as? String)
+                .into(binding.pic)
         }
     }
 
@@ -181,6 +307,12 @@ class EditRoom : AppCompatActivity() {
         location?.let{
             db.collection(userkey).document(Id).update("location", location)
             db.collection("Rooms").document(Id).update("location", location)
+        }
+    }
+    suspend fun changeMorePics(){
+        imagesListforFirebaseUris?.let{
+            db.collection(userkey).document(Id).update("imageuri", imagesListforFirebaseUris)
+            db.collection("Rooms").document(Id).update("imageuri", imagesListforFirebaseUris)
         }
     }
     suspend fun changeLD(Id: String,LD:String?,userkey:String){
@@ -229,11 +361,48 @@ class EditRoom : AppCompatActivity() {
 
         return Uri.EMPTY
     }
-    override fun onBackPressed(){
-        super.onBackPressed()
-        val intent = Intent(this, owner_home_activity::class.java)
+    override fun onBackPressed() {
+        showDeleteRoomConfirmationDialog() // Call the confirmation dialog when the back button is pressed
+    }
+    private fun showDeleteRoomConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmation")
+            .setMessage("Your room deatils are not saved yet. Are you sure you want to delete this room?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                // Delete the room and navigate back
+                GlobalScope.launch (IO){
+                    changetohome()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+    private fun changetohome(){
+        val intent = Intent(this@EditRoom, owner_home_activity::class.java)
         startActivity(intent)
         finish()
+    }
+    private suspend fun appendImagesToFirestore() {
+        val roomRef = db.collection("Rooms").document(Id)
+        val userRef = db.collection(userkey).document(Id)
 
+        try {
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(roomRef)
+                val existingImages = snapshot.get("imageuri") as? MutableList<String> ?: mutableListOf()
+
+                imagesListforFirebaseUris.forEach {
+                    existingImages.add(it.toString())
+                }
+
+                transaction.update(roomRef, "imageuri", existingImages)
+                transaction.update(userRef, "imageuri", existingImages)
+            }.await()
+        } catch (e: Exception) {
+            Log.e("FirestoreError", "Failed to append images: $e")
+        }
     }
 }
