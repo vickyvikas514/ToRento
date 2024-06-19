@@ -1,5 +1,6 @@
 package com.example.torento.LOGIN
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -7,6 +8,7 @@ import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.provider.Settings.Global
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -14,6 +16,8 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
@@ -22,8 +26,16 @@ import com.example.torento.databinding.ActivitySignUpBinding
 import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.R
 import com.example.torento.USER.user_home_activity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
+import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -39,10 +51,13 @@ class SignUp : AppCompatActivity() {
     private lateinit var popupWindow: PopupWindow
     companion object {
         var id: String = ""
+        private const val RC_SIGN_IN = 9001
     }
     private lateinit var binding: ActivitySignUpBinding
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var googleSignInClient: GoogleSignInClient
     val SHARED_PREF: String = "sharedPrefs"
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,13 +65,14 @@ class SignUp : AppCompatActivity() {
       // val db = Firebase.firestore
         binding = ActivitySignUpBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        firebaseAuth = FirebaseAuth.getInstance()
+        job = Job()
         binding.signupText.setOnClickListener {
             val intent = Intent(this, SignIn::class.java)
             startActivity(intent)
             finish()
         }
-        firebaseAuth = FirebaseAuth.getInstance()
-        job = Job()
+
 
         binding.phone.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
@@ -108,8 +124,127 @@ class SignUp : AppCompatActivity() {
                 binding.progressBar.visibility = View.GONE
             }
         }
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        // Set the Google Sign-In button listener
+        binding.GoogleLogin.setOnClickListener {
+            signIn()
+        }
+
+
+    }
+    private fun signIn() {
+        val signInIntent = googleSignInClient.signInIntent
+        startActivityForResult(signInIntent, RC_SIGN_IN)
+    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+           handleSignResult(task)
+        }
     }
 
+    private fun handleSignResult(completedTask: Task<GoogleSignInAccount>) {
+        try {
+            val account = completedTask.getResult(ApiException::class.java)!!
+            firebaseAuthWithGoogle(account.idToken!!)
+        } catch (e: ApiException) {
+            Log.w("SignUp", "signInResult:failed code=" + e.statusCode)
+            Toast.makeText(this, "Google Sign-In failed.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        firebaseAuth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success
+                    //binding.progressBar.visibility = View.GONE
+                    showUserInfoPopup()
+                    //TODO showing layout for adding the users info to firestore
+                    // Navigate to your next activity
+                } else {
+                    Toast.makeText(this, "Googel sign in failed", Toast.LENGTH_SHORT).show()
+                    // If sign in fails, display a message to the user.
+                }
+            }
+    }
+    @SuppressLint("MissingInflatedId")
+    private fun showUserInfoPopup() {
+        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val popupView = inflater.inflate(R.layout.googlesigninuser, null)
+
+        val width = LinearLayout.LayoutParams.MATCH_PARENT
+        val height = LinearLayout.LayoutParams.WRAP_CONTENT
+        val focusable = true
+        val popupWindow = PopupWindow(popupView, width, height, focusable)
+
+        popupWindow.showAtLocation(binding.root, Gravity.CENTER, 0, 0)
+        val nameInput = popupView.findViewById<TextInputEditText>(R.id.name)
+        val usernameInput = popupView.findViewById<TextInputEditText>(R.id.username)
+        val phoneInput = popupView.findViewById<TextInputEditText>(R.id.phone)
+       val submitButton = popupView.findViewById<Button>(R.id.submit_button)
+
+        submitButton.setOnClickListener {
+            val username = usernameInput.text.toString()
+            val phone = phoneInput.text.toString()
+            val name = nameInput.text.toString()
+
+
+
+            if (username.isNotEmpty() && phone.isNotEmpty() && name.isNotEmpty() ) {
+                GlobalScope.launch( Dispatchers.IO){
+                    saveUserInfo(name, username, phone)
+
+                }
+                popupWindow.dismiss()
+
+            } else {
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun saveUserInfo(name: String, username: String, phone: String) {
+        val user = firebaseAuth.currentUser ?: return
+        val uid = user.uid
+        val email  = user.email
+        val sharedPreferences:SharedPreferences = getSharedPreferences(
+            SHARED_PREF, MODE_PRIVATE
+        )
+        val editor:SharedPreferences.Editor = sharedPreferences.edit()
+        editor.putString("name","true")
+        editor.putString("username",email)
+        editor.putString("usertype", LandingPage.usertype)
+        editor.apply()
+        val userMap = hashMapOf(
+            "name" to name,
+            "username" to username,
+            "phone" to phone,
+            "email" to email,
+            "usertype" to LandingPage.usertype
+        )
+
+
+        Firebase.firestore.collection("users").document(email!!)
+            .set(userMap)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show()
+                changeThePage()
+                // Navigate to the next activity
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Failed to update profile", Toast.LENGTH_SHORT).show()
+            }
+    }
     private fun isValidPassword(password: String): Boolean {
         val hasLowercase = password.any { it.isLowerCase() }
         val hasUppercase = password.any { it.isUpperCase() }
@@ -184,8 +319,8 @@ class SignUp : AppCompatActivity() {
                     val sharedPreferences: SharedPreferences = getSharedPreferences(
                         SHARED_PREF, MODE_PRIVATE
                     )
-                    if (username != null) {
-                        id = username
+                    if (email != null) {
+                        id = email
                     }
                     val editor: SharedPreferences.Editor = sharedPreferences.edit()
                         //editor.putString("name", "true")
@@ -223,6 +358,8 @@ class SignUp : AppCompatActivity() {
 
     }
     suspend fun writeUserToFirestore(name:String, username:String, phone:String, email:String, pass:String) {
+        val user = firebaseAuth.currentUser ?: return
+        val uid = user.uid
          runOnUiThread {
              Toast.makeText(this@SignUp, "writing data", Toast.LENGTH_SHORT).show()
          }
@@ -259,6 +396,17 @@ class SignUp : AppCompatActivity() {
                 Toast.makeText(this@SignUp, "writing data no", Toast.LENGTH_SHORT).show()
             }
             Log.e("Firestore", "Exception: $e")
+        }
+    }
+    private fun changeThePage(){
+        if (LandingPage.usertype == "user") {
+            val intent = Intent(this, user_home_activity::class.java)
+            startActivity(intent)
+            finish()
+        } else {
+            val intent = Intent(this, owner_home_activity::class.java)
+            startActivity(intent)
+            finish()
         }
     }
 

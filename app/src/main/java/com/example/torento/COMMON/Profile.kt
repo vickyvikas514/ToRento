@@ -43,10 +43,6 @@ class Profile : AppCompatActivity() {
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val userkey: String? = sharedPreferences.getString("username", "")
 
-
-
-
-
         binding.edit.setOnClickListener {
             val intent = Intent(this, UpdateActivity::class.java)
             startActivity(intent)

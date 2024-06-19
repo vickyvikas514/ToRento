@@ -13,7 +13,20 @@
           "package_name": "com.example.torento"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "539467914281-4t0q8tfd83bs9bkufsnfi10m6bhbt8lr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.torento",
+            "certificate_hash": "63d2ad5f92a9b6bc1f93b27df3523268b81000bf"
+          }
+        },
+        {
+          "client_id": "539467914281-2t3gep4h0ru4r7vbovbe3ajbtlh4hav2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCQH8yyV_lorxQB8y_WAwAAEWnqvc-lpcw"
@@ -21,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "539467914281-2t3gep4h0ru4r7vbovbe3ajbtlh4hav2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

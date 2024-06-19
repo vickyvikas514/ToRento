@@ -16,12 +16,18 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import com.example.torento.databinding.ActivitySignInBinding
 import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.R
 import com.example.torento.USER.user_home_activity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +43,13 @@ class SignIn : AppCompatActivity() {
     private var db = Firebase.firestore
     private var regusertype:String="temp"
     private lateinit var popupWindow: PopupWindow
+    private lateinit var googleSignInClient: GoogleSignInClient
+    companion object {
+        var id: String = ""
+        private const val RC_SIGN_IN = 9001
+    }
 
+    //TODO username le ke aa bina type kare ya phit home activity pe kaam kar ki username na laana pade
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,15 +58,11 @@ class SignIn : AppCompatActivity() {
 
         firebaseAuth = FirebaseAuth.getInstance()
         remember()
-
         binding.signupText.setOnClickListener{
             val intent = Intent(this, SignUp::class.java)
             startActivity(intent)
         }
-
-
-
-        binding.loginButton.setOnClickListener{
+         binding.loginButton.setOnClickListener{
             binding.progressBar.visibility = View.VISIBLE
             hideKeyboard(this@SignIn)
             val username = binding.username.text.toString()
@@ -67,8 +75,18 @@ class SignIn : AppCompatActivity() {
                 }
             }
         }
-       // Toast.makeText(this@SignIn, firebaseAuth.currentUser?.uid ?.toString(), Toast.LENGTH_SHORT).show()
+       val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
 
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        // Set the Google Sign-In button listener
+        binding.GoogleLogin.setOnClickListener {
+            signIn()
+            Toast.makeText(this@SignIn, "1", Toast.LENGTH_SHORT).show()
+        }
     }
     fun hideKeyboard(activity: Activity) {
         val inputMethodManager = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -78,7 +96,7 @@ class SignIn : AppCompatActivity() {
         }
     }
     private fun emailcheck(username: String, email: String, pass: String) {
-        val docref = db.collection("users").document(username)
+        val docref = db.collection("users").document(email)
         docref.get().addOnSuccessListener { document ->
             if (document != null && document.exists()) {
                 val regemail = document.getString("email")
@@ -90,7 +108,7 @@ class SignIn : AppCompatActivity() {
                         showPopup("Please verify your email first")
                         binding.progressBar.visibility = View.GONE
                     }*/
-                    loginbtn(username, email, pass)
+                    loginbtn( email, pass)
                     binding.progressBar.visibility = View.GONE
                 } else {
                     showPopup("Username and email are not associated")
@@ -107,31 +125,20 @@ class SignIn : AppCompatActivity() {
         }
     }
 
-    private fun loginbtn(username: String, email: String, pass: String) {
+    private fun loginbtn( email: String, pass: String) {
         firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener { task ->
             binding.progressBar.visibility = View.INVISIBLE
             if (task.isSuccessful) {
-                // Your existing code for successful sign-in remains the same
                 val sharedPreferences:SharedPreferences = getSharedPreferences(
                     SHARED_PREF, MODE_PRIVATE
                 )
                 val editor:SharedPreferences.Editor = sharedPreferences.edit()
                 editor.putString("name","true")
-                editor.putString("username",username)
+                editor.putString("username",email)
                 editor.putString("usertype", LandingPage.usertype)
                 editor.apply()
-                if(LandingPage.usertype !=regusertype){
-                    Toast.makeText(this,"User can't exist",Toast.LENGTH_SHORT)
-                }
-                else if(LandingPage.usertype =="tenant"){
-                    val intent = Intent(this, user_home_activity::class.java)
-                    startActivity(intent)
-                    finish()
-                }else{
-                    val intent = Intent(this, owner_home_activity::class.java)
-                    startActivity(intent)
-                    finish()
-                }
+                // Your existing code for successful sign-in remains the same
+                changeThePage(email)
             } else {
                 Toast.makeText(this@SignIn, task.exception?.message, Toast.LENGTH_SHORT).show()
             }
@@ -156,72 +163,7 @@ class SignIn : AppCompatActivity() {
             popupWindow.dismiss()
         }, 2000)
     }
-   /* private fun emailcheck(username: String,email: String,pass: String) {
-        val docref = db.collection("users").document(username)
-        if (docref != null) {
-            docref.get().addOnSuccessListener {
-                if (it != null) {
-                    Toast.makeText(this,"Regmail is initializing",Toast.LENGTH_SHORT).show()
-                    val Regemail = it.data?.get("email").toString()
-                    regusertype = it.data?.get("usertype").toString()
-                    loginbtn(username,email,pass,Regemail)
-                } else {
-                    Toast.makeText(this, "Fail!!", Toast.LENGTH_SHORT).show()
-                }
-            }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Failed!!", Toast.LENGTH_SHORT).show()
-                }
-        } else {
-            Toast.makeText(this, "DocRef is NULL", Toast.LENGTH_SHORT).show()
-        }
 
-    }*/
-    /*private fun loginbtn(username: String, email: String, pass: String,Regemail:String) {
-            val user = firebaseAuth.currentUser
-        if (user != null) {
-            if(email.isNotEmpty() && pass.isNotEmpty() && username.isNotEmpty() && Regemail==email && user.isEmailVerified){
-                firebaseAuth.signInWithEmailAndPassword(email,pass).addOnCompleteListener {
-                    binding.progressBar.visibility = View.INVISIBLE
-                    if(it.isSuccessful){
-                        val sharedPreferences:SharedPreferences = getSharedPreferences(
-                            SHARED_PREF, MODE_PRIVATE
-                        )
-                        val editor:SharedPreferences.Editor = sharedPreferences.edit()
-                        editor.putString("name","true")
-                        editor.putString("username",username)
-                        editor.putString("usertype", LandingPage.usertype)
-                        editor.apply()
-                        if(LandingPage.usertype !=regusertype){
-                            Toast.makeText(this,"User can't exist",Toast.LENGTH_SHORT)
-                        }
-                        else if(LandingPage.usertype =="tenant"){
-                            val intent = Intent(this, user_home_activity::class.java)
-                            startActivity(intent)
-                            finish()
-                        }else{
-                            val intent = Intent(this, owner_home_activity::class.java)
-                            startActivity(intent)
-                            finish()
-                        }
-                    } else{
-                        Toast.makeText(this,it.exception.toString(),Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }else if(Regemail!=email){
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(this,"$Regemail provide correct details, Your username and email are not attached to the same account",Toast.LENGTH_SHORT).show()
-            }
-            else if(user.isEmailVerified == false){
-                showPopup()
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(this,"Please verify your email",Toast.LENGTH_SHORT).show()
-            }else{
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(this,"Please provide all the details",Toast.LENGTH_SHORT).show()
-            }
-        }
-    }*/
     private fun remember(){
         val sharedPreferences: SharedPreferences = getSharedPreferences(
             SHARED_PREF, MODE_PRIVATE
@@ -242,5 +184,86 @@ class SignIn : AppCompatActivity() {
                 finish()
             }
         }
+    }
+    private fun signIn() {
+        Toast.makeText(this@SignIn, "2", Toast.LENGTH_SHORT).show()
+        val signInIntent = googleSignInClient.signInIntent
+        startActivityForResult(signInIntent, RC_SIGN_IN)
+    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            handleSignResult(task)
+        }
+    }
+
+    private fun handleSignResult(completedTask: Task<GoogleSignInAccount>) {
+        Toast.makeText(this@SignIn, "3", Toast.LENGTH_SHORT).show()
+        try {
+            val account = completedTask.getResult(ApiException::class.java)!!
+            val email = account.email
+            firebaseAuthWithGoogle(account.idToken!!, email)
+        } catch (e: ApiException) {
+            Log.w("SignUp", "signInResult:failed code=" + e.statusCode)
+            Toast.makeText(this, "Google Sign-In failed.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String, email: String?) {
+        Toast.makeText(this@SignIn, "4", Toast.LENGTH_SHORT).show()
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        firebaseAuth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success
+                    //binding.progressBar.visibility = View.GONE
+
+                    val sharedPreferences:SharedPreferences = getSharedPreferences(
+                        SHARED_PREF, MODE_PRIVATE
+                    )
+                    val editor:SharedPreferences.Editor = sharedPreferences.edit()
+                    editor.putString("name","true")
+                    editor.putString("username",email)
+                    editor.putString("usertype", LandingPage.usertype)
+                    editor.apply()
+                    if (email != null) {
+                        changeThePage(email)
+                    }
+                    //TODO showing layout for adding the users info to firestore
+                    // Navigate to your next activity
+                } else {
+                    Toast.makeText(this, "Googel sign in failed", Toast.LENGTH_SHORT).show()
+                    // If sign in fails, display a message to the user.
+                }
+            }
+    }
+    private fun changeThePage(userkey: String){
+        val docref = userkey?.let { db.collection("users").document(it) }
+        docref?.get()?.addOnSuccessListener { document ->
+            regusertype = document.getString("usertype") ?: "temp"
+            Toast.makeText(this@SignIn, regusertype, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@SignIn, "5", Toast.LENGTH_SHORT).show()
+            if(LandingPage.usertype !=regusertype){
+                Toast.makeText(this,"User can't exist",Toast.LENGTH_SHORT)
+            }
+            else if(LandingPage.usertype =="tenant"){
+                Toast.makeText(this@SignIn, "7", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this@SignIn, user_home_activity::class.java)
+                startActivity(intent)
+                finish()
+            }else{
+                Toast.makeText(this@SignIn, "6", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this@SignIn, owner_home_activity::class.java)
+                startActivity(intent)
+                finish()
+            }
+        }
+            ?.addOnFailureListener{
+                Toast.makeText(this, "NOWAY", Toast.LENGTH_SHORT).show()
+                Log.e("SignInChangePage", "Error checking email: ${it.message}")
+            }
+
     }
 }
