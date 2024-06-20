@@ -133,10 +133,17 @@ class SignUp : AppCompatActivity() {
 
         // Set the Google Sign-In button listener
         binding.GoogleLogin.setOnClickListener {
-            signIn()
+            signOutAndSignIn()
         }
 
 
+    }
+    private fun signOutAndSignIn() {
+        googleSignInClient.signOut().addOnCompleteListener(this) {
+            googleSignInClient.revokeAccess().addOnCompleteListener(this) {
+                signIn()
+            }
+        }
     }
     private fun signIn() {
         val signInIntent = googleSignInClient.signInIntent

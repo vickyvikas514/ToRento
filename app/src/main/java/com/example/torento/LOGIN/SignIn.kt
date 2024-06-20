@@ -84,7 +84,7 @@ class SignIn : AppCompatActivity() {
 
         // Set the Google Sign-In button listener
         binding.GoogleLogin.setOnClickListener {
-            signIn()
+            signOutAndSignIn()
             Toast.makeText(this@SignIn, "1", Toast.LENGTH_SHORT).show()
         }
     }
@@ -124,7 +124,6 @@ class SignIn : AppCompatActivity() {
             binding.progressBar.visibility = View.GONE
         }
     }
-
     private fun loginbtn( email: String, pass: String) {
         firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener { task ->
             binding.progressBar.visibility = View.INVISIBLE
@@ -182,6 +181,13 @@ class SignIn : AppCompatActivity() {
                 //  progress.visibility = View.GONE
 
                 finish()
+            }
+        }
+    }
+    private fun signOutAndSignIn() {
+        googleSignInClient.signOut().addOnCompleteListener(this) {
+            googleSignInClient.revokeAccess().addOnCompleteListener(this) {
+                signIn()
             }
         }
     }
