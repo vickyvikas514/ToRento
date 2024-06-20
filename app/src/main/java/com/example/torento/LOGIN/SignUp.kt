@@ -200,6 +200,26 @@ class SignUp : AppCompatActivity() {
         val phoneInput = popupView.findViewById<TextInputEditText>(R.id.phone)
        val submitButton = popupView.findViewById<Button>(R.id.submit_button)
 
+        phoneInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action required here
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s?.length == 10) {
+                    hideKeyboard(phoneInput)
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                if (s?.length ?: 0 > 10) {
+                    // Truncate the input to 10 digits if exceeded
+                    phoneInput.setText(s?.subSequence(0, 10))
+                    phoneInput.setSelection(10) // Move cursor to the end
+                }
+            }
+        })
+
         submitButton.setOnClickListener {
             val username = usernameInput.text.toString()
             val phone = phoneInput.text.toString()
@@ -208,16 +228,23 @@ class SignUp : AppCompatActivity() {
 
 
             if (username.isNotEmpty() && phone.isNotEmpty() && name.isNotEmpty() ) {
-                GlobalScope.launch( Dispatchers.IO){
-                    saveUserInfo(name, username, phone)
+                if(phone.length != 10){
+                    Toast.makeText(this, "Please provide 10 digit phone number", Toast.LENGTH_SHORT).show()
+                }else{
+                    GlobalScope.launch( Dispatchers.IO){
+                        saveUserInfo(name, username, phone)
 
+                    }
+                    popupWindow.dismiss()
                 }
-                popupWindow.dismiss()
-
             } else {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+    private fun hideKeyboard(view: View) {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     private fun saveUserInfo(name: String, username: String, phone: String) {
@@ -237,10 +264,9 @@ class SignUp : AppCompatActivity() {
             "username" to username,
             "phone" to phone,
             "email" to email,
-            "usertype" to LandingPage.usertype
+            "usertype" to LandingPage.usertype,
+            "imageuri" to ""
         )
-
-
         Firebase.firestore.collection("users").document(email!!)
             .set(userMap)
             .addOnSuccessListener {
@@ -382,7 +408,7 @@ class SignUp : AppCompatActivity() {
                         "phone" to phone,
                         "email" to email,
                         "password" to pass,
-                        "imageuri" to "temp",
+                        "imageuri" to "",
                         "usertype" to LandingPage.usertype
                     )
 

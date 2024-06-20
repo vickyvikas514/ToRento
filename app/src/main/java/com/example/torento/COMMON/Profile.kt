@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.bumptech.glide.Glide
 import com.example.torento.LOGIN.LandingPage
 import com.example.torento.OWNER.owner_home_activity
+import com.example.torento.R
 import com.example.torento.USER.user_home_activity
 import com.example.torento.databinding.ActivityProfileBinding
 import com.google.firebase.firestore.ktx.firestore
@@ -30,7 +31,7 @@ class Profile : AppCompatActivity() {
     val SHARED_PREF: String = "sharedPrefs"
     private var db = Firebase.firestore
     private var storageRef = Firebase.storage
-   // private lateinit var uri: Uri
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,17 +82,19 @@ class Profile : AppCompatActivity() {
             binding.email.text = data[3]
 
             val setimageuri = data[4]
-            if (setimageuri != "temp") {
+            if (setimageuri != "") {
                 Glide.with(this)
                     .load(setimageuri)
                     .into(binding.dp)
+            }else
+            {
+                binding.dp.setImageResource(R.drawable.demodp)
             }
         } else {
             // Handle the case when the data list is empty or insufficient
             Log.e("Profile", "Invalid data list size: ${data.size}")
         }
     }
-
 
    suspend fun setBG(userkey: String) : MutableList<String>{
        val list :MutableList<String> = mutableListOf()
