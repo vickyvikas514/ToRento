@@ -135,6 +135,7 @@ class SignIn : AppCompatActivity() {
                 editor.putString("name","true")
                 editor.putString("username",email)
                 editor.putString("usertype", LandingPage.usertype)
+                editor.putBoolean("signUpComplete", false)
                 editor.apply()
                 // Your existing code for successful sign-in remains the same
                 changeThePage(email)
@@ -271,5 +272,23 @@ class SignIn : AppCompatActivity() {
                 Log.e("SignInChangePage", "Error checking email: ${it.message}")
             }
 
+    }
+    override fun onPause() {
+        super.onPause()
+        updateSharedPreferences()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        updateSharedPreferences()
+    }
+
+    private fun updateSharedPreferences() {
+        val sharedPreferences: SharedPreferences = getSharedPreferences(
+            SHARED_PREF, MODE_PRIVATE
+        )
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+        editor.putBoolean("signUpComplete", false) // or any other value you want to set
+        editor.apply()
     }
 }

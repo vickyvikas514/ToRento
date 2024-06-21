@@ -1,77 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="30dp"
-    android:background="@color/black">
 
-    <TextView
-        android:id="@+id/popup_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Complete Your Profile"
-        android:textSize="18sp"
-        android:layout_margin="10dp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
-        />
-
-    <com.google.android.material.textfield.TextInputEditText
-
+    android:background="@drawable/bg"
+    >
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:id="@+id/name"
-        android:textColorHint="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/registertext"
-        android:drawablePadding="8dp"
-        android:hint="Full Name"
-        android:padding="8dp"
-        android:gravity="center"
-        android:textColor="@color/white"
-        android:textColorHighlight="@color/white"
-        android:layout_marginTop="40dp"/>
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        >
+        <TextView
+            android:id="@+id/popup_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Complete Your Profile"
+            android:textSize="18sp"
+            android:layout_margin="10dp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            />
+        <androidx.cardview.widget.CardView
+            android:id="@+id/pphoto"
+            android:layout_width="155dp"
+            android:layout_height="155dp"
+            android:foregroundGravity="center"
+            android:padding="10dp"
+            android:layout_gravity="center_horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="250dp"
+            android:layout_marginTop="30dp"
+            >   <ImageView
+            android:id="@+id/dp"
+            android:layout_width="155dp"
+            android:layout_height="155dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/demodp" />
+        </androidx.cardview.widget.CardView>
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_marginHorizontal="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:id="@+id/name"
+            android:textColorHint="@color/black"
+            app:layout_constraintTop_toBottomOf="@id/registertext"
+            android:drawablePadding="8dp"
+            android:hint="Full Name"
+            android:padding="8dp"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:textColorHighlight="@color/black"
+            android:layout_marginTop="40dp"/>
 
-    <com.google.android.material.textfield.TextInputEditText
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/username"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="20dp"
+            android:drawablePadding="8dp"
+            android:gravity="center"
+            android:hint="Username"
+            android:padding="8dp"
+            android:textColor="@color/black"
 
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:id="@+id/username"
-        android:textColorHint="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/name"
-        android:drawablePadding="8dp"
-        android:hint="Username"
-        android:padding="8dp"
-        android:gravity="center"
+            android:textColorHighlight="@color/black"
+            android:textColorHint="@color/black"
+            app:layout_constraintTop_toBottomOf="@id/name" />
 
-        android:textColor="@color/white"
-        android:textColorHighlight="@color/white"
-        android:layout_marginTop="20dp"/>
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_marginHorizontal="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:id="@+id/phone"
+            android:textColorHint="@color/black"
+            app:layout_constraintTop_toBottomOf="@id/email"
+            android:drawablePadding="8dp"
+            android:hint="Phone"
+            android:padding="8dp"
+            android:gravity="center"
+            android:inputType="phone"
+            android:textColor="@color/black"
+            android:textColorHighlight="@color/black"
+            android:layout_marginTop="20dp"/>
 
-    <com.google.android.material.textfield.TextInputEditText
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:id="@+id/phone"
-        android:textColorHint="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/email"
-        android:drawablePadding="8dp"
-        android:hint="Phone"
-        android:padding="8dp"
-        android:gravity="center"
-        android:inputType="phone"
-        android:textColor="@color/white"
-        android:textColorHighlight="@color/white"
-        android:layout_marginTop="20dp"/>
+        <Button
+            android:layout_marginTop="12dp"
+            android:id="@+id/submit_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Submit"
+            android:background="?attr/colorPrimary"
+            android:textColor="@android:color/white"
+            android:layout_margin="12dp"
+            android:padding="10dp"/>
+    </LinearLayout>
+</ScrollView>
 
-    <Button
-        android:layout_marginTop="12dp"
-        android:id="@+id/submit_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Submit"
-        android:background="?attr/colorPrimary"
-        android:textColor="@android:color/white"
-        android:padding="10dp"/>
-</LinearLayout>

@@ -7,7 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
 import com.example.torento.LOGIN.LandingPage
+import com.example.torento.LOGIN.SignIn
 import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.USER.user_home_activity
 import com.example.torento.databinding.ActivitySplashBinding
@@ -30,14 +32,12 @@ class Splash_Activity : AppCompatActivity() {
                 // Check if the user is logged in using SharedPreferences
 
                 val check = isLoggedIn()
-                if (check=="user") {
-                    // Navigate to HomeActivity
-                    startActivity(Intent(this@Splash_Activity, user_home_activity::class.java))
-                } else if(check=="owner") {
-                    // Navigate to LoginActivity
-                    startActivity(Intent(this@Splash_Activity, owner_home_activity::class.java))
-                }else{
-                    startActivity(Intent(this@Splash_Activity, LandingPage::class.java))
+                Toast.makeText(this, check, Toast.LENGTH_SHORT).show()
+                when (check) {
+                    "SignUpComplete"-> startActivity(Intent(this@Splash_Activity, SignIn::class.java))
+                    "user" -> startActivity(Intent(this@Splash_Activity, user_home_activity::class.java))
+                    "owner" -> startActivity(Intent(this@Splash_Activity, owner_home_activity::class.java))
+                    else -> startActivity(Intent(this@Splash_Activity, LandingPage::class.java))
                 }
                 // Finish the current activity
                 finish()
@@ -50,12 +50,13 @@ class Splash_Activity : AppCompatActivity() {
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         val check:String? = sharedPreferences.getString("name" , "")
         val checkusertype: String? = sharedPreferences.getString("usertype","")
-        if(check.equals("true") && checkusertype.equals("tenant")){
-           return "user"
-        }else if(check.equals("true") && checkusertype.equals("owner")){
-           return "owner"
+        val signUpComplete = sharedPreferences.getBoolean("signUpComplete", false)
+        return when {
+            signUpComplete -> "SignUpComplete"
+            check == "true" && checkusertype == "tenant" -> "user"
+            check == "true" && checkusertype == "owner" -> "owner"
+            else -> "not_logged_in"
         }
-        return "not_logged_in"
     }
 
     companion object {

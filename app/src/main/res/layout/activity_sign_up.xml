@@ -28,18 +28,38 @@
                 android:layout_height="wrap_content"
                 android:text="Register"
                 app:layout_constraintTop_toTopOf="parent"
-
                 android:textSize="36sp"
                 android:textAlignment="center"
                 android:textStyle="bold"
                 android:textColor="@color/darkpurple"/>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/pphoto"
+                android:layout_width="155dp"
+                android:layout_height="155dp"
+                android:foregroundGravity="center"
+                android:padding="10dp"
+                android:layout_gravity="center_horizontal"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/registertext"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="250dp"
+                android:layout_marginTop="30dp"
+                >   <ImageView
+                android:id="@+id/dp"
+                android:layout_width="155dp"
+                android:layout_height="155dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/demodp" />
+            </androidx.cardview.widget.CardView>
             <com.google.android.material.textfield.TextInputEditText
 
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:id="@+id/name"
                 android:textColorHint="@color/black"
-                app:layout_constraintTop_toBottomOf="@id/registertext"
+                app:layout_constraintTop_toBottomOf="@id/pphoto"
                 android:drawablePadding="8dp"
                 android:hint="Full Name"
                 android:padding="8dp"

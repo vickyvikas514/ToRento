@@ -5,9 +5,12 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.provider.MediaStore
 import android.provider.Settings.Global
 import android.text.Editable
 import android.text.TextWatcher
@@ -21,7 +24,9 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.net.toUri
 import com.example.torento.databinding.ActivitySignUpBinding
 import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.R
@@ -32,6 +37,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
@@ -44,6 +50,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 
 class SignUp : AppCompatActivity() {
 
@@ -57,6 +64,7 @@ class SignUp : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
     val SHARED_PREF: String = "sharedPrefs"
+    private var dpuri:Uri = "".toUri()
 
 
 
@@ -136,8 +144,14 @@ class SignUp : AppCompatActivity() {
             signOutAndSignIn()
         }
 
-
+        binding.pphoto.setOnClickListener {
+            showImageSourceOptions()
+        }
     }
+
+
+
+
     private fun signOutAndSignIn() {
         googleSignInClient.signOut().addOnCompleteListener(this) {
             googleSignInClient.revokeAccess().addOnCompleteListener(this) {
@@ -199,6 +213,7 @@ class SignUp : AppCompatActivity() {
         val usernameInput = popupView.findViewById<TextInputEditText>(R.id.username)
         val phoneInput = popupView.findViewById<TextInputEditText>(R.id.phone)
        val submitButton = popupView.findViewById<Button>(R.id.submit_button)
+        val dpspace = popupView.findViewById<MaterialCardView>(R.id.pphoto)
 
         phoneInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
@@ -219,7 +234,9 @@ class SignUp : AppCompatActivity() {
                 }
             }
         })
-
+        dpspace.setOnClickListener {
+            showImageSourceOptions()
+        }
         submitButton.setOnClickListener {
             val username = usernameInput.text.toString()
             val phone = phoneInput.text.toString()
@@ -233,7 +250,6 @@ class SignUp : AppCompatActivity() {
                 }else{
                     GlobalScope.launch( Dispatchers.IO){
                         saveUserInfo(name, username, phone)
-
                     }
                     popupWindow.dismiss()
                 }
@@ -246,7 +262,6 @@ class SignUp : AppCompatActivity() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
-
     private fun saveUserInfo(name: String, username: String, phone: String) {
         val user = firebaseAuth.currentUser ?: return
         val uid = user.uid
@@ -265,7 +280,7 @@ class SignUp : AppCompatActivity() {
             "phone" to phone,
             "email" to email,
             "usertype" to LandingPage.usertype,
-            "imageuri" to ""
+            "imageuri" to dpuri,
         )
         Firebase.firestore.collection("users").document(email!!)
             .set(userMap)
@@ -323,6 +338,7 @@ class SignUp : AppCompatActivity() {
         }
 
     }
+
     private fun restartApp(context: Context) {
         val packageManager = context.packageManager
         val intent = packageManager.getLaunchIntentForPackage(context.packageName)
@@ -359,6 +375,7 @@ class SignUp : AppCompatActivity() {
                         //editor.putString("name", "true")
                     editor.putString("username", id)
                     editor.putString("usertype", LandingPage.usertype)
+                    editor.putBoolean("signUpComplete", true)
                     editor.apply()
                     runOnUiThread {
                         Toast.makeText(this@SignUp, "Account created successfully", Toast.LENGTH_SHORT).show()
@@ -408,7 +425,7 @@ class SignUp : AppCompatActivity() {
                         "phone" to phone,
                         "email" to email,
                         "password" to pass,
-                        "imageuri" to "",
+                        "imageuri" to dpuri,
                         "usertype" to LandingPage.usertype
                     )
 
@@ -441,6 +458,113 @@ class SignUp : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+    }
+
+    //Taking photo
+    private fun showImageSourceOptions() {
+        // Define options in an array
+        val options = arrayOf("Choose from Gallery", "Take Photo")
+
+        // Create a dialog for options
+        AlertDialog.Builder(this)
+            .setTitle("Select Image Source")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> {
+                        // Choose from Gallery option selected
+                        chooseFromGallery()
+                    }
+                    1 -> {
+                        // Take Photo option selected
+                        takePhoto()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+    private fun chooseFromGallery() {
+        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        galleryIntent.type = "image/*"
+        resultLauncherGallery.launch(galleryIntent)
+    }
+    private fun takePhoto() {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        resultLauncher.launch(cameraIntent)
+    }
+    private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data: Intent? = result.data
+            val imageBitmap = data?.extras?.get("data") as? Bitmap
+            imageBitmap?.let { handleImageBitmap(it) }
+        } else {
+            Toast.makeText(this, "Image capture cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private val resultLauncherGallery = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data: Intent? = result.data
+            val uri = data?.data
+            // Handle the selected image URI accordingly
+            uri?.let { handleImageUri(it) }
+        } else {
+            Toast.makeText(this, "Image selection cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun handleImageBitmap(bitmap: Bitmap) {
+        // Do something with the selected image URI
+        // For example, display the selected image in an ImageView
+        val uri = getImageUri(bitmap)
+        binding.dp.setImageURI(uri)
+        if (uri != null) {
+
+                Log.d("jiji","1")
+                //binding.progressBar.visibility = View.VISIBLE
+                dpuri = uri
+
+            //
+        }
+    }
+    private fun handleImageUri(uri: Uri) {
+
+        // Do something with the selected image URI
+        // For example, display the selected image in an ImageView
+        binding.dp.setImageURI(uri)
+        if (uri != null) {
+
+                Log.d("jiji","1")
+                //binding.progressBar.visibility = View.VISIBLE
+                dpuri = uri
+
+            //
+        }
+    }
+    private fun getImageUri(inImage: Bitmap): Uri {
+        val bytes = ByteArrayOutputStream()
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path: String = MediaStore.Images.Media.insertImage(contentResolver, inImage, "Title", null)
+        return Uri.parse(path)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        updateSharedPreferences()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        updateSharedPreferences()
+    }
+
+    private fun updateSharedPreferences() {
+        val sharedPreferences: SharedPreferences = getSharedPreferences(
+            SHARED_PREF, MODE_PRIVATE
+        )
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+        editor.putBoolean("signUpComplete", false) // or any other value you want to set
+        editor.apply()
     }
 
 }
