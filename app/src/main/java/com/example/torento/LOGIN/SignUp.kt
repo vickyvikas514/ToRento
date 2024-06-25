@@ -64,6 +64,8 @@ class SignUp : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
     val SHARED_PREF: String = "sharedPrefs"
+    private var regusertype:String="temp"
+    private var db = Firebase.firestore
     private var dpuri:Uri = "".toUri()
 
 
@@ -189,7 +191,31 @@ class SignUp : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success
                     //binding.progressBar.visibility = View.GONE
-                    showUserInfoPopup()
+                    val user = firebaseAuth.currentUser
+                    val email = user?.email.toString()
+                    // Sign in success
+                    //binding.progressBar.visibility = View.GONE
+
+                    val docRef = db.collection("users").document(user?.email.toString())
+                    docRef.get().addOnSuccessListener { document ->
+                        if(document.exists()){
+                            val sharedPreferences:SharedPreferences = getSharedPreferences(
+                                SHARED_PREF, MODE_PRIVATE
+                            )
+                            val editor:SharedPreferences.Editor = sharedPreferences.edit()
+                            editor.putString("name","true")
+                            editor.putString("username",email)
+                            editor.putString("usertype", LandingPage.usertype)
+                            editor.apply()
+                            if (email != null) {
+                                changeThePage(email)
+                            }
+                        }else{
+                            showUserInfoPopup()
+                        }
+                    }.addOnFailureListener{
+                        Toast.makeText(this, "Failed to get user data", Toast.LENGTH_SHORT).show()
+                    }
                     //TODO showing layout for adding the users info to firestore
                     // Navigate to your next activity
                 } else {
@@ -459,7 +485,33 @@ class SignUp : AppCompatActivity() {
             finish()
         }
     }
+    private fun changeThePage(userkey: String){
+        val docref = userkey?.let { db.collection("users").document(it) }
+        docref?.get()?.addOnSuccessListener { document ->
+            regusertype = document.getString("usertype") ?: "temp"
+            Toast.makeText(this@SignUp, regusertype, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@SignUp, "5", Toast.LENGTH_SHORT).show()
+            if(LandingPage.usertype !=regusertype){
+                Toast.makeText(this,"User can't exist",Toast.LENGTH_SHORT)
+            }
+            else if(LandingPage.usertype =="tenant"){
+                Toast.makeText(this@SignUp, "7", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this@SignUp, user_home_activity::class.java)
+                startActivity(intent)
+                finish()
+            }else{
+                Toast.makeText(this@SignUp, "6", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this@SignUp, owner_home_activity::class.java)
+                startActivity(intent)
+                finish()
+            }
+        }
+            ?.addOnFailureListener{
+                Toast.makeText(this, "NOWAY", Toast.LENGTH_SHORT).show()
+                Log.e("SignInChangePage", "Error checking email: ${it.message}")
+            }
 
+    }
     //Taking photo
     private fun showImageSourceOptions() {
         // Define options in an array
