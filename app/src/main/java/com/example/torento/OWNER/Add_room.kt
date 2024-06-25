@@ -69,6 +69,7 @@ class add_room : AppCompatActivity() {
             GlobalScope.launch(Dispatchers.Main){
                 Toast.makeText(this@add_room, "11", Toast.LENGTH_SHORT).show()
             }
+
             roomOwnerDpUrl = getOwnerDp()
         }
         val pickImages =
@@ -108,6 +109,7 @@ class add_room : AppCompatActivity() {
         var Url = ""
         try {
             docRef.data?.let {
+                owner_name = it["username"].toString()
                 Url = it["imageuri"].toString()
             }
         } catch(e:Exception) {
@@ -278,7 +280,7 @@ class add_room : AppCompatActivity() {
         location = binding.Locality.text.toString()
         loaction_description = binding.locationDescription.text.toString()
         amount = binding.amount.text.toString()
-        owner_name = binding.OwnerName.text.toString()
+
         breif_description = binding.RoomDescription.text.toString()
         if (isInputDataValid()) {
             CoroutineScope(Dispatchers.Main).launch {
@@ -289,6 +291,7 @@ class add_room : AppCompatActivity() {
                         uploadBG(dpuri)
                     }
                 }
+
                 if(dpUri.isNotEmpty()){
                     val updateData = hashMapOf(
                         "length" to length,
