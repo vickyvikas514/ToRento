@@ -26,6 +26,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
+import com.airbnb.lottie.LottieAnimationView
 import com.example.torento.databinding.ActivitySignInBinding
 import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.R
@@ -58,6 +59,8 @@ class SignIn : AppCompatActivity() {
     private lateinit var popupWindow: PopupWindow
     private lateinit var googleSignInClient: GoogleSignInClient
     private var dpuri: Uri = "".toUri()
+    private lateinit var loadingAnimation: LottieAnimationView
+    private lateinit var touchInterceptor:View
     companion object {
         var id: String = ""
         private const val RC_SIGN_IN = 9001
@@ -72,20 +75,22 @@ class SignIn : AppCompatActivity() {
 
         firebaseAuth = FirebaseAuth.getInstance()
         remember()
+        loadingAnimation = binding.progressBar
+        touchInterceptor = binding.touchInterceptor
         binding.signupText.setOnClickListener{
             val intent = Intent(this, SignUp::class.java)
             startActivity(intent)
         }
          binding.loginButton.setOnClickListener{
-            binding.progressBar.visibility = View.VISIBLE
+            startAnimation()
             hideKeyboard(this@SignIn)
-            val username = binding.username.text.toString()
+
             val email = binding.email.text.toString()
             val pass = binding.password.text.toString()
 
-            if (username.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty()) {
+            if ( email.isNotEmpty() && pass.isNotEmpty()) {
                 GlobalScope.launch(Dispatchers.Main) {
-                    emailcheck(username, email, pass)
+                    emailcheck( email, pass)
                 }
             }
         }
@@ -109,7 +114,7 @@ class SignIn : AppCompatActivity() {
             inputMethodManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
         }
     }
-    private fun emailcheck(username: String, email: String, pass: String) {
+    private fun emailcheck( email: String, pass: String) {
         val docref = db.collection("users").document(email)
         docref.get().addOnSuccessListener { document ->
             if (document != null && document.exists()) {
@@ -123,24 +128,24 @@ class SignIn : AppCompatActivity() {
                         binding.progressBar.visibility = View.GONE
                     }*/
                     loginbtn( email, pass)
-                    binding.progressBar.visibility = View.GONE
+                    stopAnimation()
                 } else {
                     showPopup("Username and email are not associated")
-                    binding.progressBar.visibility = View.GONE
+                    stopAnimation()
                 }
             } else {
                 showPopup("User not found")
-                binding.progressBar.visibility = View.GONE
+               stopAnimation()
             }
         }.addOnFailureListener {
             Log.e("SignIn", "Error checking email: ${it.message}")
             showPopup("Failed to check email")
-            binding.progressBar.visibility = View.GONE
+            stopAnimation()
         }
     }
     private fun loginbtn( email: String, pass: String) {
         firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener { task ->
-            binding.progressBar.visibility = View.INVISIBLE
+            stopAnimation()
             if (task.isSuccessful) {
                 val sharedPreferences:SharedPreferences = getSharedPreferences(
                     SHARED_PREF, MODE_PRIVATE
@@ -514,5 +519,15 @@ class SignIn : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+    }
+    private fun startAnimation(){
+        loadingAnimation.visibility = View.VISIBLE
+        loadingAnimation.playAnimation()
+        touchInterceptor.visibility = View.VISIBLE
+    }
+    private fun stopAnimation(){
+        loadingAnimation.visibility = View.INVISIBLE
+        loadingAnimation.cancelAnimation()
+        touchInterceptor.visibility = View.INVISIBLE
     }
 }

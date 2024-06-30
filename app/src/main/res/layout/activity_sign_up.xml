@@ -13,7 +13,25 @@
 
 
 
-
+<FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <View
+        android:id="@+id/touchInterceptor"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone"/>
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/progressBar"
+        android:layout_width="150dp"
+        android:layout_height="130dp"
+        android:visibility="invisible"
+        android:layout_gravity="center"
+        app:lottie_rawRes="@raw/progressbar"
+        app:lottie_speed="1"
+        app:lottie_autoPlay="false"
+        app:lottie_loop="true" />
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -98,16 +116,6 @@
                 android:textColor="@color/black"
                 android:textColorHighlight="@color/cardview_dark_background"
                 android:layout_marginTop="20dp"/>
-            <ProgressBar
-                android:id="@+id/progressBar"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scrollbarSize="30dp"
-                android:visibility="invisible" />
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
@@ -208,5 +216,5 @@
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
+</FrameLayout>
 </ScrollView>

@@ -1,5 +1,6 @@
 package com.example.torento.OWNER
 
+import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -9,11 +10,15 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import androidx.transition.Visibility
+import com.airbnb.lottie.LottieAnimationView
+import com.example.torento.LOGIN.SignIn
+import com.example.torento.R
 import com.example.torento.databinding.ActivityAddRoomBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
@@ -54,6 +59,8 @@ class add_room : AppCompatActivity() {
     private val imagesListforFirebaseUris = mutableListOf<Uri>()
     private lateinit var auth: FirebaseAuth
     private lateinit var roomOwnerDpUrl:String
+    private lateinit var loadingAnimation :LottieAnimationView
+    private lateinit var touchInterceptor:View
 
 
 
@@ -63,6 +70,8 @@ class add_room : AppCompatActivity() {
         binding = ActivityAddRoomBinding.inflate(layoutInflater)
         setContentView(binding.root)
         storageRef = FirebaseStorage.getInstance()
+        loadingAnimation = findViewById(R.id.progressBar)
+        touchInterceptor = binding.touchInterceptor
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         userkey = sharedPreferences.getString("username", "")
         GlobalScope.launch(Dispatchers.IO) {
@@ -93,6 +102,7 @@ class add_room : AppCompatActivity() {
            showImageSourceOptions()
         }
         binding.AddMorePics.setOnClickListener {
+            hideKeyboard(this@add_room)
             if (this@add_room::dpuri.isInitialized && dpuri != "".toUri()){
                 pickImages.launch("image/*")
             }else{
@@ -267,10 +277,10 @@ class add_room : AppCompatActivity() {
             ?: throw RuntimeException("Failed to upload image")
     }.await()
     private fun showProgressOverlay(show: Boolean) {
-        binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        //binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
         binding.root.isClickable = show
         binding.root.isFocusable = show
-        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
+        if (show) startAnimation() else stopAnimation()
     }
     private fun UploadTheRoom(){
         showProgressOverlay(true)
@@ -393,5 +403,23 @@ class add_room : AppCompatActivity() {
         val owner_name = binding.OwnerName.text.toString()
         val breif_description = binding.RoomDescription.text.toString()
         return !(length.isEmpty() || width.isEmpty() || location.isEmpty() || loaction_description.isEmpty() || amount.isEmpty() || owner_name.isEmpty() || breif_description.isEmpty())
+    }
+    fun hideKeyboard(activity: Activity) {
+        val inputMethodManager = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        val currentFocus = activity.currentFocus
+        if (currentFocus != null) {
+            inputMethodManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
+        }
+    }
+    private fun startAnimation() {
+        touchInterceptor.visibility = View.VISIBLE
+        loadingAnimation.visibility = View.VISIBLE
+        loadingAnimation.playAnimation()
+    }
+
+    private fun stopAnimation() {
+        touchInterceptor.visibility = View.INVISIBLE
+        loadingAnimation.cancelAnimation()
+        loadingAnimation.visibility = View.INVISIBLE
     }
 }

@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.airbnb.lottie.LottieAnimationView
 import com.example.torento.Adapter.RoomAdapter
 import com.example.torento.COMMON.Profile
 import com.example.torento.COMMON.descripn
@@ -40,13 +41,11 @@ class owner_home_activity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var binding: ActivityOwnerHomeBinding
     val SHARED_PREF : String = "sharedPrefs"
-    var x=0
     private var db = Firebase.firestore
     private var job: Job = Job()
-    private var backPressedOnce = false
     var id=""
-    private lateinit var popupWindow: PopupWindow
     private var test = ""
+    private lateinit var AddBtnAnimation: LottieAnimationView
 
 
 
@@ -54,6 +53,8 @@ class owner_home_activity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityOwnerHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        AddBtnAnimation = binding.addButton
+        AddBtnAnimation.playAnimation()
         auth = FirebaseAuth.getInstance()
         auth.addAuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
@@ -64,9 +65,6 @@ class owner_home_activity : AppCompatActivity() {
                 }
             }
         }
-       // val isEmailVerified = getVerificationStatusFromSharedPreferences()
-       // Toast.makeText(this@owner_home_activity, auth.currentUser?.uid ?.toString(), Toast.LENGTH_SHORT).show()
-
         val currentUser = auth.currentUser
         currentUser?.let { user ->
             if (!user.isEmailVerified) {
@@ -174,27 +172,6 @@ class owner_home_activity : AppCompatActivity() {
 
         }
 
-   /*suspend fun getDpUrl(OwnerId: String) : String{
-       val docref =  db.collection("users").document("ddd").get().await()
-       var Url = ""
-       try {
-           docref.data?.let {
-               Url = it["imageuri"].toString()
-           }
-           GlobalScope.launch(Dispatchers.Main){
-               Toast.makeText(this@owner_home_activity, OwnerId, Toast.LENGTH_SHORT).show()
-           }
-
-       } catch(e:Exception) {
-           Log.e("descripn", "Error fetching data from Firestore: ${e.message}")
-       }
-       GlobalScope.launch(Dispatchers.Main){
-           Toast.makeText(this@owner_home_activity, Url, Toast.LENGTH_SHORT).show()
-       }
-
-       return Url
-    }*/
-
     private fun restartApp(context: Context) {
         val packageManager = context.packageManager
         val intent = packageManager.getLaunchIntentForPackage(context.packageName)
@@ -225,24 +202,6 @@ class owner_home_activity : AppCompatActivity() {
             .show()
         return true
     }
-    suspend fun getuserId(userkey:String): String = GlobalScope.async{
-        var userId:String = ""
-        try {
-            val docref = db.collection("users").document(userkey).get().await()
-            if (docref != null) {
-                docref.data?.let {
-                    userId = it["userId"].toString()
-                }
-            }
-
-            else {
-                Toast.makeText(this@owner_home_activity, "DocRef is NULL", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: java.lang.Exception){
-            Log.e("Profile", "Error fetching data from Firestore: ${e.message}")
-        }
-        return@async userId
-    }.await()
     override fun onDestroy() {
         super.onDestroy()
         // Cancel the job when the activity is destroyed
@@ -263,7 +222,6 @@ class owner_home_activity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
-
     private fun profile() {
         val intent = Intent(this, Profile::class.java)
         startActivity(intent)
@@ -284,22 +242,6 @@ class owner_home_activity : AppCompatActivity() {
         startActivity(intent)
     }
     //to save values of x and num in changing configuration
-    override fun onSaveInstanceState(outState: Bundle) {
-        // Save the values of your variables
-        outState.putInt("x", x)
-        outState.putInt("num", num)
-
-        // Always call the superclass so it can save the view hierarchy state
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        // Restore the values after the activity has been recreated
-        super.onRestoreInstanceState(savedInstanceState)
-
-        x = savedInstanceState.getInt("x", 0)
-        num = savedInstanceState.getInt("num", 0)
-    }
     private fun showPopup() {
         val inflater = LayoutInflater.from(this)
         val customLayout = inflater.inflate(R.layout.popup, null)
@@ -350,5 +292,4 @@ class owner_home_activity : AppCompatActivity() {
     /*private fun dismissPopup() {
         popupWindow.dismiss()
     }*/
-
-}
+    }

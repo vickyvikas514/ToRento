@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,12 +12,16 @@
     android:background="@color/maincolor"
     tools:context=".COMMON.UpdateActivity">
 
+<FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
 
+    >
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_gravity="center_horizontal"
         android:padding="24dp">
@@ -49,7 +54,6 @@
             android:id="@+id/dpupdate"
             android:layout_width="80dp"
             android:layout_height="80dp"
-
             android:src="@drawable/baseline_add_a_photo_24"
             android:background="@drawable/custom_button"
             android:layout_marginStart="18dp"
@@ -57,19 +61,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="18dp"
             />
-
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:progressTint="@color/brown"
-            android:scrollbarSize="30dp"
-            android:visibility="invisible" />
 
         <com.google.android.material.textfield.TextInputEditText
 
@@ -118,9 +109,22 @@
             app:layout_constraintTop_toBottomOf="@id/phone"
             android:layout_marginTop="25dp"
             tools:layout_editor_absoluteX="43dp" />
-
-
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
+ </androidx.constraintlayout.widget.ConstraintLayout>
+    <View
+        android:id="@+id/touchInterceptor"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone"/>
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/progressBar"
+        android:layout_width="150dp"
+        android:layout_height="130dp"
+        android:visibility="invisible"
+        android:layout_gravity="center"
+        app:lottie_rawRes="@raw/progressbar"
+        app:lottie_speed="1"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true" />
+</FrameLayout>
 </ScrollView>

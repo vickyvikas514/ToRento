@@ -27,6 +27,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
+import com.airbnb.lottie.LottieAnimationView
 import com.example.torento.databinding.ActivitySignUpBinding
 import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.R
@@ -67,6 +68,8 @@ class SignUp : AppCompatActivity() {
     private var regusertype:String="temp"
     private var db = Firebase.firestore
     private var dpuri:Uri = "".toUri()
+    private lateinit var loadingAnimation: LottieAnimationView
+    private lateinit var touchInterceptor:View
 
 
 
@@ -77,6 +80,8 @@ class SignUp : AppCompatActivity() {
         setContentView(binding.root)
         firebaseAuth = FirebaseAuth.getInstance()
         job = Job()
+        loadingAnimation = binding.progressBar
+        touchInterceptor = binding.touchInterceptor
         binding.signupText.setOnClickListener {
             val intent = Intent(this, SignIn::class.java)
             startActivity(intent)
@@ -105,7 +110,7 @@ class SignUp : AppCompatActivity() {
         })
 
         binding.signupbtn.setOnClickListener {
-            binding.progressBar.visibility = View.VISIBLE
+            startAnimation()
             hideKeyboard(this@SignUp)
             val name = binding.name.text.toString()
             val username = binding.username.text.toString()
@@ -116,13 +121,13 @@ class SignUp : AppCompatActivity() {
             if (name.isNotEmpty() && username.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty() && confpass.isNotEmpty()) {
                 if (phone.length != 10) {
                     Toast.makeText(this, "Please enter a valid 10-digit phone number", Toast.LENGTH_SHORT).show()
-                    binding.progressBar.visibility = View.GONE
+                    stopAnimation()
                 } else if (!isValidPassword(pass)) {
                     Toast.makeText(this, "Password must contain at least 1 lowercase, 1 uppercase, 1 digit, and 1 special character.", Toast.LENGTH_SHORT).show()
-                    binding.progressBar.visibility = View.GONE
+                    stopAnimation()
                 } else if (confpass != pass) {
                     Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
-                    binding.progressBar.visibility = View.GONE
+                    stopAnimation()
                 } else {
                     GlobalScope.launch {
                         loginlate(pass, confpass, email, name, username, phone)
@@ -131,7 +136,7 @@ class SignUp : AppCompatActivity() {
                 }
             } else {
                 Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
-                binding.progressBar.visibility = View.GONE
+                stopAnimation()
             }
         }
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -618,7 +623,16 @@ class SignUp : AppCompatActivity() {
         editor.putBoolean("signUpComplete", false) // or any other value you want to set
         editor.apply()
     }
-
+    private fun startAnimation(){
+        loadingAnimation.visibility = View.VISIBLE
+        loadingAnimation.playAnimation()
+        touchInterceptor.visibility = View.VISIBLE
+    }
+    private fun stopAnimation(){
+        loadingAnimation.visibility = View.INVISIBLE
+        loadingAnimation.cancelAnimation()
+        touchInterceptor.visibility = View.INVISIBLE
+    }
 }
 
 

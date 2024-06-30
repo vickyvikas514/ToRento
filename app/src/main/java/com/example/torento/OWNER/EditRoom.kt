@@ -177,7 +177,7 @@ class EditRoom : AppCompatActivity() {
 
     }
     private fun showProgressOverlay(show: Boolean) {
-        binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        //binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
         binding.root.isClickable = show
         binding.root.isFocusable = show
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE

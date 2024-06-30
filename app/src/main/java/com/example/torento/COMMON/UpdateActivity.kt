@@ -16,7 +16,9 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
+import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
+import com.example.torento.R
 import com.example.torento.databinding.ActivityUpdateBinding
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ktx.firestore
@@ -24,6 +26,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -41,6 +44,11 @@ class UpdateActivity : AppCompatActivity() {
     private var storageRef = Firebase.storage
     private var userkey: String? = ""
     private var dpuri:Uri = "".toUri()
+    private lateinit var loadingAnimation:LottieAnimationView
+    private lateinit var touchInterceptor: View
+
+
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -56,6 +64,9 @@ class UpdateActivity : AppCompatActivity() {
             }
 
         }
+        touchInterceptor = binding.touchInterceptor
+        loadingAnimation = findViewById(R.id.progressBar)
+        //loadingAnimation.setAnimation(R.raw.uploadingtocloud)
         binding.UpdateBtn.setOnClickListener {
             val name = binding.name.text.toString()
             val phone = binding.phone.text.toString()
@@ -63,7 +74,7 @@ class UpdateActivity : AppCompatActivity() {
                 CoroutineScope(Dispatchers.Main).launch {
                     userkey?.let { key ->
                         if (dpuri != "".toUri()) {
-                            binding.progressBar.visibility = View.VISIBLE
+                            startAnimation()
                             // Wait for the upload to complete
                             uploadBG(key, dpuri)
                         }
@@ -76,9 +87,10 @@ class UpdateActivity : AppCompatActivity() {
                     if (docRefUser != null) {
                         docRefUser.update(updateData as Map<String, Any>)
                             .addOnSuccessListener {
-                                val intent = Intent(this@UpdateActivity, Profile::class.java)
+                              /* stopAnimation()
+                               val intent = Intent(this@UpdateActivity, Profile::class.java)
                                 startActivity(intent)
-                                finish()
+                                finish()*/
                                 Toast.makeText(this@UpdateActivity, "Success", Toast.LENGTH_SHORT)
                                     .show()
                             }
@@ -241,5 +253,16 @@ class UpdateActivity : AppCompatActivity() {
                     .into(binding.dp)
             }
         }
+    }
+    private fun startAnimation() {
+        touchInterceptor.visibility = View.VISIBLE
+        loadingAnimation.visibility = View.VISIBLE
+        loadingAnimation.playAnimation()
+    }
+
+    private fun stopAnimation() {
+        touchInterceptor.visibility = View.INVISIBLE
+        loadingAnimation.cancelAnimation()
+        loadingAnimation.visibility = View.INVISIBLE
     }
 }
