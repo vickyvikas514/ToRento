@@ -36,7 +36,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 //TODO room must saved to draft first, make draft section in the app.
-//TODO showing dialog to wait unitil array is fillin in uploadImagesToFirebaseStorage
+
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
     private var db = Firebase.firestore

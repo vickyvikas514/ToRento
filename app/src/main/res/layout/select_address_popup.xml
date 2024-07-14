@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:context=".LOGIN.SignIn"
+        android:layout_gravity="center"
+    android:background="@color/white"
+
+        >
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+
+                app:cardBackgroundColor="@color/white"
+
+                android:layout_gravity="center"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:cardElevation="20dp"
+                android:background="@drawable/custom_edit">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:padding="24dp">
+
+
+                    <TextView
+                        android:id="@+id/loginText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Near by location to find the property"
+                        android:textSize="26sp"
+                        android:textAlignment="center"
+                        android:textStyle="bold"
+                        android:textColor="@color/darkpurple"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+
+                    <Spinner
+                        android:id="@+id/dropdownMenu1"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:padding="8dp"
+                        android:background="@drawable/custom_edit"
+                        android:layout_marginTop="20dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/loginText" />
+                    <Spinner
+                        android:id="@+id/dropdownMenu2"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="20dp"
+                        android:background="@drawable/custom_edit"
+                        android:padding="8dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/dropdownMenu1" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/locality"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:background="@drawable/custom_edit"
+                        android:drawablePadding="8dp"
+                        android:gravity="center"
+                        android:hint="LOCALITY"
+                        android:inputType="textPassword"
+                        android:padding="8dp"
+                        android:textColor="@color/black"
+                        android:textColorHighlight="@color/cardview_dark_background"
+                        android:layout_marginTop="20dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/dropdownMenu2" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/house_no"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:background="@drawable/custom_edit"
+                        android:drawablePadding="8dp"
+                        android:gravity="center"
+                        android:hint="HOUSE NO/ FLAT NO"
+                        android:inputType="textPassword"
+                        android:padding="8dp"
+                        android:textColor="@color/black"
+                        android:textColorHighlight="@color/cardview_dark_background"
+                        android:layout_marginTop="20dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/locality" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/pincode"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:background="@drawable/custom_edit"
+                        android:drawablePadding="8dp"
+                        android:gravity="center"
+                        android:hint="PINCODE"
+                        android:inputType="textPassword"
+                        android:padding="8dp"
+                        android:textColor="@color/black"
+                        android:textColorHighlight="@color/cardview_dark_background"
+                        android:layout_marginTop="20dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/house_no" />
+
+
+
+                    <Button
+                        android:id="@+id/loginButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:layout_marginTop="30dp"
+                        android:backgroundTint="@color/purple"
+                        android:text="set address"
+                        android:textSize="18sp"
+                        app:cornerRadius="20dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/pincode" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_constraintTop_toBottomOf="@id/loginButton"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        android:padding="12dp"
+                        android:text="OR"
+                        android:id="@+id/OrText"
+                        android:gravity="center_horizontal"
+                        android:textColor="@color/darkpurple"
+                        android:textSize="16dp"/>
+
+                    <TextView
+                        android:id="@+id/locateMe_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_constraintTop_toBottomOf="@id/OrText"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        android:padding="12dp"
+                        android:text="LOCATE ME"
+                        android:gravity="center_horizontal"
+                        android:textColor="@color/darkpurple"
+                        android:textSize="18dp"/>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.cardview.widget.CardView>
+
+
+
+
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
