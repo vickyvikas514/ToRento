@@ -17,7 +17,7 @@
         android:layout_margin="18dp"
         android:gravity="center_horizontal"
         android:foregroundGravity="center_horizontal"
-        android:text="select Address"
+        android:text="set Address"
         android:id="@+id/address_select"/>
 
     <androidx.recyclerview.widget.RecyclerView

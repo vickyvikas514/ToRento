@@ -4,14 +4,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -25,7 +29,6 @@ import com.example.torento.R
 import com.example.torento.databinding.ActivityMainBinding
 import com.example.torento.COMMON.descripn
 import com.example.torento.DATACLASS.Address
-import com.example.torento.OWNER.owner_home_activity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -41,7 +44,9 @@ class user_home_activity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var binding: ActivityMainBinding
     val SHARED_PREF : String = "sharedPrefs"
-
+    private var selected_state: String = ""
+    private var selected_district: String = ""
+    private lateinit var username: String
     private var db = Firebase.firestore
 
 
@@ -59,7 +64,7 @@ class user_home_activity : AppCompatActivity() {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             supportActionBar?.setDisplayUseLogoEnabled(true)
             val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-            val username: String? = sharedPreferences.getString("username", "")
+            username = sharedPreferences.getString("username", "") ?: ""
             /////////////////////
             DatatoRecyclerView(username)
         }
@@ -310,8 +315,8 @@ class user_home_activity : AppCompatActivity() {
 
         dropdownMenu1.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                val selectedState = states[position]
-                val districts = districtsMap[selectedState] ?: emptyList()
+                 selected_state = states[position]
+                val districts = districtsMap[selected_state] ?: emptyList()
                 mutableOptionsForSecondSpinner.clear()
                 mutableOptionsForSecondSpinner.addAll(districts)
                 secondSpinnerAdapter.notifyDataSetChanged()
@@ -321,12 +326,75 @@ class user_home_activity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {
                 dropdownMenu2.isEnabled = false
             }
+
         }
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogLayout)
             .create()
 
+        val pincode = dialogLayout.findViewById<EditText>(R.id.pincode)
+        pincode.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action required here
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s?.length == 6) {
+                    hideKeyboard(dialogLayout)
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                if (s?.length ?: 0 > 6) {
+                    // Truncate the input to 10 digits if exceeded
+                    pincode.setText(s?.subSequence(0, 6))
+                    pincode.setSelection(6) // Move cursor to the end
+                }
+            }
+        })
+
+        val set_address_btn = dialogLayout.findViewById<Button>(R.id.set_address_btn)
+        set_address_btn.setOnClickListener {
+            selected_state = dropdownMenu1.selectedItem.toString()
+            selected_district = dropdownMenu2.selectedItem.toString()
+            val locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
+            val pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
+            val house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
+            if(selected_state.isEmpty() || selected_district.isEmpty()){
+                Toast.makeText(this@user_home_activity, "Please select state and district respectively from the given list", Toast.LENGTH_SHORT).show()
+            }else{
+                Add_Address(selected_state,selected_district,locality,pincode,house_no,dialog)
+            }
+        }
+
+
         dialog.show()
     }
+    private fun Add_Address(
+        selected_state: String,
+        selected_district: String,
+        locality: String,
+        pincode: String,
+        house_no: String,
+        dialog: AlertDialog
+    ) {
+        val address = hashMapOf(
+            "state" to selected_state,
+            "district" to selected_district,
+            "locality" to locality,
+            "pincode" to pincode,
+            "house_no" to house_no,
+        )
+        db.collection("users").document(username).update("address",address)
+            .addOnSuccessListener {
+                dialog.dismiss()
+                Toast.makeText(this@user_home_activity, "Address is set successfully", Toast.LENGTH_SHORT).show()
+            }
+    }
+    private fun hideKeyboard(view: View) {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
 }
+
