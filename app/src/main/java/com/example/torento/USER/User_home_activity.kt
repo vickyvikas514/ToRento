@@ -305,12 +305,12 @@ class user_home_activity : AppCompatActivity() {
 
 
         val firstSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, states)
-        firstSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        firstSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
         dropdownMenu1.adapter = firstSpinnerAdapter
 
         val mutableOptionsForSecondSpinner = mutableListOf<String>()
         val secondSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, mutableOptionsForSecondSpinner)
-        secondSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        secondSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
         dropdownMenu2.adapter = secondSpinnerAdapter
 
         dropdownMenu1.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {

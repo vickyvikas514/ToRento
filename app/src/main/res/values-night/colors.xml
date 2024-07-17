@@ -4,4 +4,6 @@
     <color name="red">	#ff0000</color>
     <color name = "brown">#7f3b28</color>
     <color name = "maincolor">#6cbfff</color>
+    <color name="purple">#8692F7</color>
+    <color name = "hint">#FFFFFF</color>
 </resources>
