@@ -440,12 +440,7 @@ class EditRoom : AppCompatActivity() {
         val states = stateDistrictData.states
         val districtsMap = stateDistrictData.districtsMap
 
-        val defaultState = address.state
-        val defaultDistrict = address.district
-        val statesWithDefault = mutableListOf(defaultState)
-        statesWithDefault.addAll(states)
-
-        val firstSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, statesWithDefault)
+        val firstSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, states)
         firstSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
         dropdownMenu1.adapter = firstSpinnerAdapter
 

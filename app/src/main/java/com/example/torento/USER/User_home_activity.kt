@@ -1,4 +1,4 @@
-package com.example.torento.USER
+package com.example.torento. USER
 
 import android.content.Context
 import android.content.Intent
@@ -29,6 +29,7 @@ import com.example.torento.R
 import com.example.torento.databinding.ActivityMainBinding
 import com.example.torento.COMMON.descripn
 import com.example.torento.DATACLASS.Address
+import com.example.torento.DATACLASS.address1
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -45,9 +46,12 @@ class user_home_activity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     val SHARED_PREF : String = "sharedPrefs"
     private var selected_state: String = ""
-    private var selected_district: String = ""
+
     private lateinit var username: String
     private var db = Firebase.firestore
+    private var address: address1? = null
+    private lateinit var addresstoset: address1
+
 
 
 
@@ -71,37 +75,7 @@ class user_home_activity : AppCompatActivity() {
 
 ////////////////////////////////////////////////////////
         binding.addressSelect.setOnClickListener { showCustomDialog() }
-        /*val optionsForFirstSpinner = listOf("Option 1", "Option 2", "Option 3")
 
-        // Sample data for the second spinner based on first spinner selection
-        val optionsForSecondSpinnerMap = mapOf(
-            "Option 1" to listOf("Option 1.1", "Option 1.2", "Option 1.3"),
-            "Option 2" to listOf("Option 2.1", "Option 2.2", "Option 2.3"),
-            "Option 3" to listOf("Option 3.1", "Option 3.2", "Option 3.3")
-        )
-        val firstSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, optionsForFirstSpinner)
-        firstSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.dropdownMenu1.adapter = firstSpinnerAdapter
-
-        // Set up the adapter for the second spinner
-        val secondSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, listOf<String>())
-        secondSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.dropdownMenu2.adapter = secondSpinnerAdapter
-        binding.dropdownMenu1.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                val selectedOption = optionsForFirstSpinner[position]
-                val secondSpinnerOptions = optionsForSecondSpinnerMap[selectedOption] ?: emptyList()
-                secondSpinnerAdapter.clear()
-                secondSpinnerAdapter.addAll(secondSpinnerOptions)
-                secondSpinnerAdapter.notifyDataSetChanged()
-                binding.dropdownMenu2.isEnabled = secondSpinnerOptions.isNotEmpty()
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                // Optional: Handle case when nothing is selected
-                binding.dropdownMenu2.isEnabled = false
-            }
-        }*/
 
     }
     private fun showPopup() {
@@ -207,16 +181,21 @@ class user_home_activity : AppCompatActivity() {
                     return@addSnapshotListener
                 }
                 snapshot?.forEach { document ->
-                    val roomimage = document.getString("dpuri") ?: ""
-                    val description = document.getString("location") ?: ""
+                    val roomimage = document.getString("dpuri")?:""
+                    val addressMap = document["address"] as? Map<String, Any>
+                    if (addressMap != null) {
+                        address = address1.fromMap(addressMap)
+                    }
                     val roomlength = document.getString("length") ?: ""
                     val roomwidth = document.getString("width") ?: ""
-                    val roomsize: String = roomlength + "x" + roomwidth
-                    val roomOwnerDpUrl = document.getString("ownerDpUrl") ?: ""
+                    val roomsize:String = roomlength+" ft"+" x "+roomwidth+" ft"
+                    val roomOwnerDpUrl:String = document.getString("ownerDpUrl")?:""
                     val Docid:String = document.id
-                    val item = Room(roomsize, description, roomimage, roomOwnerDpUrl)
-                    itemsList.add(item)
+                    val item = address?.let { Room( roomsize, it.locality,roomimage, roomOwnerDpUrl) }
                     idlist.add(Docid)
+                    if (item != null) {
+                        itemsList.add(item)
+                    }
                 }
                }
              }
@@ -299,6 +278,14 @@ class user_home_activity : AppCompatActivity() {
         val dropdownMenu1 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu1)
         val dropdownMenu2 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu2)
 
+        addresstoset = address1(
+            state = "",
+            district = "",
+            locality = "",
+            pincode = "",
+            house_no = ""
+        )
+
         val stateDistrictData = Address.getDefaultData()
         val states = stateDistrictData.states
         val districtsMap = stateDistrictData.districtsMap
@@ -334,6 +321,7 @@ class user_home_activity : AppCompatActivity() {
             .create()
 
         val pincode = dialogLayout.findViewById<EditText>(R.id.pincode)
+
         pincode.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 // No action required here
@@ -356,15 +344,15 @@ class user_home_activity : AppCompatActivity() {
 
         val set_address_btn = dialogLayout.findViewById<Button>(R.id.set_address_btn)
         set_address_btn.setOnClickListener {
-            selected_state = dropdownMenu1.selectedItem.toString()
-            selected_district = dropdownMenu2.selectedItem.toString()
-            val locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
-            val pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
-            val house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
-            if(selected_state.isEmpty() || selected_district.isEmpty()){
-                Toast.makeText(this@user_home_activity, "Please select state and district respectively from the given list", Toast.LENGTH_SHORT).show()
+            addresstoset.state = dropdownMenu1.selectedItem.toString()
+            addresstoset.district = dropdownMenu2.selectedItem.toString()
+            addresstoset.locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
+            addresstoset.pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
+            addresstoset.house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
+            if(isAddressValid()){
+                Add_Address(dialog)
             }else{
-                Add_Address(selected_state,selected_district,locality,pincode,house_no,dialog)
+                Toast.makeText(this@user_home_activity, "Please select state and district respectively from the given list", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -372,26 +360,32 @@ class user_home_activity : AppCompatActivity() {
         dialog.show()
     }
     private fun Add_Address(
-        selected_state: String,
-        selected_district: String,
-        locality: String,
-        pincode: String,
-        house_no: String,
+
         dialog: AlertDialog
     ) {
-        val address = hashMapOf(
-            "state" to selected_state,
-            "district" to selected_district,
-            "locality" to locality,
-            "pincode" to pincode,
-            "house_no" to house_no,
-        )
-        db.collection("users").document(username).update("address",address)
+        db.collection("users").document(username).update("address",addresstoset)
             .addOnSuccessListener {
                 dialog.dismiss()
                 Toast.makeText(this@user_home_activity, "Address is set successfully", Toast.LENGTH_SHORT).show()
             }
     }
+    private fun isAddressValid(): Boolean {
+        return try {
+            if (addresstoset.state.isBlank() || addresstoset.district.isBlank() ||
+                addresstoset.locality.isBlank() || addresstoset.pincode.isBlank()
+                || addresstoset.house_no.isBlank()) { // Check if 'state' is initialized and not empty
+                //Toast.makeText(this, "Please fill all the details", Toast.LENGTH_SHORT).show()
+                false
+            } else {
+                // Perform your actual address validation logic here
+                true
+            }
+        } catch (e: UninitializedPropertyAccessException) {
+            //Toast.makeText(this, "Please fill all the details", Toast.LENGTH_SHORT).show()
+            false
+        }
+    }
+
     private fun hideKeyboard(view: View) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
