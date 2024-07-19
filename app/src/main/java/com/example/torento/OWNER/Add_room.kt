@@ -492,11 +492,6 @@ class add_room : AppCompatActivity() {
                 Toast.makeText(this@add_room, "Please fill all the fields", Toast.LENGTH_SHORT).show()
             }else{
                 dialog.dismiss()
-                /*Toast.makeText(this, state.toString(), Toast.LENGTH_SHORT).show()
-                Toast.makeText(this, district.toString(), Toast.LENGTH_SHORT).show()
-                Toast.makeText(this, locality.toString(), Toast.LENGTH_SHORT).show()
-                Toast.makeText(this, pincode.toString(), Toast.LENGTH_SHORT).show()
-                Toast.makeText(this, house_no.toString(), Toast.LENGTH_SHORT).show()*/
                 Toast.makeText(this@add_room, "Your address is set", Toast.LENGTH_SHORT).show()
             }
         }
@@ -518,29 +513,7 @@ class add_room : AppCompatActivity() {
             false
         }
     }
-    /*private fun Add_Address(
-        selected_state: String,
-        selected_district: String,
-        locality: String,
-        pincode: String,
-        house_no: String,
-        dialog: AlertDialog
-    ) {
-        val address = hashMapOf(
-            "state" to selected_state,
-            "district" to selected_district,
-            "locality" to locality,
-            "pincode" to pincode,
-            "house_no" to house_no,
-        )
-        userkey?.let {
-            db.collection("users").document(it).update("address",address)
-                .addOnSuccessListener {
-                    dialog.dismiss()
-                    Toast.makeText(this@add_room, "Address is set successfully", Toast.LENGTH_SHORT).show()
-                }
-        }
-    }*/
+
     private fun hideKeyboard(view: View) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)

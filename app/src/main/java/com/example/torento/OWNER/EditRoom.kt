@@ -1,16 +1,29 @@
 package com.example.torento.OWNER
 
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import com.bumptech.glide.Glide
+import com.example.torento.DATACLASS.Address
+import com.example.torento.DATACLASS.address1
+import com.example.torento.R
 import com.example.torento.databinding.ActivityAddRoomBinding
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
@@ -39,6 +52,8 @@ class EditRoom : AppCompatActivity() {
     private val storage = FirebaseStorage.getInstance()
     private val storageref: StorageReference = storage.reference
     private lateinit var userkey: String
+
+    private lateinit var address: address1
     private var check:Int = 0
 
 
@@ -53,6 +68,7 @@ class EditRoom : AppCompatActivity() {
         Id = intent.getStringExtra("documentid").toString()
         Toast.makeText(this@EditRoom, Id, Toast.LENGTH_SHORT).show()
         binding.uploadbtn.text = "Save the changes"
+        binding.setAddressBtn.text = "Edit your address"
         val galleryImage = registerForActivityResult(ActivityResultContracts.GetContent()) {
             binding.pic.setImageURI(it)
             if (it != null) {
@@ -115,6 +131,10 @@ class EditRoom : AppCompatActivity() {
                     dialog.dismiss()
                 }
                 .show()
+        }
+
+        binding.setAddressBtn.setOnClickListener {
+            showCustomDialog()
         }
     }
     /*private fun ShowDialogForAddmorePics(){
@@ -189,11 +209,9 @@ class EditRoom : AppCompatActivity() {
     private fun updateTheEdit(Id: String,userkey: String){
         val length:String? = binding.roomlength.text.toString()
        val width:String? = binding.roomwidth.text.toString()
-        val location:String? = binding.Locality.text.toString()
-        val loaction_description:String? = binding.locationDescription.text.toString()
         val amount:String? = binding.amount.text.toString()
-        val owner_name:String? = binding.OwnerName.text.toString()
         val breif_description:String? = binding.RoomDescription.text.toString()
+
 
         GlobalScope.launch (Dispatchers.IO){
 
@@ -208,17 +226,7 @@ class EditRoom : AppCompatActivity() {
             }
             val deferred3 = async {
 
-                    changeL(Id, location, userkey)
-
-            }
-            val deferred4 = async {
-
-                    changeLD(Id, loaction_description, userkey)
-
-            }
-            val deferred5 = async {
-
-                    changeON(owner_name, Id, userkey)
+                    changeAdd(Id, userkey)
 
             }
             val deferred6 = async {
@@ -237,8 +245,7 @@ class EditRoom : AppCompatActivity() {
             deferred1.await()
             deferred2.await()
             deferred3.await()
-            deferred4.await()
-            deferred5.await()
+
             deferred6.await()
             deferred7.await()
 
@@ -254,12 +261,6 @@ class EditRoom : AppCompatActivity() {
         length?.let{ db.collection(userkey).document(Id).update("length", length) }
         width?.let{ db.collection("Rooms").document(Id).update("width", width) }
         width?.let{ db.collection(userkey).document(Id).update("width", width) }
-    }
-    suspend fun changeON(ON:String?,Id: String,userkey:String){
-        ON?.let{
-            db.collection(userkey).document(Id).update("owner_name", ON)
-            db.collection("Rooms").document(Id).update("owner_name", ON)
-        }
     }
 
     suspend fun retreivingdataBG(Id:String,userKey: String){
@@ -292,9 +293,10 @@ class EditRoom : AppCompatActivity() {
             binding.roomlength.setText(length)
             binding.roomwidth.setText(roomData["width"] as? String)
             binding.amount.setText(roomData["amount"] as? String)
-            binding.Locality.setText(roomData["location"] as? String)
-            binding.locationDescription.setText(roomData["location_detail"] as? String)
-            binding.OwnerName.setText(roomData["owner_name"] as? String)
+            val addressMap = roomData["address"] as? Map<String, Any>
+            if (addressMap != null) {
+                address = address1.fromMap(addressMap)
+            }
             binding.RoomDescription.setText(roomData["breif_description"] as? String)
             //Toast.makeText(this@EditRoom, roomData["imageuri"] as? String, Toast.LENGTH_SHORT).show()
             Glide.with(this)
@@ -303,10 +305,10 @@ class EditRoom : AppCompatActivity() {
         }
     }
 
-    suspend fun changeL(Id: String,location:String?,userkey:String){
-        location?.let{
-            db.collection(userkey).document(Id).update("location", location)
-            db.collection("Rooms").document(Id).update("location", location)
+    suspend fun changeAdd(Id: String,userkey:String){
+        address?.let{
+            db.collection(userkey).document(Id).update("address", address)
+            db.collection("Rooms").document(Id).update("address", address)
         }
     }
     suspend fun changeMorePics(){
@@ -404,5 +406,116 @@ class EditRoom : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e("FirestoreError", "Failed to append images: $e")
         }
+    }
+    private fun showCustomDialog() {
+        val inflater = LayoutInflater.from(this)
+        val dialogLayout = inflater.inflate(R.layout.select_address_popup, null)
+        val dropdownMenu1 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu1)
+        val dropdownMenu2 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu2)
+
+        dialogLayout.findViewById<EditText>(R.id.locality).setText(address.locality)
+        dialogLayout.findViewById<EditText>(R.id.house_no).setText(address.house_no)
+
+
+        val stateDistrictData = Address.getDefaultData()
+        val states = stateDistrictData.states
+        val districtsMap = stateDistrictData.districtsMap
+
+        val defaultState = address.state
+        val defaultDistrict = address.district
+        val statesWithDefault = mutableListOf(defaultState)
+        statesWithDefault.addAll(states)
+
+        val firstSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, statesWithDefault)
+        firstSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
+        dropdownMenu1.adapter = firstSpinnerAdapter
+
+        val mutableOptionsForSecondSpinner = mutableListOf<String>()
+        val secondSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, mutableOptionsForSecondSpinner)
+        secondSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
+        dropdownMenu2.adapter = secondSpinnerAdapter
+
+        dropdownMenu1.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                address.state = states[position]
+                val districts = districtsMap[address.state] ?: emptyList()
+                mutableOptionsForSecondSpinner.clear()
+                mutableOptionsForSecondSpinner.addAll(districts)
+                secondSpinnerAdapter.notifyDataSetChanged()
+                dropdownMenu2.isEnabled = districts.isNotEmpty()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                dropdownMenu2.isEnabled = false
+            }
+
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogLayout)
+            .create()
+
+        val pincode1 = dialogLayout.findViewById<EditText>(R.id.pincode)
+        pincode1.setText(address.pincode)
+        pincode1.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action required here
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s?.length == 6) {
+                    hideKeyboard(dialogLayout)
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                if (s?.length ?: 0 > 6) {
+                    // Truncate the input to 10 digits if exceeded
+                    pincode1.setText(s?.subSequence(0, 6))
+                    pincode1.setSelection(6) // Move cursor to the end
+                }
+            }
+        })
+
+        val set_address_btn = dialogLayout.findViewById<Button>(R.id.set_address_btn)
+        set_address_btn.setOnClickListener {
+            address.state = dropdownMenu1.selectedItem.toString()
+            address.district = dropdownMenu2.selectedItem.toString()
+            address.locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
+            address.pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
+            address.house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
+            if(address.state.isEmpty() || address.district.isEmpty() || address.locality.isEmpty() || address.pincode.isEmpty() || address.house_no.isEmpty()){
+                Toast.makeText(this@EditRoom, "Please fill all the fields", Toast.LENGTH_SHORT).show()
+            }else{
+                dialog.dismiss()
+                /*Toast.makeText(this, state.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, district.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, locality.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, pincode.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, house_no.toString(), Toast.LENGTH_SHORT).show()*/
+                Toast.makeText(this@EditRoom, "Your address is set", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
+        dialog.show()
+    }
+    private fun isAddressValid(): Boolean {
+        return try {
+            if (address.state.isBlank() || address.district.isBlank() || address.locality.isBlank() || address.pincode.isBlank() || address.house_no.isBlank()) { // Check if 'state' is initialized and not empty
+                //Toast.makeText(this, "Please fill all the details", Toast.LENGTH_SHORT).show()
+                false
+            } else {
+                // Perform your actual address validation logic here
+                true
+            }
+        } catch (e: UninitializedPropertyAccessException) {
+            //Toast.makeText(this, "Please fill all the details", Toast.LENGTH_SHORT).show()
+            false
+        }
+    }
+    private fun hideKeyboard(view: View) {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 }

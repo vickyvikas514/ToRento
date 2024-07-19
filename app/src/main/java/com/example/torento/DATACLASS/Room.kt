@@ -62,4 +62,24 @@ data class Address(
         }
     }
 }
+data class address1(
+    var state:String,
+    var district:String,
+    var pincode:String,
+    var locality:String,
+    var house_no:String,
+
+    ){
+    companion object {
+        fun fromMap(map: Map<String, Any>): address1 {
+            return address1(
+                state = map["state"] as? String ?: "",
+                district = map["district"] as? String ?: "",
+                locality = map["locality"] as? String ?: "",
+                pincode = map["pincode"] as? String ?: "",
+                house_no = map["house_no"] as? String ?: ""
+            )
+        }
+    }
+}
 
