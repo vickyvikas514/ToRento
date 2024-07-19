@@ -52,7 +52,10 @@ class EditRoom : AppCompatActivity() {
     private val storage = FirebaseStorage.getInstance()
     private val storageref: StorageReference = storage.reference
     private lateinit var userkey: String
-
+    private lateinit var length:String
+    private lateinit var width:String
+    private lateinit var amount:String
+    private lateinit var breif_description:String
     private lateinit var address: address1
     private var check:Int = 0
 
@@ -207,11 +210,20 @@ class EditRoom : AppCompatActivity() {
             ?: throw RuntimeException("Failed to upload image")
     }.await()
     private fun updateTheEdit(Id: String,userkey: String){
-        val length:String? = binding.roomlength.text.toString()
-       val width:String? = binding.roomwidth.text.toString()
-        val amount:String? = binding.amount.text.toString()
-        val breif_description:String? = binding.RoomDescription.text.toString()
-
+         length = binding.roomlength.text.toString()
+        width = binding.roomwidth.text.toString()
+         amount = binding.amount.text.toString()
+         breif_description = binding.RoomDescription.text.toString()
+        if (!isInputDataValid()) {
+            showProgressOverlay(false)
+            Toast.makeText(this, "Please provide all the required details for room", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!isAddressValid()) {
+            showProgressOverlay(false)
+            Toast.makeText(this, "Please provide all the address details", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         GlobalScope.launch (Dispatchers.IO){
 
@@ -289,15 +301,18 @@ class EditRoom : AppCompatActivity() {
     private fun updateEditTextFields(roomData: Map<String, Any>?) {
         if (roomData != null) {
             // Example: Update length EditText field
-            val length = roomData["length"] as? String
+             length = (roomData["length"] as? String).toString()
             binding.roomlength.setText(length)
-            binding.roomwidth.setText(roomData["width"] as? String)
-            binding.amount.setText(roomData["amount"] as? String)
+            width = roomData["width"] as? String ?: ""
+            binding.roomwidth.setText(width)
+            breif_description = roomData["breif_description"] as? String ?: ""
+            amount = roomData["amount"] as? String ?: ""
+            binding.amount.setText(amount)
             val addressMap = roomData["address"] as? Map<String, Any>
             if (addressMap != null) {
                 address = address1.fromMap(addressMap)
             }
-            binding.RoomDescription.setText(roomData["breif_description"] as? String)
+            binding.RoomDescription.setText(breif_description)
             //Toast.makeText(this@EditRoom, roomData["imageuri"] as? String, Toast.LENGTH_SHORT).show()
             Glide.with(this)
                 .load(roomData["dpuri"] as? String)
@@ -315,12 +330,6 @@ class EditRoom : AppCompatActivity() {
         imagesListforFirebaseUris?.let{
             db.collection(userkey).document(Id).update("imageuri", imagesListforFirebaseUris)
             db.collection("Rooms").document(Id).update("imageuri", imagesListforFirebaseUris)
-        }
-    }
-    suspend fun changeLD(Id: String,LD:String?,userkey:String){
-       LD?.let {
-            db.collection("Rooms").document(Id).update("location_detail", LD)
-            db.collection(userkey).document(Id).update("location_detail", LD)
         }
     }
     suspend fun changePrice(Id: String,price:String?,userkey:String){
@@ -383,6 +392,16 @@ class EditRoom : AppCompatActivity() {
             .show()
     }
     private fun changetohome(){
+        if (!isInputDataValid()) {
+            //showProgressOverlay(false)
+            //Toast.makeText(this, "Please provide all the required details for room", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!isAddressValid()) {
+            //showProgressOverlay(false)
+            //Toast.makeText(this, "Please provide all the address details", Toast.LENGTH_SHORT).show()
+            return
+        }
         val intent = Intent(this@EditRoom, owner_home_activity::class.java)
         startActivity(intent)
         finish()
@@ -488,11 +507,7 @@ class EditRoom : AppCompatActivity() {
                 Toast.makeText(this@EditRoom, "Please fill all the fields", Toast.LENGTH_SHORT).show()
             }else{
                 dialog.dismiss()
-                /*Toast.makeText(this, state.toString(), Toast.LENGTH_SHORT).show()
-                Toast.makeText(this, district.toString(), Toast.LENGTH_SHORT).show()
-                Toast.makeText(this, locality.toString(), Toast.LENGTH_SHORT).show()
-                Toast.makeText(this, pincode.toString(), Toast.LENGTH_SHORT).show()
-                Toast.makeText(this, house_no.toString(), Toast.LENGTH_SHORT).show()*/
+
                 Toast.makeText(this@EditRoom, "Your address is set", Toast.LENGTH_SHORT).show()
             }
         }
@@ -503,6 +518,23 @@ class EditRoom : AppCompatActivity() {
     private fun isAddressValid(): Boolean {
         return try {
             if (address.state.isBlank() || address.district.isBlank() || address.locality.isBlank() || address.pincode.isBlank() || address.house_no.isBlank()) { // Check if 'state' is initialized and not empty
+                //Toast.makeText(this, "Please fill all the details", Toast.LENGTH_SHORT).show()
+                false
+            } else {
+                // Perform your actual address validation logic here
+                true
+            }
+        } catch (e: UninitializedPropertyAccessException) {
+            //Toast.makeText(this, "Please fill all the details", Toast.LENGTH_SHORT).show()
+            false
+        }
+    }
+    private fun isInputDataValid(): Boolean {
+        // Validate all the necessary input fields here
+        return try {
+            if (length.isBlank() || width.isBlank() ||
+                amount.isBlank() || breif_description.isBlank()
+               ) { // Check if 'state' is initialized and not empty
                 //Toast.makeText(this, "Please fill all the details", Toast.LENGTH_SHORT).show()
                 false
             } else {
