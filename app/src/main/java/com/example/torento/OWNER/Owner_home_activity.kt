@@ -21,6 +21,7 @@ import com.example.torento.Adapter.RoomAdapter
 import com.example.torento.COMMON.Profile
 import com.example.torento.COMMON.descripn
 import com.example.torento.DATACLASS.Room
+import com.example.torento.DATACLASS.address1
 import com.example.torento.LOGIN.LandingPage
 import com.example.torento.LOGIN.LandingPage.Companion.num
 import com.example.torento.LOGIN.LandingPage.Companion.userid
@@ -46,6 +47,7 @@ class owner_home_activity : AppCompatActivity() {
     var id=""
     private var test = ""
     private lateinit var AddBtnAnimation: LottieAnimationView
+    private lateinit var address: address1
 
 
 
@@ -122,13 +124,16 @@ class owner_home_activity : AppCompatActivity() {
 
                     snapshot?.forEach { document ->
                         val roomimage = document.getString("dpuri")?:""
-                        val description = document.getString("location") ?: ""
+                        val addressMap = document["address"] as? Map<String, Any>
+                        if (addressMap != null) {
+                            address = address1.fromMap(addressMap)
+                        }
                         val roomlength = document.getString("length") ?: ""
                         val roomwidth = document.getString("width") ?: ""
                         val roomsize:String = roomlength+" ft"+" x "+roomwidth+" ft"
                         val roomOwnerDpUrl:String = document.getString("ownerDpUrl")?:""
                         val Docid:String = document.id
-                        val item = Room( roomsize, description,roomimage, roomOwnerDpUrl)
+                        val item = Room( roomsize, address.locality,roomimage, roomOwnerDpUrl)
                         idlist.add(Docid)
                         itemsList.add(item)
                     }
