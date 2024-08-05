@@ -48,7 +48,7 @@ import java.io.ByteArrayOutputStream
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-//TODO make draft section in the app.
+//TODO make section in the app for drafted rooms.
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
@@ -393,6 +393,7 @@ class add_room : AppCompatActivity() {
                     if (docRefUser != null) {
 
                         updateData["roomId"] = documentId
+                        updateData["status"] = "published"
                         docref2.document(documentId).update(updateData)
                             .addOnSuccessListener {
                                 docRefUser.set(updateData)

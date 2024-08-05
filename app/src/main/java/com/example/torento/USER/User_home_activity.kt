@@ -51,6 +51,7 @@ class user_home_activity : AppCompatActivity() {
     private var db = Firebase.firestore
     private var address: address1? = null
     private lateinit var addresstoset: address1
+    private var IsViewingLiked = false
 
 
 
@@ -70,7 +71,7 @@ class user_home_activity : AppCompatActivity() {
             val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
             username = sharedPreferences.getString("username", "") ?: ""
             /////////////////////
-            DatatoRecyclerView(username)
+            DatatoRecyclerView(username,false)
         }
 
 ////////////////////////////////////////////////////////
@@ -170,8 +171,9 @@ class user_home_activity : AppCompatActivity() {
         return true
     }
 
-   suspend fun retreivingdata() : Pair<List<Room>, List<String>> = withContext(Dispatchers.IO){
-        val itemsCollection = db.collection("Rooms")
+   suspend fun retreivingdata(Liked:Boolean) : Pair<List<Room>, List<String>> = withContext(Dispatchers.IO){
+
+       val itemsCollection = if(Liked)db.collection(username) else db.collection("Rooms")
         val itemsList = mutableListOf<Room>()
         val idlist = mutableListOf<String>()
         if (itemsCollection != null) {
@@ -202,9 +204,9 @@ class user_home_activity : AppCompatActivity() {
             kotlinx.coroutines.delay(1000)
             return@withContext Pair(itemsList,idlist)
     }
-    private fun DatatoRecyclerView(username: String?) {
+    private fun DatatoRecyclerView(username: String?,Liked:Boolean) {
         GlobalScope.launch {
-            val (rooms, ids) = async { retreivingdata() }.await()
+            val (rooms, ids) = async { retreivingdata(Liked) }.await()
             withContext(Dispatchers.Main){
                 val adapter = RoomAdapter(
                     applicationContext,
@@ -241,16 +243,27 @@ class user_home_activity : AppCompatActivity() {
         menuInflater.inflate(R.menu.app_bar,menu)
         return super.onCreateOptionsMenu(menu)
     }
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val draftrooms = menu?.findItem(R.id.saveditems)
+        draftrooms?.title = if (IsViewingLiked) "All the Rooms" else "Liked Rooms"
+        return true
+    }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.logout -> logout()
             R.id.profile ->profile()
-            R.id.saveditems->SAVEDROOMS()
+            R.id.saveditems->toggleRoomsView()
 
         }
         return super.onOptionsItemSelected(item)
     }
-        private fun SAVEDROOMS(){
+    private fun toggleRoomsView() {
+        IsViewingLiked = !IsViewingLiked
+        val status = if (IsViewingLiked) true else false
+        DatatoRecyclerView(username, status)
+        invalidateOptionsMenu() // This will trigger onPrepareOptionsMenu to update the menu item title
+    }
+    private fun SAVEDROOMS(){
             val intent = Intent(this,Save::class.java)
             startActivity(intent)
         }

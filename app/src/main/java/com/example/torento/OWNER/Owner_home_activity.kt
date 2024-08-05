@@ -48,6 +48,7 @@ class owner_home_activity : AppCompatActivity() {
     private var test = ""
     private lateinit var AddBtnAnimation: LottieAnimationView
     private lateinit var address: address1
+    private var isViewingDrafts = false
 
 
 
@@ -94,7 +95,7 @@ class owner_home_activity : AppCompatActivity() {
             job = Job()
             val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
             val userkey: String? = sharedPreferences.getString("username", "")
-
+            userid = userkey.toString()
             binding.addButton.setOnClickListener{
                 //made temp room
 
@@ -172,16 +173,16 @@ class owner_home_activity : AppCompatActivity() {
 
                 binding.OwnerRoomlist.setHasFixedSize(true)
             }*/
-        fetchRooms(userkey.toString())
+        fetchRooms(userkey.toString(),"draft")
 
 
         }
-    private fun fetchRooms(userkey: String) {
+    private fun fetchRooms(userkey: String,status:String) {
         val itemsCollection = db.collection(userkey)
         val itemsList = mutableListOf<Room>()
         val idlist = mutableListOf<String>()
 
-        itemsCollection.whereNotEqualTo("status", "draft").addSnapshotListener { snapshot, exception ->
+        itemsCollection.whereNotEqualTo("status", status).addSnapshotListener { snapshot, exception ->
             if (exception != null) {
                 // Handle the error
                 return@addSnapshotListener
@@ -274,18 +275,29 @@ class owner_home_activity : AppCompatActivity() {
     }
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_bar,menu)
-        val itemToHide = menu!!.findItem(R.id.saveditems)
-        itemToHide.setVisible(false)
+        
         return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val draftrooms = menu?.findItem(R.id.saveditems)
+        draftrooms?.title = if (isViewingDrafts) "Listed Rooms" else "Draft Rooms"
+        return true
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.logout -> logout()
             R.id.profile ->profile()
-
+            R.id.saveditems-> toggleRoomsView()
 
         }
         return super.onOptionsItemSelected(item)
+    }
+    private fun toggleRoomsView() {
+        isViewingDrafts = !isViewingDrafts
+        val status = if (isViewingDrafts) "published" else "draft"
+        fetchRooms(userid, status)
+        invalidateOptionsMenu() // This will trigger onPrepareOptionsMenu to update the menu item title
     }
     private fun profile() {
         val intent = Intent(this, Profile::class.java)
