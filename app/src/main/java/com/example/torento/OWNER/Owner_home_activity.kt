@@ -111,7 +111,7 @@ class owner_home_activity : AppCompatActivity() {
             supportActionBar?.setDisplayUseLogoEnabled(true)
             supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
 
-            val itemsCollection = userkey?.let { db.collection(it) }
+            /*val itemsCollection = userkey?.let { db.collection(it) }
             val itemsList = mutableListOf<Room>()
             val idlist = mutableListOf<String>()
 
@@ -171,11 +171,71 @@ class owner_home_activity : AppCompatActivity() {
                 }
 
                 binding.OwnerRoomlist.setHasFixedSize(true)
-            }
-
+            }*/
+        fetchRooms(userkey.toString())
 
 
         }
+    private fun fetchRooms(userkey: String) {
+        val itemsCollection = db.collection(userkey)
+        val itemsList = mutableListOf<Room>()
+        val idlist = mutableListOf<String>()
+
+        itemsCollection.whereNotEqualTo("status", "draft").addSnapshotListener { snapshot, exception ->
+            if (exception != null) {
+                // Handle the error
+                return@addSnapshotListener
+            }
+
+            itemsList.clear()
+            idlist.clear()
+
+            snapshot?.forEach { document ->
+                val roomimage = document.getString("dpuri") ?: ""
+                val addressMap = document["address"] as? Map<String, Any>
+                if (addressMap != null) {
+                    address = address1.fromMap(addressMap)
+                }
+                val roomlength = document.getString("length") ?: ""
+                val roomwidth = document.getString("width") ?: ""
+                val roomsize = "$roomlength ft x $roomwidth ft"
+                val roomOwnerDpUrl = document.getString("ownerDpUrl") ?: ""
+                val Docid = document.id
+                val item = Room(roomsize, address.locality, roomimage, roomOwnerDpUrl)
+                idlist.add(Docid)
+                itemsList.add(item)
+            }
+
+            val adapter = RoomAdapter(
+                applicationContext,
+                itemsList,
+                idlist
+            )
+            binding.OwnerRoomlist.adapter = adapter
+            adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener {
+                override fun onItemClick(documentid: String, position: Int) {
+                    // Handle item click here
+                    GlobalScope.launch(Dispatchers.IO) {
+                        try {
+                            launch(Dispatchers.Main) {
+                                Toast.makeText(this@owner_home_activity, test, Toast.LENGTH_SHORT).show()
+                                val intent = Intent(this@owner_home_activity, descripn::class.java)
+                                intent.putExtra("documentid", documentid)
+                                intent.putExtra("usertype", "owner")
+                                intent.putExtra("collection2", userkey)
+                                intent.putExtra("userIdO", "0D2bMnHrhcWCSkyRlklWMhY0NTS2")
+                                startActivity(intent)
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            })
+        }
+
+        binding.OwnerRoomlist.setHasFixedSize(true)
+    }
 
     private fun restartApp(context: Context) {
         val packageManager = context.packageManager

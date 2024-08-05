@@ -29,6 +29,7 @@ import com.example.torento.DATACLASS.Address
 import com.example.torento.R
 import com.example.torento.databinding.ActivityAddRoomBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -39,11 +40,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-//TODO room must saved to draft first, make draft section in the app.
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
+
+//TODO make draft section in the app.
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
@@ -72,6 +77,7 @@ class add_room : AppCompatActivity() {
     private lateinit var roomOwnerDpUrl:String
     private lateinit var loadingAnimation :LottieAnimationView
     private lateinit var touchInterceptor:View
+    private lateinit var ownerId:String
 
 
 
@@ -99,7 +105,8 @@ class add_room : AppCompatActivity() {
                     // Upload images to Firebase Storage
                     uploadImagesToFirebaseStorage()
                 }}
-
+        auth = FirebaseAuth.getInstance()
+        ownerId = auth.currentUser?.uid.toString()
         binding.uploadbtn.setOnClickListener {
             //Toast.makeText(this, "HELLO", Toast.LENGTH_SHORT).show()
               UploadTheRoom()
@@ -140,7 +147,24 @@ class add_room : AppCompatActivity() {
         return@async Url
     }.await()
     override fun onBackPressed() {
-        showDeleteRoomConfirmationDialog() // Call the confirmation dialog when the back button is pressed
+        ShowDraftMessage() // Call the confirmation dialog when the back button is pressed
+    }
+    private fun ShowDraftMessage() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmation")
+            .setMessage("Want to save this room as Draft?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                // Delete the room and navigate back
+                showProgressOverlay(true)
+                GlobalScope.launch {
+                    Draft()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                showDeleteRoomConfirmationDialog()
+            }
+            .show()
     }
     private fun showDeleteRoomConfirmationDialog() {
         AlertDialog.Builder(this)
@@ -222,6 +246,7 @@ class add_room : AppCompatActivity() {
                 Log.d("jiji","1")
                 //binding.progressBar.visibility = View.VISIBLE
                 dpuri = uri
+                Toast.makeText(this,dpuri.toString()+"121", Toast.LENGTH_SHORT).show()
             }
             //
         }
@@ -235,6 +260,7 @@ class add_room : AppCompatActivity() {
                 Log.d("jiji","1")
                 //binding.progressBar.visibility = View.VISIBLE
                 dpuri = uri
+                Toast.makeText(this,dpuri.toString()+"121", Toast.LENGTH_SHORT).show()
             }
             //
         }
@@ -248,10 +274,12 @@ class add_room : AppCompatActivity() {
     private suspend fun uploadBG(uri: Uri?){
         storageRef = FirebaseStorage.getInstance()
         return try{
+            Toast.makeText(this, "777", Toast.LENGTH_SHORT).show()
             val reference = storageRef.getReference("images").child(System.currentTimeMillis().toString())
             reference.putFile(uri!!).await() // Await the completion of the upload
             val downloadUrl = reference.downloadUrl.await()
             dpUri = downloadUrl.toString()// Await download URL
+            Toast.makeText(this, dpUri, Toast.LENGTH_SHORT).show()
         } catch(e:Exception){
             Log.d("ExceptionInAddingMoreImages",e.toString())
             Toast.makeText(this@add_room, "Error uploading image: $e", Toast.LENGTH_SHORT).show()
@@ -292,7 +320,6 @@ class add_room : AppCompatActivity() {
     }
     private fun UploadTheRoom(){
         showProgressOverlay(true)
-        auth = FirebaseAuth.getInstance()
         length = binding.roomlength.text.toString()
         width = binding.roomwidth.text.toString()
         amount = binding.amount.text.toString()
@@ -314,7 +341,7 @@ class add_room : AppCompatActivity() {
             CoroutineScope(Dispatchers.Main).launch {
                 userkey?.let { key ->
                     if (this@add_room::dpuri.isInitialized && dpuri != "".toUri()) {
-                        binding.progressBar.visibility = View.VISIBLE
+                        showProgressOverlay(true)
                         // Wait for the upload to complete
                         uploadBG(dpuri)
                     }
@@ -326,6 +353,7 @@ class add_room : AppCompatActivity() {
                     "pincode" to pincode,
                     "house_no" to house_no,
                 )
+
                 if(dpUri.isNotEmpty()){
                     val updateData = hashMapOf(
                         "length" to length,
@@ -396,6 +424,90 @@ class add_room : AppCompatActivity() {
                 }
         }
     }
+    private fun Draft(){
+        length = binding.roomlength.text.toString()
+        width = binding.roomwidth.text.toString()
+        amount = binding.amount.text.toString()
+        breif_description = binding.RoomDescription.text.toString()
+        fun getLateInitOrNull(propertyName: String): String? {
+            return try {
+                val property = this::class.memberProperties.find { it.name == propertyName }
+                property?.let {
+                    it.isAccessible = true // Make the property accessible
+                    it.getter.call(this) as? String
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
+        CoroutineScope(Dispatchers.Main).launch {
+
+            userkey?.let { key ->
+                if (this@add_room::dpuri.isInitialized && dpuri != "".toUri()) {
+                    showProgressOverlay(true)
+                    // Wait for the upload to complete
+                    uploadBG(dpuri)
+                }
+            }
+
+            val stateValue = getLateInitOrNull("state")
+            val districtValue = getLateInitOrNull("district")
+            val localityValue = getLateInitOrNull("locality")
+            val pincodeValue = getLateInitOrNull("pincode")
+            val houseNoValue = getLateInitOrNull("house_no")
+            val lengthValue = getLateInitOrNull("length")
+            val widthValue = getLateInitOrNull("width")
+            val ownerNameValue = getLateInitOrNull("owner_name")
+            val amountValue = getLateInitOrNull("amount")
+            val briefDescriptionValue = getLateInitOrNull("breif_description")
+            val dpUriValue = getLateInitOrNull("dpUri")
+            val imagesListForFirebaseUrisValue = getLateInitOrNull("imagesListforFirebaseUris")
+
+            val addressDraft = hashMapOf(
+                "state" to (stateValue ?: ""),
+                "district" to (districtValue ?: ""),
+                "locality" to (localityValue ?: ""),
+                "pincode" to (pincodeValue ?: ""),
+                "house_no" to (houseNoValue ?: "")
+            )
+            val updateDataDraft: Map<String, Any?> = hashMapOf(
+                "length" to (lengthValue ?: ""),
+                "width" to (widthValue ?: ""),
+                "owner_name" to (ownerNameValue ?: ""),
+                "amount" to (amountValue ?: ""),
+                "breif_description" to (briefDescriptionValue ?: ""),
+                "roomId" to roomId,
+                "dpuri" to (dpUriValue ?: ""),
+                "imageuri" to (imagesListForFirebaseUrisValue ?: ""),
+                "ownerId" to ownerId,
+                "ownerDpUrl" to roomOwnerDpUrl,
+                "address" to addressDraft
+            )
+            saveRoomDataDraft(updateDataDraft)
+        }
+    }
+    private fun saveRoomDataDraft(updateData: Map<String, Any?>) {
+        val docref2 = db.collection(userkey.toString())
+        if (docref2 != null) {
+            val updatedDataWithStatus = updateData.toMutableMap()
+            updatedDataWithStatus["status"] = "draft"
+            docref2.add(updatedDataWithStatus)
+                .addOnSuccessListener {
+                    val documentId = it.id
+                    roomId = documentId
+                    db.collection("users").document(userkey.toString()).update("DraftRoomId", FieldValue.arrayUnion(documentId))
+                    Toast.makeText(this@add_room, "Success", Toast.LENGTH_SHORT)
+                        .show()
+                    showProgressOverlay(false)
+                    backtoHome()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this@add_room, "failure", Toast.LENGTH_SHORT)
+                        .show()
+                }
+        }
+    }
+
     private fun backtoHome(){
         val intent = Intent(
             this@add_room, owner_home_activity::class.java
@@ -536,4 +648,5 @@ class add_room : AppCompatActivity() {
         loadingAnimation.cancelAnimation()
         loadingAnimation.visibility = View.INVISIBLE
     }
+
 }
