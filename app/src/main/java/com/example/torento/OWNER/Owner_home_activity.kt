@@ -224,7 +224,6 @@ class owner_home_activity : AppCompatActivity() {
                                 intent.putExtra("documentid", documentid)
                                 intent.putExtra("usertype", "owner")
                                 intent.putExtra("collection2", userkey)
-                                intent.putExtra("userIdO", "0D2bMnHrhcWCSkyRlklWMhY0NTS2")
                                 startActivity(intent)
                             }
                         } catch (e: Exception) {

@@ -40,7 +40,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-//TODO check drop down menus
+
 class user_home_activity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var binding: ActivityMainBinding
@@ -263,10 +263,7 @@ class user_home_activity : AppCompatActivity() {
         DatatoRecyclerView(username, status)
         invalidateOptionsMenu() // This will trigger onPrepareOptionsMenu to update the menu item title
     }
-    private fun SAVEDROOMS(){
-            val intent = Intent(this,Save::class.java)
-            startActivity(intent)
-        }
+
     private fun profile() {
 
         val intent = Intent(this, Profile::class.java)

@@ -16,7 +16,7 @@ import com.example.torento.LOGIN.LandingPage.Companion.usertype
 import com.example.torento.OWNER.EditRoom
 import com.example.torento.OWNER.owner_home_activity
 import com.example.torento.R
-import com.example.torento.USER.Save
+import com.example.torento.USER.user_home_activity
 import com.example.torento.databinding.ActivityDescripnBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -27,21 +27,23 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-
+// TODO discripn mai tho main photo hai hi nhi
 class descripn : AppCompatActivity() {
     private lateinit var binding: ActivityDescripnBinding
     private var db = Firebase.firestore
     val SHARED_PREF: String = "sharedPrefs"
     private lateinit var heartButton: ImageView
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var usertype: String
+    private lateinit var username: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDescripnBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
        val documentid = intent.getStringExtra("documentid")
-        val usertype = intent.getStringExtra("usertype")
-        val username = intent.getStringExtra("username")
+        usertype = intent.getStringExtra("usertype").toString()
+        username = intent.getStringExtra("username").toString()
         sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
 
         if(usertype=="owner"){
@@ -83,8 +85,10 @@ class descripn : AppCompatActivity() {
                     updateHeartButtonState(isLiked)
                     if(isLiked){
                         GlobalScope.launch(Dispatchers.IO) {
-                            val data : MutableMap<String, Any> = retreivingdataBG().third
-                            save(data,username.toString(),documentid.toString())
+                            val data : MutableMap<String, Any>? = retreivingdataBG().third
+                            if (data != null) {
+                                save(data,username.toString(),documentid.toString())
+                            }
 
                         }
                     }else
@@ -135,7 +139,6 @@ class descripn : AppCompatActivity() {
     }
     private fun changetoChatbyOwner(userId: String?, documentid: String?) {
         val intent = Intent(this@descripn, ChatListActivity::class.java)
-        intent.putExtra("userId",userId)
         intent.putExtra("documentid",documentid)
         Toast.makeText(this, userId, Toast.LENGTH_SHORT).show()
         startActivity(intent)
@@ -149,6 +152,12 @@ class descripn : AppCompatActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        val intent = if(usertype=="owner") Intent(this@descripn, owner_home_activity::class.java) else Intent(this@descripn, user_home_activity::class.java)
+        startActivity(intent)
+        finish()
+    }
     private fun retreivingdata(list:MutableList<String>,imageUriList:List<String>){
         binding.fullLocanDetsil.text = list[0]
         binding.amount.text =list[1]
@@ -158,29 +167,45 @@ class descripn : AppCompatActivity() {
         // Set the new adapter to the RecyclerView
         binding.listPhoto.adapter = PicsAdapter(this,imageUriList)
     }
-   suspend fun retreivingdataBG() : Triple<MutableList<String>,List<String>,MutableMap<String, Any>>{
+   suspend fun retreivingdataBG() : Triple<MutableList<String>, List<String>, MutableMap<String, Any>?> {
         val Id = intent.getStringExtra("documentid").toString()
         val list:MutableList<String> = mutableListOf<String>()
        var imageUriList:List<String> = listOf<String>()
-       val docref =  db.collection("Rooms").document(Id).get().await()
+       var dataMap: MutableMap<String, Any>? = null
+       val docref =  db.collection(username).document(Id).get().await()
        try {
            if (docref != null) {
-               docref.data?.let {
-                   list.add(it["location_detail"].toString())
-                   list.add(it["amount"].toString())
-                   list.add(it["owner_name"].toString())
-                   list.add(it["breif_description"].toString())
-                   imageUriList = it["imageuri"] as? List<String> ?: emptyList()
+               dataMap = docref.data
+               if (dataMap != null) {
+                   list.add(dataMap["location_detail"]?.toString() ?: "Default Location")
+                   list.add(dataMap["amount"]?.toString() ?: "0")
+                   list.add(dataMap["owner_name"]?.toString() ?: "Unknown Owner")
+                   list.add(dataMap["breif_description"]?.toString() ?: "No Description")
+                   imageUriList = dataMap["imageuri"] as? List<String> ?: listOf()
+               } else {
+                   // Provide default values if dataMap is null
+                   list.add("Default Location")
+                   list.add("0")
+                   list.add("Unknown Owner")
+                   list.add("No Description")
+                   imageUriList = listOf()
                }
                Log.d("chaudhary1", list.size.toString())
+           } else {
+               Toast.makeText(this, "DocRef is NULL", Toast.LENGTH_SHORT).show()
            }
-           else { Toast.makeText(this, "DocRef is NULL", Toast.LENGTH_SHORT).show() }
-
+           if (imageUriList.isEmpty()) {
+               val packageName = applicationContext.packageName
+               imageUriList = listOf("android.resource://$packageName/drawable/demodp")
+           }
        } catch (e:Exception){
            Log.e("descripn", "Error fetching data from Firestore: ${e.message}")
        }
 
-       return Triple(list,imageUriList,docref.data!!)
+
+
+       return Triple(list,imageUriList,docref.data)
+
     }
 
     suspend fun save(data: MutableMap<String, Any>,userKey:String,Id:String,) {
