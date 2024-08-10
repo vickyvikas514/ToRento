@@ -49,9 +49,6 @@ class ChatActivity : AppCompatActivity() {
          messagesReference = FirebaseDatabase.getInstance().reference.child("messages").child(documentId.toString())
         messagesReferenceOwner = FirebaseDatabase.getInstance().reference.child(receiverUserId.toString())
 
-
-
-
         addFirebaseConnectionListener()//to check the connection of firebase
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
@@ -115,11 +112,7 @@ class ChatActivity : AppCompatActivity() {
                     messageEditText.text.clear()
                 }
             }
-
-
-
-
-    }
+   }
     suspend fun getsize(senderId:String,documentId: String?, callback: (Int) -> Unit){
 
 
@@ -171,7 +164,7 @@ class ChatActivity : AppCompatActivity() {
         }
         return@async name
     }.await()
-        private fun sendMessageOwner(receiverId: String, documentId: String?,name:String){
+    private fun sendMessageOwner(receiverId: String, documentId: String?,name:String){
             val senderId = auth.currentUser?.uid ?: return
             val messageOwner =
 

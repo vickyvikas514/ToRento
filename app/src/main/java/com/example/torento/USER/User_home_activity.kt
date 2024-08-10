@@ -56,6 +56,7 @@ class user_home_activity : AppCompatActivity() {
 
 
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -70,6 +71,7 @@ class user_home_activity : AppCompatActivity() {
             supportActionBar?.setDisplayUseLogoEnabled(true)
             val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
             username = sharedPreferences.getString("username", "") ?: ""
+            Toast.makeText(this, username, Toast.LENGTH_SHORT).show()
             /////////////////////
             DatatoRecyclerView(username,false)
         }
@@ -226,7 +228,7 @@ class user_home_activity : AppCompatActivity() {
                                 val intent = Intent(this@user_home_activity, descripn::class.java)
                                 intent.putExtra("documentid", documentId)
                                 intent.putExtra("usertype", "user")
-                                intent.putExtra("userId", Id)
+                                intent.putExtra("ownerId", Id)
                                 intent.putExtra("username", username)
                                 startActivity(intent)
                             }

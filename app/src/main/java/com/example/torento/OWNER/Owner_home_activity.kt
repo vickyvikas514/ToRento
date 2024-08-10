@@ -49,6 +49,8 @@ class owner_home_activity : AppCompatActivity() {
     private lateinit var AddBtnAnimation: LottieAnimationView
     private lateinit var address: address1
     private var isViewingDrafts = false
+    private lateinit var owner_Id:String
+    private lateinit var username:String
 
 
 
@@ -59,6 +61,7 @@ class owner_home_activity : AppCompatActivity() {
         AddBtnAnimation = binding.addButton
         AddBtnAnimation.playAnimation()
         auth = FirebaseAuth.getInstance()
+        owner_Id = auth.currentUser?.uid.toString()
         auth.addAuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
             user?.let {
@@ -94,14 +97,14 @@ class owner_home_activity : AppCompatActivity() {
         auth.addAuthStateListener(authStateListener)
             job = Job()
             val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-            val userkey: String? = sharedPreferences.getString("username", "")
-            userid = userkey.toString()
+             username = sharedPreferences.getString("username", "").toString()
+            userid = username.toString()
             binding.addButton.setOnClickListener{
                 //made temp room
 
                     GlobalScope.launch {
-                    if (userkey != null) {
-                        userid = userkey
+                    if (username != null) {
+                        userid = username
                     }
                     changepage()
                 }
@@ -173,12 +176,12 @@ class owner_home_activity : AppCompatActivity() {
 
                 binding.OwnerRoomlist.setHasFixedSize(true)
             }*/
-        fetchRooms(userkey.toString(),"draft")
+        fetchRooms("draft")
 
 
         }
-    private fun fetchRooms(userkey: String,status:String) {
-        val itemsCollection = db.collection(userkey)
+    private fun fetchRooms(status:String) {
+        val itemsCollection = db.collection(owner_Id)
         val itemsList = mutableListOf<Room>()
         val idlist = mutableListOf<String>()
 
@@ -223,7 +226,8 @@ class owner_home_activity : AppCompatActivity() {
                                 val intent = Intent(this@owner_home_activity, descripn::class.java)
                                 intent.putExtra("documentid", documentid)
                                 intent.putExtra("usertype", "owner")
-                                intent.putExtra("collection2", userkey)
+                                intent.putExtra("ownerId", owner_Id)
+                                intent.putExtra("username", username)
                                 startActivity(intent)
                             }
                         } catch (e: Exception) {
@@ -295,7 +299,7 @@ class owner_home_activity : AppCompatActivity() {
     private fun toggleRoomsView() {
         isViewingDrafts = !isViewingDrafts
         val status = if (isViewingDrafts) "published" else "draft"
-        fetchRooms(userid, status)
+        fetchRooms(status)
         invalidateOptionsMenu() // This will trigger onPrepareOptionsMenu to update the menu item title
     }
     private fun profile() {

@@ -40,7 +40,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-
+// TODO make all the correction in one by hash map and make draft room published
+// TODO shows provide all details if i edit one field only and returns from the edit activity
+// TODO Locate me is not set up yet
 class EditRoom : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
     private var storageRef = Firebase.storage
@@ -94,11 +96,11 @@ class EditRoom : AppCompatActivity() {
         binding.uploadbtn.setOnClickListener {
             binding.progressBar.visibility = View.VISIBLE
             if (userkey != null) {
-                updateTheEdit(Id,userkey)
+                updateTheEdit()
             }else{
                 Toast.makeText(this, "username is not found", Toast.LENGTH_SHORT).show()
             }
-            changetohome()
+            //changetohome()
         }
         GlobalScope.launch (Dispatchers.IO){
             retreivingdataBG(Id,userkey.toString())
@@ -209,19 +211,21 @@ class EditRoom : AppCompatActivity() {
         return@async storageref.child("images/${System.currentTimeMillis()}").putFile(imageUri).await().metadata?.reference?.downloadUrl?.await()
             ?: throw RuntimeException("Failed to upload image")
     }.await()
-    private fun updateTheEdit(Id: String,userkey: String){
+    private fun updateTheEdit(){
          length = binding.roomlength.text.toString()
         width = binding.roomwidth.text.toString()
          amount = binding.amount.text.toString()
          breif_description = binding.RoomDescription.text.toString()
         if (!isInputDataValid()) {
             showProgressOverlay(false)
-            Toast.makeText(this, "Please provide all the required details for room", Toast.LENGTH_SHORT).show()
+            showDraftRoomConfirmationDialog()
+            // Toast.makeText(this, "Please provide all the required details for room", Toast.LENGTH_SHORT).show()
             return
         }
         if (!isAddressValid()) {
             showProgressOverlay(false)
-            Toast.makeText(this, "Please provide all the address details", Toast.LENGTH_SHORT).show()
+            showDraftRoomConfirmationDialog()
+            //Toast.makeText(this, "Please provide all the address details", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -229,22 +233,7 @@ class EditRoom : AppCompatActivity() {
 
             val deferred1 = async {
                     Log.d("CHECKJIJI",length.toString())
-                        changeMeasurements(length, width, Id, userkey)
-            }
-            val deferred2 = async {
-
-                    changeD(Id, breif_description, userkey)
-
-            }
-            val deferred3 = async {
-
-                    changeAdd(Id, userkey)
-
-            }
-            val deferred6 = async {
-
-                    changePrice(Id, amount, userkey)
-
+                        changeFields(amount, breif_description, length, width,false)
             }
             val deferred7 = async {
             if(check==1){
@@ -255,10 +244,6 @@ class EditRoom : AppCompatActivity() {
             }
             }
             deferred1.await()
-            deferred2.await()
-            deferred3.await()
-
-            deferred6.await()
             deferred7.await()
 
             withContext(Dispatchers.Main){
@@ -267,21 +252,52 @@ class EditRoom : AppCompatActivity() {
             }
         }
     }
+    private fun updateTheEditDraft(){
+        length = binding.roomlength.text.toString()
+        width = binding.roomwidth.text.toString()
+        amount = binding.amount.text.toString()
+        breif_description = binding.RoomDescription.text.toString()
+        GlobalScope.launch (Dispatchers.IO){
 
-    suspend fun changeMeasurements(length:String?,width:String?,Id: String,userkey: String){
+            val deferred1 = async {
+                Log.d("CHECKJIJI",length.toString())
+                changeFields(amount, breif_description, length, width,true)
+            }
+            val deferred7 = async {
+                if(check==1){
+                    appendImagesToFirestore()
+                }
+                else {
+                    changeMorePics()
+                }
+            }
+            deferred1.await()
+            deferred7.await()
+            withContext(Dispatchers.Main){
+                binding.progressBar.visibility = View.INVISIBLE
+                Toast.makeText(this@EditRoom, "your Room has been updated", Toast.LENGTH_SHORT).show()
+                changetohome()
+            }
+        }
+    }
+   /* suspend fun changeMeasurements(length:String?,width:String?,Id: String,userkey: String){
         length?.let { db.collection("Rooms").document(Id).update("length",length) }
         length?.let{ db.collection(userkey).document(Id).update("length", length) }
         width?.let{ db.collection("Rooms").document(Id).update("width", width) }
         width?.let{ db.collection(userkey).document(Id).update("width", width) }
-    }
+    }*/
 
     suspend fun retreivingdataBG(Id:String,userKey: String){
+
         if (userKey != null) {
-            val roomRef = db.collection("Rooms").document(Id)
+
+            val roomRef = db.collection(userkey).document(Id)
+
             roomRef.get()
                 .addOnSuccessListener { documentSnapshot ->
                     if (documentSnapshot.exists()) {
                         val roomData = documentSnapshot.data
+
                         // Update EditText fields with existing data
                         GlobalScope.launch (Dispatchers.Main){
                             updateEditTextFields(roomData)
@@ -319,29 +335,27 @@ class EditRoom : AppCompatActivity() {
                 .into(binding.pic)
         }
     }
+    suspend fun changeFields(price:String?,descrpn:String?,length:String?,width:String?,isDraft:Boolean){
+        val updatedData = hashMapOf(
+            "address" to address,
+            "amount" to price,
+            "breif_description" to descrpn,
+            "length" to length,
+            "width" to width,
 
-    suspend fun changeAdd(Id: String,userkey:String){
-        address?.let{
-            db.collection(userkey).document(Id).update("address", address)
-            db.collection("Rooms").document(Id).update("address", address)
+        )
+        if(!isDraft) {
+            updatedData["status"] = "published"
+        }else{
+            updatedData["status"] = "draft"
         }
+        db.collection(userkey).document(Id).update(updatedData)
+        db.collection("Rooms").document(Id).update(updatedData)
     }
     suspend fun changeMorePics(){
         imagesListforFirebaseUris?.let{
             db.collection(userkey).document(Id).update("imageuri", imagesListforFirebaseUris)
             db.collection("Rooms").document(Id).update("imageuri", imagesListforFirebaseUris)
-        }
-    }
-    suspend fun changePrice(Id: String,price:String?,userkey:String){
-        price?.let{
-            db.collection("Rooms").document(Id).update("amount", price)
-            db.collection(userkey).document(Id).update("amount", price)
-        }
-    }
-    suspend fun changeD(Id: String,descrpn:String?,userkey:String){
-        descrpn?.let{
-            db.collection("Rooms").document(Id).update("breif_description", descrpn)
-            db.collection(userkey).document(Id).update("breif_description", descrpn)
         }
     }
     suspend fun savechanges(uploadedImageUri:Uri,Id:String,userkey:String): Deferred<Unit> = GlobalScope.async{
@@ -378,7 +392,7 @@ class EditRoom : AppCompatActivity() {
     private fun showDeleteRoomConfirmationDialog() {
         AlertDialog.Builder(this)
             .setTitle("Confirmation")
-            .setMessage("Your room deatils are not saved yet. Are you sure you want to delete this room?")
+            .setMessage("Your room deatils are not saved yet. Are you sure you want to leave your progress?")
             .setPositiveButton("Yes") { dialog, _ ->
                 // Delete the room and navigate back
                 GlobalScope.launch (IO){
@@ -391,8 +405,25 @@ class EditRoom : AppCompatActivity() {
             }
             .show()
     }
+    private fun showDraftRoomConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmation")
+            .setMessage("All the room details are not filled yet. Do you want to save these changes in Drafted room")
+            .setPositiveButton("Yes") { dialog, _ ->
+                // Delete the room and navigate back
+                GlobalScope.launch (IO){
+                    updateTheEditDraft()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                showDeleteRoomConfirmationDialog()
+                dialog.dismiss()
+            }
+            .show()
+    }
     private fun changetohome(){
-        if (!isInputDataValid()) {
+        /*if (!isInputDataValid()) {
             //showProgressOverlay(false)
             //Toast.makeText(this, "Please provide all the required details for room", Toast.LENGTH_SHORT).show()
             return
@@ -401,7 +432,7 @@ class EditRoom : AppCompatActivity() {
             //showProgressOverlay(false)
             //Toast.makeText(this, "Please provide all the address details", Toast.LENGTH_SHORT).show()
             return
-        }
+        }*/
         val intent = Intent(this@EditRoom, owner_home_activity::class.java)
         startActivity(intent)
         finish()

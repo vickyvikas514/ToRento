@@ -48,7 +48,7 @@ import java.io.ByteArrayOutputStream
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-//TODO make section in the app for drafted rooms.
+//TODO adding username of owner and document id or room id in the room itself
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
@@ -383,7 +383,7 @@ class add_room : AppCompatActivity() {
                 owner_name.isNotEmpty() && breif_description.isNotEmpty()
     }
     private fun saveRoomData(updateData: HashMap<String, Any>) {
-        val docref2 = db.collection(userkey.toString())
+        val docref2 = db.collection(ownerId)
         if (docref2 != null) {
             docref2.add(updateData)
                 .addOnSuccessListener {
@@ -394,6 +394,7 @@ class add_room : AppCompatActivity() {
 
                         updateData["roomId"] = documentId
                         updateData["status"] = "published"
+                        updateData["OwnerUsername"] = userkey.toString()
                         docref2.document(documentId).update(updateData)
                             .addOnSuccessListener {
                                 docRefUser.set(updateData)
@@ -488,7 +489,7 @@ class add_room : AppCompatActivity() {
         }
     }
     private fun saveRoomDataDraft(updateData: Map<String, Any?>) {
-        val docref2 = db.collection(userkey.toString())
+        val docref2 = db.collection(ownerId)
         if (docref2 != null) {
             val updatedDataWithStatus = updateData.toMutableMap()
             updatedDataWithStatus["status"] = "draft"
@@ -496,6 +497,10 @@ class add_room : AppCompatActivity() {
                 .addOnSuccessListener {
                     val documentId = it.id
                     roomId = documentId
+                   updatedDataWithStatus["roomId"] = documentId
+                    updatedDataWithStatus["ownerusername"] = userkey
+                    docref2.document(documentId).update(updatedDataWithStatus)
+                    //added room id's of the drafted rooms
                     db.collection("users").document(userkey.toString()).update("DraftRoomId", FieldValue.arrayUnion(documentId))
                     Toast.makeText(this@add_room, "Success", Toast.LENGTH_SHORT)
                         .show()
