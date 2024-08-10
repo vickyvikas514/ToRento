@@ -32,8 +32,7 @@ import kotlinx.coroutines.withContext
 
 
 // TODO discripn mai tho main photo hai hi nhi that is DP which shows in home activity
-// TODO like waala kuch aur kaam kar raha hai room liked mai nhi jaa raha
-// TODO address show karna hai hai description activity mai
+
 class descripn : AppCompatActivity() {
     private lateinit var binding: ActivityDescripnBinding
     private var db = Firebase.firestore
@@ -183,8 +182,12 @@ class descripn : AppCompatActivity() {
                        }
 
 
-//
-                       binding.fullLocanDetsil.text = roomData?.get("location_detail") as? String ?: "No Location is set"
+                       val addressrecieved = roomData?.get("address") as? Map<String, Any>
+                       val orderedKeys = listOf("house_no", "locality", "district", "state", "pincode")
+                       val addressString = orderedKeys.joinToString(separator = ", ") { key ->
+                           addressrecieved?.get(key)?.toString() ?: "" // Use empty string if key doesn't exist
+                       }
+                       binding.fullLocanDetsil.text = addressString
                        binding.amount.text = roomData?.get("amount") as? String ?: "Nil"
                        binding.ownerName.text = roomData?.get("owner_name") as? String ?: "No owner name is found"
                        binding.breifDescription.text = roomData?.get("breif_description") as? String ?: "Set a description"
