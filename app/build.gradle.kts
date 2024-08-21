@@ -72,6 +72,7 @@ dependencies {
     implementation ("com.airbnb.android:lottie:6.4.1")
     // Also add the dependency for the Google Play services library and specify its version
     implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("androidx.activity:activity:1.8.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.0")

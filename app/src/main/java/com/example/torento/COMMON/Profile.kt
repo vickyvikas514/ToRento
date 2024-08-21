@@ -1,5 +1,6 @@
 package com.example.torento.COMMON
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
@@ -10,6 +11,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.torento.LOGIN.LandingPage
 import com.example.torento.OWNER.owner_home_activity
@@ -31,6 +33,7 @@ class Profile : AppCompatActivity() {
     val SHARED_PREF: String = "sharedPrefs"
     private var db = Firebase.firestore
     private var storageRef = Firebase.storage
+    private lateinit var dpuri:String
 
 
 
@@ -45,11 +48,11 @@ class Profile : AppCompatActivity() {
         val userkey: String? = sharedPreferences.getString("username", "")
 
         binding.edit.setOnClickListener {
-            val intent = Intent(this, UpdateActivity::class.java)
-            startActivity(intent)
-            finish()
+            EditProfile()
         }
-
+        binding.pphoto.setOnClickListener{
+            showImageOptionsDialog()
+        }
             Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
 
         if (userkey != null) {
@@ -61,7 +64,7 @@ class Profile : AppCompatActivity() {
     }
 
     private fun set(userkey: String){
-        GlobalScope.launch(Dispatchers.IO){
+        lifecycleScope.launch(Dispatchers.IO){
             try {
                 val data  = setBG(userkey)
                Log.d("chaudhary",data.size.toString())
@@ -73,7 +76,11 @@ class Profile : AppCompatActivity() {
             }
         }
     }
-
+    private fun EditProfile(){
+        val intent = Intent(this, UpdateActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
     private fun updateUI(data: MutableList<String>) {
         if (data.size >= 5) {
             binding.name.text = data[0]
@@ -96,6 +103,37 @@ class Profile : AppCompatActivity() {
         }
     }
 
+    private fun showImageOptionsDialog() {
+        // Define options in an array
+        val options = arrayOf("View Full Screen", "Change DP")
+
+        // Create a dialog for options
+        AlertDialog.Builder(this)
+            .setTitle("Choose an option")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> {
+                        // View Full Screen option selected
+                        viewImageFullScreen()
+                    }
+                    1 -> {
+                        // Change DP option selected
+                        EditProfile()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+    private fun viewImageFullScreen() {
+        // Create an intent to open the full-screen activity
+        val intent = Intent(this, FullScreenDPView::class.java)
+        intent.putExtra("imageUri", dpuri.toString()) // Pass the image URI to the activity
+        startActivity(intent)
+    }
+
    suspend fun setBG(userkey: String) : MutableList<String>{
        val list :MutableList<String> = mutableListOf()
 
@@ -108,6 +146,7 @@ class Profile : AppCompatActivity() {
                    list.add(it["phone"].toString())
                    list.add(it["email"].toString())
                    list.add(it["imageuri"].toString())
+                   dpuri = it["imageuri"].toString()
                }
                Log.d("chaudhary1", list.size.toString())
                    }
