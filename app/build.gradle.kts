@@ -65,16 +65,18 @@ dependencies {
     implementation("com.google.firebase:firebase-database:21.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation ("io.realm.kotlin:library-sync:1.11.0")
-    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth")
     implementation ("org.jetbrains.kotlin:kotlin-reflect:<kotlin_version>")
     //Lottie Animation
     implementation ("com.airbnb.android:lottie:6.4.1")
     // Also add the dependency for the Google Play services library and specify its version
     implementation("com.google.android.gms:play-services-auth:21.2.0")
-    implementation("androidx.activity:activity:1.8.0")
+    implementation ("com.google.android.gms:play-services-location:21.3.0")
+    implementation("androidx.activity:activity-ktx:1.9.1")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.2.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.0")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }

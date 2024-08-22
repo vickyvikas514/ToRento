@@ -1,14 +1,21 @@
 package com.example.torento.OWNER
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.location.Geocoder
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -20,15 +27,20 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.airbnb.lottie.LottieAnimationView
 import com.example.torento.DATACLASS.Address
 import com.example.torento.R
 import com.example.torento.databinding.ActivityAddRoomBinding
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
@@ -46,10 +58,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.util.Locale
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-//TODO adding username of owner and document id or room id in the room itself
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
@@ -79,41 +92,54 @@ class add_room : AppCompatActivity() {
     private lateinit var loadingAnimation :LottieAnimationView
     private lateinit var touchInterceptor:View
     private lateinit var ownerId:String
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var shouldCheckLocationPermission = false
+    private var addressDialog: AlertDialog? = null
 
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         binding = ActivityAddRoomBinding.inflate(layoutInflater)
         setContentView(binding.root)
         storageRef = FirebaseStorage.getInstance()
         loadingAnimation = findViewById(R.id.progressBar)
         touchInterceptor = binding.touchInterceptor
+
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         userkey = sharedPreferences.getString("username", "")
-        GlobalScope.launch(Dispatchers.IO) {
+        //Requesting location permission
+        //fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        lifecycleScope.launch(Dispatchers.IO) {
             GlobalScope.launch(Dispatchers.Main){
                 Toast.makeText(this@add_room, "11", Toast.LENGTH_SHORT).show()
             }
 
             roomOwnerDpUrl = getOwnerDp()
         }
-        val pickImages =
-            registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+
+        val pickImages = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
                 if (uris.isNotEmpty()) {
                     imagesList.addAll(uris)
                     // Upload images to Firebase Storage
                     uploadImagesToFirebaseStorage()
                 }}
+
         auth = FirebaseAuth.getInstance()
         ownerId = auth.currentUser?.uid.toString()
+
         binding.uploadbtn.setOnClickListener {
             //Toast.makeText(this, "HELLO", Toast.LENGTH_SHORT).show()
               UploadTheRoom()
         }
+
         binding.setAddressBtn.setOnClickListener { showCustomDialog() }
+
         binding.dpupdate.visibility = View.GONE
+
         binding.picCard.setOnClickListener{
            showImageSourceOptions()
         }
@@ -127,6 +153,84 @@ class add_room : AppCompatActivity() {
 
         }
     }
+
+    private fun onLocateMeClicked() {
+        shouldCheckLocationPermission = true
+        checkLocationPermission()
+    }
+    private fun isLocationEnabled(): Boolean {
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER)
+    }
+    private fun checkLocationPermission() {
+        // Request permission if not granted, or get the current location
+        if(!isLocationEnabled()){
+            showLocationEnableDialog()
+        }
+        else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+        } else {
+            getCurrentLocation()
+        }
+    }
+    private fun showLocationEnableDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Enable Location")
+            .setMessage("Your location is turned off. Please enable location services to detect your address.")
+            .setPositiveButton("Enable") { dialog: DialogInterface, _: Int ->
+                dialog.dismiss()
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel") { dialog: DialogInterface, _: Int ->
+                dialog.dismiss()
+                Toast.makeText(this, "Location is required to detect address", Toast.LENGTH_SHORT).show()
+            }
+            .setCancelable(false)
+            .show()
+    }
+    override fun onResume() {
+        super.onResume()
+        if (shouldCheckLocationPermission) {
+            checkLocationPermission()
+        }
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getCurrentLocation()
+        } else {
+            Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun getCurrentLocation() {
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                location?.let {
+                    val geocoder = Geocoder(this, Locale.getDefault())
+                    val addresses: List<android.location.Address>? = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+                    if (addresses != null) {
+                        if (addresses.isNotEmpty()) {
+                            val address = addresses[0]
+                            val addressText = "${address.getAddressLine(0)}, ${address.locality}, ${address.adminArea}, ${address.countryName}"
+                            Toast.makeText(this, "Your Location: $addressText", Toast.LENGTH_LONG).show()
+                            addressDialog?.dismiss()
+                        }
+                    }
+                } ?: run {
+                    Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to get location", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1000
+    }
+
     private suspend fun getOwnerDp():String = GlobalScope.async{
         GlobalScope.launch(Dispatchers.Main){
             Toast.makeText(this@add_room, "12", Toast.LENGTH_SHORT).show()
@@ -147,9 +251,11 @@ class add_room : AppCompatActivity() {
 
         return@async Url
     }.await()
+
     override fun onBackPressed() {
         ShowDraftMessage() // Call the confirmation dialog when the back button is pressed
     }
+
     private fun ShowDraftMessage() {
         AlertDialog.Builder(this)
             .setTitle("Confirmation")
@@ -185,6 +291,7 @@ class add_room : AppCompatActivity() {
             }
             .show()
     }
+
     private fun showImageSourceOptions() {
         // Define options in an array
         val options = arrayOf("Choose from Gallery", "Take Photo")
@@ -272,6 +379,7 @@ class add_room : AppCompatActivity() {
         val path: String = MediaStore.Images.Media.insertImage(contentResolver, inImage, "Title", null)
         return Uri.parse(path)
     }
+
     private suspend fun uploadBG(uri: Uri?) {
         withContext(Dispatchers.IO) { // Ensure this runs on IO thread
             try {
@@ -364,12 +472,6 @@ class add_room : AppCompatActivity() {
         return@async storageref.child("images/${System.currentTimeMillis()}").putFile(imageUri).await().metadata?.reference?.downloadUrl?.await()
             ?: throw RuntimeException("Failed to upload image")
     }.await()
-    private fun showProgressOverlay(show: Boolean) {
-        //binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
-        binding.root.isClickable = show
-        binding.root.isFocusable = show
-        if (show) startAnimation() else stopAnimation()
-    }
     private fun UploadTheRoom(){
         showProgressOverlay(true)
         length = binding.roomlength.text.toString()
@@ -429,11 +531,6 @@ class add_room : AppCompatActivity() {
             }
 
     }
-    private fun isInputDataValid(): Boolean {
-        // Validate all the necessary input fields here
-        return length.isNotEmpty() && width.isNotEmpty() &&  amount.isNotEmpty() &&
-                owner_name.isNotEmpty() && breif_description.isNotEmpty()
-    }
     private fun saveRoomData(updateData: HashMap<String, Any>) {
         val docref2 = db.collection(ownerId)
         if (docref2 != null) {
@@ -478,6 +575,9 @@ class add_room : AppCompatActivity() {
                 }
         }
     }
+
+    
+
     private fun Draft(){
         length = binding.roomlength.text.toString()
         width = binding.roomwidth.text.toString()
@@ -544,18 +644,25 @@ class add_room : AppCompatActivity() {
             }
         }
     }
-    private suspend fun checkIfAllDetailsFilled(): Boolean {
-        val length = binding.roomlength.text.toString()
-        val width = binding.roomwidth.text.toString()
-        val amount = binding.amount.text.toString()
-        val breif_description = binding.RoomDescription.text.toString()
-        return !(length.isEmpty() || width.isEmpty() || amount.isEmpty() || breif_description.isEmpty())
-    }
     private fun showCustomDialog() {
         val inflater = LayoutInflater.from(this)
         val dialogLayout = inflater.inflate(R.layout.select_address_popup, null)
         val dropdownMenu1 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu1)
         val dropdownMenu2 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu2)
+        val locatemeBtn = dialogLayout.findViewById<TextView>(R.id.locateMe_text)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogLayout)
+            .create()
+        addressDialog = dialog
+        locatemeBtn.setOnClickListener {
+//            locationPermissionRequest.launch(arrayOf(
+//                Manifest.permission.ACCESS_FINE_LOCATION,
+//                Manifest.permission.ACCESS_COARSE_LOCATION
+//            ))
+            onLocateMeClicked()
+        }
 
         val stateDistrictData = Address.getDefaultData()
         val states = stateDistrictData.states
@@ -587,9 +694,6 @@ class add_room : AppCompatActivity() {
 
         }
 
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogLayout)
-            .create()
 
         val pincode1 = dialogLayout.findViewById<EditText>(R.id.pincode)
         pincode1.addTextChangedListener(object : TextWatcher {
@@ -616,9 +720,9 @@ class add_room : AppCompatActivity() {
         set_address_btn.setOnClickListener {
             state = dropdownMenu1.selectedItem.toString()
             district = dropdownMenu2.selectedItem.toString()
-             locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
-             pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
-             house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
+            locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
+            pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
+            house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
             if(state.isEmpty() || district.isEmpty() || locality.isEmpty() || pincode.isEmpty() || house_no.isEmpty()){
                 Toast.makeText(this@add_room, "Please fill all the fields", Toast.LENGTH_SHORT).show()
             }else{
@@ -629,6 +733,14 @@ class add_room : AppCompatActivity() {
 
 
         dialog.show()
+    }
+
+    private suspend fun checkIfAllDetailsFilled(): Boolean {
+        val length = binding.roomlength.text.toString()
+        val width = binding.roomwidth.text.toString()
+        val amount = binding.amount.text.toString()
+        val breif_description = binding.RoomDescription.text.toString()
+        return !(length.isEmpty() || width.isEmpty() || amount.isEmpty() || breif_description.isEmpty())
     }
     private fun isAddressValid(): Boolean {
         return try {
@@ -644,6 +756,11 @@ class add_room : AppCompatActivity() {
             false
         }
     }
+    private fun isInputDataValid(): Boolean {
+        // Validate all the necessary input fields here
+        return length.isNotEmpty() && width.isNotEmpty() &&  amount.isNotEmpty() &&
+                owner_name.isNotEmpty() && breif_description.isNotEmpty()
+    }
 
     private fun hideKeyboard(view: View) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -656,12 +773,18 @@ class add_room : AppCompatActivity() {
             inputMethodManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
         }
     }
+
+    private fun showProgressOverlay(show: Boolean) {
+        //binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        binding.root.isClickable = show
+        binding.root.isFocusable = show
+        if (show) startAnimation() else stopAnimation()
+    }
     private fun startAnimation() {
         touchInterceptor.visibility = View.VISIBLE
         loadingAnimation.visibility = View.VISIBLE
         loadingAnimation.playAnimation()
     }
-
     private fun stopAnimation() {
         touchInterceptor.visibility = View.INVISIBLE
         loadingAnimation.cancelAnimation()
