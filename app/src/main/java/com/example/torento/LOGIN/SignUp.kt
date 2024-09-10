@@ -110,7 +110,7 @@ class SignUp : AppCompatActivity() {
         })
 
         binding.signupbtn.setOnClickListener {
-            startAnimation()
+            showProgressOverlay(true)
             hideKeyboard(this@SignUp)
             val name = binding.name.text.toString()
             val username = binding.username.text.toString()
@@ -121,13 +121,13 @@ class SignUp : AppCompatActivity() {
             if (name.isNotEmpty() && username.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty() && confpass.isNotEmpty()) {
                 if (phone.length != 10) {
                     Toast.makeText(this, "Please enter a valid 10-digit phone number", Toast.LENGTH_SHORT).show()
-                    stopAnimation()
+                    showProgressOverlay(false)
                 } else if (!isValidPassword(pass)) {
                     Toast.makeText(this, "Password must contain at least 1 lowercase, 1 uppercase, 1 digit, and 1 special character.", Toast.LENGTH_SHORT).show()
-                    stopAnimation()
+                    showProgressOverlay(false)
                 } else if (confpass != pass) {
                     Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
-                    stopAnimation()
+                    showProgressOverlay(false)
                 } else {
                     GlobalScope.launch {
                         loginlate(pass, confpass, email, name, username, phone)
@@ -136,7 +136,7 @@ class SignUp : AppCompatActivity() {
                 }
             } else {
                 Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
-                stopAnimation()
+                showProgressOverlay(false)
             }
         }
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -623,15 +623,21 @@ class SignUp : AppCompatActivity() {
         editor.putBoolean("signUpComplete", false) // or any other value you want to set
         editor.apply()
     }
-    private fun startAnimation(){
+    private fun showProgressOverlay(show: Boolean) {
+        //binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        binding.root.isClickable = show
+        binding.root.isFocusable = show
+        if (show) startAnimation() else stopAnimation()
+    }
+    private fun startAnimation() {
+        touchInterceptor.visibility = View.VISIBLE
         loadingAnimation.visibility = View.VISIBLE
         loadingAnimation.playAnimation()
-        touchInterceptor.visibility = View.VISIBLE
     }
-    private fun stopAnimation(){
-        loadingAnimation.visibility = View.INVISIBLE
-        loadingAnimation.cancelAnimation()
+    private fun stopAnimation() {
         touchInterceptor.visibility = View.INVISIBLE
+        loadingAnimation.cancelAnimation()
+        loadingAnimation.visibility = View.INVISIBLE
     }
 }
 

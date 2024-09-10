@@ -82,7 +82,7 @@ class SignIn : AppCompatActivity() {
             startActivity(intent)
         }
          binding.loginButton.setOnClickListener{
-            startAnimation()
+            showProgressOverlay(true)
             hideKeyboard(this@SignIn)
 
             val email = binding.email.text.toString()
@@ -128,24 +128,24 @@ class SignIn : AppCompatActivity() {
                         binding.progressBar.visibility = View.GONE
                     }*/
                     loginbtn( email, pass)
-                    stopAnimation()
+
                 } else {
                     showPopup("Username and email are not associated")
-                    stopAnimation()
+                    showProgressOverlay(false)
                 }
             } else {
                 showPopup("User not found")
-               stopAnimation()
+               showProgressOverlay(false)
             }
         }.addOnFailureListener {
             Log.e("SignIn", "Error checking email: ${it.message}")
             showPopup("Failed to check email")
-            stopAnimation()
+            showProgressOverlay(false)
         }
     }
     private fun loginbtn( email: String, pass: String) {
         firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener { task ->
-            stopAnimation()
+            showProgressOverlay(false)
             if (task.isSuccessful) {
                 val sharedPreferences:SharedPreferences = getSharedPreferences(
                     SHARED_PREF, MODE_PRIVATE
@@ -158,6 +158,7 @@ class SignIn : AppCompatActivity() {
                 editor.apply()
                 // Your existing code for successful sign-in remains the same
                 changeThePage(email)
+                showProgressOverlay(false)
             } else {
                 Toast.makeText(this@SignIn, task.exception?.message, Toast.LENGTH_SHORT).show()
             }
@@ -283,7 +284,7 @@ class SignIn : AppCompatActivity() {
             Toast.makeText(this@SignIn, regusertype, Toast.LENGTH_SHORT).show()
             Toast.makeText(this@SignIn, "5", Toast.LENGTH_SHORT).show()
             if(LandingPage.usertype !=regusertype){
-                Toast.makeText(this,"User can't exist",Toast.LENGTH_SHORT)
+                Dialogforwrongusertype("Your account is not associated with the selected usertype")
             }
             else if(LandingPage.usertype =="tenant"){
                 Toast.makeText(this@SignIn, "7", Toast.LENGTH_SHORT).show()
@@ -298,10 +299,19 @@ class SignIn : AppCompatActivity() {
             }
         }
             ?.addOnFailureListener{
-                Toast.makeText(this, "NOWAY", Toast.LENGTH_SHORT).show()
+                Dialogforwrongusertype("User is not existed in database")
                 Log.e("SignInChangePage", "Error checking email: ${it.message}")
             }
 
+    }
+    private fun Dialogforwrongusertype(msg : String) {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Wrong Usertype")
+            .setMessage(msg)
+            .setCancelable(true) // Allows dismissing the dialog by tapping outside or pressing the back button
+            .create()
+
+        dialog.show()
     }
     override fun onPause() {
         super.onPause()
@@ -495,11 +505,9 @@ class SignIn : AppCompatActivity() {
         val dp  = popupView.findViewById<ImageView>(R.id.dp)
         dp.setImageURI(uri)
         if (uri != null) {
-
             Log.d("jiji","1")
             //binding.progressBar.visibility = View.VISIBLE
             dpuri = uri
-
             //
         }
     }
@@ -520,14 +528,20 @@ class SignIn : AppCompatActivity() {
             finish()
         }
     }
-    private fun startAnimation(){
+    private fun showProgressOverlay(show: Boolean) {
+        //binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        binding.root.isClickable = show
+        binding.root.isFocusable = show
+        if (show) startAnimation() else stopAnimation()
+    }
+    private fun startAnimation() {
+        touchInterceptor.visibility = View.VISIBLE
         loadingAnimation.visibility = View.VISIBLE
         loadingAnimation.playAnimation()
-        touchInterceptor.visibility = View.VISIBLE
     }
-    private fun stopAnimation(){
-        loadingAnimation.visibility = View.INVISIBLE
-        loadingAnimation.cancelAnimation()
+    private fun stopAnimation() {
         touchInterceptor.visibility = View.INVISIBLE
+        loadingAnimation.cancelAnimation()
+        loadingAnimation.visibility = View.INVISIBLE
     }
 }
