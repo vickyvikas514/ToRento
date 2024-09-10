@@ -53,13 +53,14 @@ class descripn : AppCompatActivity() {
         usertype = intent.getStringExtra("usertype").toString()
         username = intent.getStringExtra("username").toString()
         ownerId = intent.getStringExtra("ownerId").toString()
-        Toast.makeText(this,intent.getStringExtra("username").toString(), Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this,intent.getStringExtra("username").toString(), Toast.LENGTH_SHORT).show()
         sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         GlobalScope.launch(Dispatchers.IO) {retreivingdataBG()}
         if(usertype=="owner"){
             binding.saveBtn.text = "Change Room details"
             binding.saveBtn.setOnClickListener {
                 val intent = Intent(this@descripn,EditRoom::class.java)
+
                 intent.putExtra("documentid",documentid)
                 intent.putExtra("ownerId",ownerId)
                 startActivity(intent)
@@ -160,10 +161,10 @@ class descripn : AppCompatActivity() {
         val Id = intent.getStringExtra("documentid").toString()
        var imageUriList:List<String> = listOf<String>()
        var roomData: MutableMap<String, Any>? = null
-        GlobalScope.launch (Dispatchers.Main){
-            Toast.makeText(this@descripn, username+"1234", Toast.LENGTH_SHORT).show()
-            Toast.makeText(this@descripn, Id+"456", Toast.LENGTH_SHORT).show()
-        }
+//        GlobalScope.launch (Dispatchers.Main){
+////            Toast.makeText(this@descripn, username+"1234", Toast.LENGTH_SHORT).show()
+////            Toast.makeText(this@descripn, Id+"456", Toast.LENGTH_SHORT).show()
+//        }
 
            val docref =  db.collection(ownerId).document(Id)
                docref.get()

@@ -1,11 +1,18 @@
 package com.example.torento.OWNER
 
+import android.Manifest
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -17,14 +24,20 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.example.torento.DATACLASS.Address
 import com.example.torento.DATACLASS.address1
+import com.example.torento.OWNER.add_room.Companion.LOCATION_PERMISSION_REQUEST_CODE
 import com.example.torento.R
 import com.example.torento.databinding.ActivityAddRoomBinding
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.ktx.firestore
@@ -39,6 +52,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 // TODO make all the correction in one by hash map and make draft room published
 // TODO shows provide all details if i edit one field only and returns from the edit activity
@@ -60,6 +74,14 @@ class EditRoom : AppCompatActivity() {
     private lateinit var breif_description:String
     private lateinit var address: address1
     private var check:Int = 0
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var shouldCheckLocationPermission = false
+    private var addressDialog: AlertDialog? = null
+    private  var state:String=""
+    private  var district:String=""
+    private  var locality:String = ""
+    private  var house_no:String = ""
+    private  var pincode:String = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,7 +90,8 @@ class EditRoom : AppCompatActivity() {
         setContentView(binding.root)
         binding.addroomtext.text = "Edit your room details"
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-        userkey = sharedPreferences.getString("username", "").toString()
+        userkey = intent.getStringExtra("ownerId").toString()
+        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
 
         Id = intent.getStringExtra("documentid").toString()
         Toast.makeText(this@EditRoom, Id, Toast.LENGTH_SHORT).show()
@@ -78,7 +101,7 @@ class EditRoom : AppCompatActivity() {
             binding.pic.setImageURI(it)
             if (it != null) {
                 val dpUri = it
-                GlobalScope.launch(Dispatchers.IO) {
+                GlobalScope.launch(IO) {
                     val uploadedImageUri = async { changeDPBG(dpUri) }.await()
                     if (userkey != null) {
                         savechanges(uploadedImageUri,Id,userkey).await()
@@ -142,6 +165,118 @@ class EditRoom : AppCompatActivity() {
             showCustomDialog()
         }
     }
+
+    private fun onLocateMeClicked() {
+        shouldCheckLocationPermission = true
+        checkLocationPermission()
+    }
+    private fun isLocationEnabled(): Boolean {
+        Toast.makeText(this, "check location", Toast.LENGTH_SHORT).show()
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER)
+    }
+    private fun checkLocationPermission() {
+        // Request permission if not granted, or get the current location
+        if(!isLocationEnabled()){
+            showLocationEnableDialog()
+        }
+        else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+        } else {
+            getCurrentLocation()
+        }
+    }
+    private fun showLocationEnableDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Enable Location")
+            .setMessage("Your location is turned off. Please enable location services to detect your address.")
+            .setPositiveButton("Enable") { dialog: DialogInterface, _: Int ->
+                dialog.dismiss()
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel") { dialog: DialogInterface, _: Int ->
+                dialog.dismiss()
+                Toast.makeText(this, "Location is required to detect address", Toast.LENGTH_SHORT).show()
+            }
+            .setCancelable(false)
+            .show()
+    }
+    override fun onResume() {
+        super.onResume()
+        if (shouldCheckLocationPermission) {
+            checkLocationPermission()
+        }
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getCurrentLocation()
+        } else {
+            Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun getCurrentLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                location?.let {
+                    val geocoder = Geocoder(this, Locale.getDefault())
+                    val addresses: List<android.location.Address>? = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+                    if (addresses != null) {
+                        if (addresses.isNotEmpty()) {
+                            val address = addresses[0]
+                            val addressText = "${address.getAddressLine(0)}+ ${address.locality}+ ${address.adminArea}+ ${address.countryName}"
+                            //60, gali no3, ghukna then Ghaziabad then Uttar Pradesh then India
+                            val stateTextView = addressDialog?.findViewById<TextView>(R.id.state)
+                            val districtTextView = addressDialog?.findViewById<TextView>(R.id.District)
+                            val localityEditText = addressDialog?.findViewById<EditText>(R.id.locality)
+                            val houseNoEditText = addressDialog?.findViewById<EditText>(R.id.house_no)
+                            val pincodeEditText = addressDialog?.findViewById<EditText>(R.id.pincode)
+                            val statelist = addressDialog?.findViewById<Spinner>(R.id.dropdownMenu1)
+                            val districtlist = addressDialog?.findViewById<Spinner>(R.id.dropdownMenu2)
+                            stateTextView?.visibility = View.VISIBLE
+                            districtTextView?.visibility = View.VISIBLE
+                            statelist?.visibility = View.INVISIBLE
+                            districtlist?.visibility = View.INVISIBLE
+                            state = address.adminArea
+                            district = address.locality
+                            stateTextView?.text = address.adminArea
+                            //Toast.makeText(this@add_room, "trying"+ state.toString(), Toast.LENGTH_SHORT).show()
+                            districtTextView?.text = address.locality
+                            localityEditText?.setText(address.locality)
+                            houseNoEditText?.setText(address.getAddressLine(0))
+                            pincodeEditText?.setText(address.postalCode)
+                            //updateDialogWithLocationDetails()
+                            // Toast.makeText(this, "Your Location: $state,$district,$locality,$house_no,$pincode", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } ?: run {
+                    Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to get location", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     /*private fun ShowDialogForAddmorePics(){
         // Define options in an array
         val options = arrayOf("Remove all the previous images and add new images", "Add some new images to the existing images")
@@ -201,12 +336,6 @@ class EditRoom : AppCompatActivity() {
         }
 
     }
-    private fun showProgressOverlay(show: Boolean) {
-        //binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
-        binding.root.isClickable = show
-        binding.root.isFocusable = show
-        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
-    }
     private suspend fun uploadImage(imageUri: Uri): Uri = GlobalScope.async {
         return@async storageref.child("images/${System.currentTimeMillis()}").putFile(imageUri).await().metadata?.reference?.downloadUrl?.await()
             ?: throw RuntimeException("Failed to upload image")
@@ -249,6 +378,7 @@ class EditRoom : AppCompatActivity() {
             withContext(Dispatchers.Main){
                 binding.progressBar.visibility = View.INVISIBLE
                 Toast.makeText(this@EditRoom, "your Room has been updated", Toast.LENGTH_SHORT).show()
+                changetohome()
             }
         }
     }
@@ -297,7 +427,6 @@ class EditRoom : AppCompatActivity() {
                 .addOnSuccessListener { documentSnapshot ->
                     if (documentSnapshot.exists()) {
                         val roomData = documentSnapshot.data
-
                         // Update EditText fields with existing data
                         GlobalScope.launch (Dispatchers.Main){
                             updateEditTextFields(roomData)
@@ -313,7 +442,6 @@ class EditRoom : AppCompatActivity() {
         }
 
     }
-
     private fun updateEditTextFields(roomData: Map<String, Any>?) {
         if (roomData != null) {
             // Example: Update length EditText field
@@ -335,6 +463,7 @@ class EditRoom : AppCompatActivity() {
                 .into(binding.pic)
         }
     }
+
     suspend fun changeFields(price:String?,descrpn:String?,length:String?,width:String?,isDraft:Boolean){
         val updatedData = hashMapOf(
             "address" to address,
@@ -389,6 +518,7 @@ class EditRoom : AppCompatActivity() {
     override fun onBackPressed() {
         showDeleteRoomConfirmationDialog() // Call the confirmation dialog when the back button is pressed
     }
+
     private fun showDeleteRoomConfirmationDialog() {
         AlertDialog.Builder(this)
             .setTitle("Confirmation")
@@ -437,6 +567,7 @@ class EditRoom : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+
     private suspend fun appendImagesToFirestore() {
         val roomRef = db.collection("Rooms").document(Id)
         val userRef = db.collection(userkey).document(Id)
@@ -457,12 +588,38 @@ class EditRoom : AppCompatActivity() {
             Log.e("FirestoreError", "Failed to append images: $e")
         }
     }
+
     private fun showCustomDialog() {
         val inflater = LayoutInflater.from(this)
         val dialogLayout = inflater.inflate(R.layout.select_address_popup, null)
+        val locatemeBtn = dialogLayout.findViewById<TextView>(R.id.locateMe_text)
         val dropdownMenu1 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu1)
         val dropdownMenu2 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu2)
+        val statetext = dialogLayout.findViewById<TextView>(R.id.state)
+        val districttext = dialogLayout.findViewById<TextView>(R.id.District)
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogLayout)
+            .create()
+        addressDialog = dialog
+        locatemeBtn.setOnClickListener {
+//            locationPermissionRequest.launch(arrayOf(
+//                Manifest.permission.ACCESS_FINE_LOCATION,
+//                Manifest.permission.ACCESS_COARSE_LOCATION
+//            ))
+            onLocateMeClicked()
+        }
+
+        if(address.state.isNotEmpty() || address.district.isNotEmpty()){
+            statetext.visibility = View.VISIBLE
+            dropdownMenu2.visibility = View.INVISIBLE
+            districttext.visibility = View.VISIBLE
+            dropdownMenu1.visibility = View.INVISIBLE
+            statetext.text = address.state
+            districttext.text = address.district
+        }
         dialogLayout.findViewById<EditText>(R.id.locality).setText(address.locality)
         dialogLayout.findViewById<EditText>(R.id.house_no).setText(address.house_no)
 
@@ -496,9 +653,6 @@ class EditRoom : AppCompatActivity() {
 
         }
 
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogLayout)
-            .create()
 
         val pincode1 = dialogLayout.findViewById<EditText>(R.id.pincode)
         pincode1.setText(address.pincode)
@@ -575,5 +729,11 @@ class EditRoom : AppCompatActivity() {
     private fun hideKeyboard(view: View) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+    private fun showProgressOverlay(show: Boolean) {
+        //binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        binding.root.isClickable = show
+        binding.root.isFocusable = show
+        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
     }
 }

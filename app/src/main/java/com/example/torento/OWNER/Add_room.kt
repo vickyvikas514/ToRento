@@ -53,16 +53,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.io.IOException
 import java.util.Locale
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
+// TODO 719 pe upload BG call ho raha hai par agar dp select karni hi nhi fir yeh function call hi nhi hoga aur draft save nhi hoga
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
@@ -70,11 +69,11 @@ class add_room : AppCompatActivity() {
     private var storageRef = Firebase.storage
     private lateinit var length:String
     private lateinit var width:String
-    private lateinit var state:String
-    private lateinit var district:String
-    private lateinit var locality:String
-    private lateinit var house_no:String
-    private lateinit var pincode:String
+    private  var state:String=""
+    private  var district:String=""
+    private  var locality:String = ""
+    private  var house_no:String = ""
+    private  var pincode:String = ""
     private lateinit var amount:String
     private lateinit var owner_name:String
     private lateinit var breif_description:String
@@ -110,13 +109,14 @@ class add_room : AppCompatActivity() {
 
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         userkey = sharedPreferences.getString("username", "")
+        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
         //Requesting location permission
         //fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            GlobalScope.launch(Dispatchers.Main){
-                Toast.makeText(this@add_room, "11", Toast.LENGTH_SHORT).show()
-            }
+        lifecycleScope.launch(IO) {
+//            GlobalScope.launch(Dispatchers.Main){
+//                Toast.makeText(this@add_room, "11", Toast.LENGTH_SHORT).show()
+//            }
 
             roomOwnerDpUrl = getOwnerDp()
         }
@@ -159,6 +159,7 @@ class add_room : AppCompatActivity() {
         checkLocationPermission()
     }
     private fun isLocationEnabled(): Boolean {
+        Toast.makeText(this, "check location", Toast.LENGTH_SHORT).show()
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
             LocationManager.NETWORK_PROVIDER)
@@ -205,6 +206,23 @@ class add_room : AppCompatActivity() {
         }
     }
     private fun getCurrentLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
                 location?.let {
@@ -213,9 +231,29 @@ class add_room : AppCompatActivity() {
                     if (addresses != null) {
                         if (addresses.isNotEmpty()) {
                             val address = addresses[0]
-                            val addressText = "${address.getAddressLine(0)}, ${address.locality}, ${address.adminArea}, ${address.countryName}"
-                            Toast.makeText(this, "Your Location: $addressText", Toast.LENGTH_LONG).show()
-                            addressDialog?.dismiss()
+                            val addressText = "${address.getAddressLine(0)}+ ${address.locality}+ ${address.adminArea}+ ${address.countryName}"
+                            //60, gali no3, ghukna then Ghaziabad then Uttar Pradesh then India
+                            val stateTextView = addressDialog?.findViewById<TextView>(R.id.state)
+                            val districtTextView = addressDialog?.findViewById<TextView>(R.id.District)
+                            val localityEditText = addressDialog?.findViewById<EditText>(R.id.locality)
+                            val houseNoEditText = addressDialog?.findViewById<EditText>(R.id.house_no)
+                            val pincodeEditText = addressDialog?.findViewById<EditText>(R.id.pincode)
+                            val statelist = addressDialog?.findViewById<Spinner>(R.id.dropdownMenu1)
+                            val districtlist = addressDialog?.findViewById<Spinner>(R.id.dropdownMenu2)
+                            stateTextView?.visibility = View.VISIBLE
+                            districtTextView?.visibility = View.VISIBLE
+                            statelist?.visibility = View.INVISIBLE
+                            districtlist?.visibility = View.INVISIBLE
+                            state = address.adminArea
+                            district = address.locality
+                            stateTextView?.text = address.adminArea
+                            //Toast.makeText(this@add_room, "trying"+ state.toString(), Toast.LENGTH_SHORT).show()
+                            districtTextView?.text = address.locality
+                            localityEditText?.setText(address.locality)
+                            houseNoEditText?.setText(address.getAddressLine(0))
+                            pincodeEditText?.setText(address.postalCode)
+                            //updateDialogWithLocationDetails()
+                           // Toast.makeText(this, "Your Location: $state,$district,$locality,$house_no,$pincode", Toast.LENGTH_LONG).show()
                         }
                     }
                 } ?: run {
@@ -226,15 +264,126 @@ class add_room : AppCompatActivity() {
                 Toast.makeText(this, "Failed to get location", Toast.LENGTH_SHORT).show()
             }
     }
+    private fun updateDialogWithLocationDetails() {
+        // Update TextViews and EditTexts in the dialog with the extracted location details
+        val stateTextView = addressDialog?.findViewById<TextView>(R.id.state)
+        val districtTextView = addressDialog?.findViewById<TextView>(R.id.District)
+        val localityEditText = addressDialog?.findViewById<EditText>(R.id.locality)
+        val houseNoEditText = addressDialog?.findViewById<EditText>(R.id.house_no)
+        val pincodeEditText = addressDialog?.findViewById<EditText>(R.id.pincode)
+
+        stateTextView?.text = state
+        districtTextView?.text = district
+        localityEditText?.setText(locality)
+        houseNoEditText?.setText(house_no)
+        pincodeEditText?.setText(pincode)
+    }
+    private fun showCustomDialog() {
+        val inflater = LayoutInflater.from(this)
+        val dialogLayout = inflater.inflate(R.layout.select_address_popup, null)
+        val statelist = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu1)
+        val districtlist = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu2)
+        val locatemeBtn = dialogLayout.findViewById<TextView>(R.id.locateMe_text)
+        val stateTextView = dialogLayout.findViewById<TextView>(R.id.state)
+        val districtTextView = dialogLayout.findViewById<TextView>(R.id.District)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogLayout)
+            .create()
+        addressDialog = dialog
+        locatemeBtn.setOnClickListener {
+//            locationPermissionRequest.launch(arrayOf(
+//                Manifest.permission.ACCESS_FINE_LOCATION,
+//                Manifest.permission.ACCESS_COARSE_LOCATION
+//            ))
+            onLocateMeClicked()
+        }
+
+        val stateDistrictData = Address.getDefaultData()
+        val states = stateDistrictData.states
+        val districtsMap = stateDistrictData.districtsMap
+
+
+        val firstSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, states)
+        firstSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
+        statelist.adapter = firstSpinnerAdapter
+
+        val mutableOptionsForSecondSpinner = mutableListOf<String>()
+        val secondSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, mutableOptionsForSecondSpinner)
+        secondSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
+        districtlist.adapter = secondSpinnerAdapter
+
+        statelist.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                state = states[position]
+                val districts = districtsMap[state] ?: emptyList()
+                mutableOptionsForSecondSpinner.clear()
+                mutableOptionsForSecondSpinner.addAll(districts)
+                secondSpinnerAdapter.notifyDataSetChanged()
+                districtlist.isEnabled = districts.isNotEmpty()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                districtlist.isEnabled = false
+            }
+
+        }
+
+
+        val pincode1 = dialogLayout.findViewById<EditText>(R.id.pincode)
+        pincode1.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action required here
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s?.length == 6) {
+                    hideKeyboard(dialogLayout)
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                if (s?.length ?: 0 > 6) {
+                    // Truncate the input to 10 digits if exceeded
+                    pincode1.setText(s?.subSequence(0, 6))
+                    pincode1.setSelection(6) // Move cursor to the end
+                }
+            }
+        })
+
+        val set_address_btn = dialogLayout.findViewById<Button>(R.id.set_address_btn)
+        set_address_btn.setOnClickListener {
+            if(state.isEmpty() || district.isEmpty()){
+                state = statelist.selectedItem.toString()
+                district = districtlist.selectedItem.toString()
+            }
+            locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
+            pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
+            house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
+            Toast.makeText(this@add_room, locality, Toast.LENGTH_SHORT).show()
+            if(state.isEmpty() || district.isEmpty() || locality.isEmpty() || pincode.isEmpty() || house_no.isEmpty()){
+                Toast.makeText(this@add_room, "Please fill all the fields", Toast.LENGTH_SHORT).show()
+            }else{
+                dialog.dismiss()
+                //state and district is not set
+                Toast.makeText(this@add_room, "Your address is set $state$district", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
+        dialog.show()
+    }
 
     companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1000
+         const val LOCATION_PERMISSION_REQUEST_CODE = 1000
     }
 
     private suspend fun getOwnerDp():String = GlobalScope.async{
-        GlobalScope.launch(Dispatchers.Main){
-            Toast.makeText(this@add_room, "12", Toast.LENGTH_SHORT).show()
-        }
+//        GlobalScope.launch(Dispatchers.Main){
+//            Toast.makeText(this@add_room, "12", Toast.LENGTH_SHORT).show()
+//        }
         val docRef = db.collection("users").document(userkey.toString()).get().await()
         var Url = ""
         try {
@@ -245,9 +394,9 @@ class add_room : AppCompatActivity() {
         } catch(e:Exception) {
             Log.e("descripn", "Error fetching data from Firestore: ${e.message}")
         }
-        GlobalScope.launch(Dispatchers.Main){
-            Toast.makeText(this@add_room, Url, Toast.LENGTH_SHORT).show()
-        }
+//        GlobalScope.launch(Dispatchers.Main){
+//            Toast.makeText(this@add_room, Url, Toast.LENGTH_SHORT).show()
+//        }
 
         return@async Url
     }.await()
@@ -380,21 +529,29 @@ class add_room : AppCompatActivity() {
         return Uri.parse(path)
     }
 
-    private suspend fun uploadBG(uri: Uri?) {
-        withContext(Dispatchers.IO) { // Ensure this runs on IO thread
+    private suspend fun uploadBG() {
+        withContext(IO) { // Ensure this runs on IO thread
             try {
-                val reference = storageRef.getReference("images").child(System.currentTimeMillis().toString())
-                reference.putFile(uri!!).await() // Await the completion of the upload
-                val downloadUrl = reference.downloadUrl.await()
-                dpUri = downloadUrl.toString() // Await download URL
-                imagesListforFirebaseUris.add(0, dpUri.toUri())
+                if (this@add_room::dpuri.isInitialized && dpuri != "".toUri()) {
+                    //showProgressOverlay(true)
+                    // Wait for the upload to complete
+                    val reference = storageRef.getReference("images").child(System.currentTimeMillis().toString())
+                    reference.putFile(dpuri!!).await() // Await the completion of the upload
+                    val downloadUrl = reference.downloadUrl.await()
+                    dpUri = downloadUrl.toString() // Await download URL
+                    imagesListforFirebaseUris.add(0, dpUri.toUri())
+                }else{
+                    dpuri = "".toUri()
+                    dpUri = ""
+                }
+
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@add_room, "Error uploading image: $e", Toast.LENGTH_SHORT).show()
                 }
             } finally {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@add_room, "12345"+imagesListforFirebaseUris[0].toString(), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@add_room, "12345$state", Toast.LENGTH_SHORT).show()
                     fun getLateInitOrNull(propertyName: String): String? {
                         return try {
                             val property = this::class.memberProperties.find { it.name == propertyName }
@@ -406,11 +563,6 @@ class add_room : AppCompatActivity() {
                             null
                         }
                     }
-                    val stateValue = getLateInitOrNull("state")
-                    val districtValue = getLateInitOrNull("district")
-                    val localityValue = getLateInitOrNull("locality")
-                    val pincodeValue = getLateInitOrNull("pincode")
-                    val houseNoValue = getLateInitOrNull("house_no")
                     val lengthValue = getLateInitOrNull("length")
                     val widthValue = getLateInitOrNull("width")
                     val ownerNameValue = getLateInitOrNull("owner_name")
@@ -418,15 +570,16 @@ class add_room : AppCompatActivity() {
                     val briefDescriptionValue = getLateInitOrNull("breif_description")
                     val dpUriValue = getLateInitOrNull("dpUri")
                     val imagesListForFirebaseUrisValue = getLateInitOrNull("imagesListforFirebaseUris")
-
+                    Toast.makeText(this@add_room, "$state 987", Toast.LENGTH_SHORT).show()
                     val addressDraft = hashMapOf(
-                        "state" to (stateValue ?: ""),
-                        "district" to (districtValue ?: ""),
-                        "locality" to (localityValue ?: ""),
-                        "pincode" to (pincodeValue ?: ""),
-                        "house_no" to (houseNoValue ?: "")
+                        "state" to (state),
+                        "district" to (district),
+                        "locality" to (locality),
+                        "pincode" to (pincode),
+                        "house_no" to (house_no)
                     )
-
+                    // TODO trying null is the toast in uploadBG
+                    Toast.makeText(this@add_room, "trying1"+ state.toString(), Toast.LENGTH_SHORT).show()
                     val updateDataDraft: Map<String, Any?> = hashMapOf(
                         "length" to (lengthValue ?: ""),
                         "width" to (widthValue ?: ""),
@@ -497,7 +650,7 @@ class add_room : AppCompatActivity() {
                     if (this@add_room::dpuri.isInitialized && dpuri != "".toUri()) {
                         showProgressOverlay(true)
                         // Wait for the upload to complete
-                        uploadBG(dpuri)
+                        uploadBG()
                     }
                 }
                 val address = hashMapOf(
@@ -586,11 +739,8 @@ class add_room : AppCompatActivity() {
 
         CoroutineScope(Dispatchers.Main).launch {
             userkey?.let { key ->
-                if (this@add_room::dpuri.isInitialized && dpuri != "".toUri()) {
-                    //showProgressOverlay(true)
-                    // Wait for the upload to complete
-                    uploadBG(dpuri)
-                }
+
+                uploadBG()
             }
 
         }
@@ -598,6 +748,7 @@ class add_room : AppCompatActivity() {
     private fun saveRoomDataDraft(updateData: Map<String, Any?>) {
         showProgressOverlay(true)
         CoroutineScope(Dispatchers.Main).launch {
+            Toast.makeText(this@add_room, "1245", Toast.LENGTH_SHORT).show()
             try {
                 val docref2 = db.collection(ownerId)
                 if (docref2 != null) {
@@ -644,96 +795,7 @@ class add_room : AppCompatActivity() {
             }
         }
     }
-    private fun showCustomDialog() {
-        val inflater = LayoutInflater.from(this)
-        val dialogLayout = inflater.inflate(R.layout.select_address_popup, null)
-        val dropdownMenu1 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu1)
-        val dropdownMenu2 = dialogLayout.findViewById<Spinner>(R.id.dropdownMenu2)
-        val locatemeBtn = dialogLayout.findViewById<TextView>(R.id.locateMe_text)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogLayout)
-            .create()
-        addressDialog = dialog
-        locatemeBtn.setOnClickListener {
-//            locationPermissionRequest.launch(arrayOf(
-//                Manifest.permission.ACCESS_FINE_LOCATION,
-//                Manifest.permission.ACCESS_COARSE_LOCATION
-//            ))
-            onLocateMeClicked()
-        }
-
-        val stateDistrictData = Address.getDefaultData()
-        val states = stateDistrictData.states
-        val districtsMap = stateDistrictData.districtsMap
-
-
-        val firstSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, states)
-        firstSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
-        dropdownMenu1.adapter = firstSpinnerAdapter
-
-        val mutableOptionsForSecondSpinner = mutableListOf<String>()
-        val secondSpinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, mutableOptionsForSecondSpinner)
-        secondSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item)
-        dropdownMenu2.adapter = secondSpinnerAdapter
-
-        dropdownMenu1.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                state = states[position]
-                val districts = districtsMap[state] ?: emptyList()
-                mutableOptionsForSecondSpinner.clear()
-                mutableOptionsForSecondSpinner.addAll(districts)
-                secondSpinnerAdapter.notifyDataSetChanged()
-                dropdownMenu2.isEnabled = districts.isNotEmpty()
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                dropdownMenu2.isEnabled = false
-            }
-
-        }
-
-
-        val pincode1 = dialogLayout.findViewById<EditText>(R.id.pincode)
-        pincode1.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // No action required here
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s?.length == 6) {
-                    hideKeyboard(dialogLayout)
-                }
-            }
-
-            override fun afterTextChanged(s: Editable?) {
-                if (s?.length ?: 0 > 6) {
-                    // Truncate the input to 10 digits if exceeded
-                    pincode1.setText(s?.subSequence(0, 6))
-                    pincode1.setSelection(6) // Move cursor to the end
-                }
-            }
-        })
-
-        val set_address_btn = dialogLayout.findViewById<Button>(R.id.set_address_btn)
-        set_address_btn.setOnClickListener {
-            state = dropdownMenu1.selectedItem.toString()
-            district = dropdownMenu2.selectedItem.toString()
-            locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
-            pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
-            house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
-            if(state.isEmpty() || district.isEmpty() || locality.isEmpty() || pincode.isEmpty() || house_no.isEmpty()){
-                Toast.makeText(this@add_room, "Please fill all the fields", Toast.LENGTH_SHORT).show()
-            }else{
-                dialog.dismiss()
-                Toast.makeText(this@add_room, "Your address is set", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-
-        dialog.show()
-    }
+   
 
     private suspend fun checkIfAllDetailsFilled(): Boolean {
         val length = binding.roomlength.text.toString()
