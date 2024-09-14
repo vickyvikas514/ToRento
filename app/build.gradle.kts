@@ -65,9 +65,9 @@ dependencies {
     implementation("com.google.firebase:firebase-database:21.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation ("io.realm.kotlin:library-sync:1.11.0")
-    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
     implementation("com.google.firebase:firebase-auth")
-    implementation ("org.jetbrains.kotlin:kotlin-reflect:<kotlin_version>")
+    implementation ("org.jetbrains.kotlin:kotlin-reflect:1.9.20")
     //Lottie Animation
     implementation ("com.airbnb.android:lottie:6.4.1")
     // Also add the dependency for the Google Play services library and specify its version
