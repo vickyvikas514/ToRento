@@ -87,6 +87,11 @@ class SignUp : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+        binding.usertypetext.setOnClickListener{
+            val intent = Intent(this, LandingPage::class.java);
+            startActivity(intent)
+            finish()
+        }
 
 
         binding.phone.addTextChangedListener(object : TextWatcher {

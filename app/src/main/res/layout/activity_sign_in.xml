@@ -33,6 +33,16 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/logowithoutname" />
         </androidx.cardview.widget.CardView>
+        <TextView
+            android:id="@+id/usertypetext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/registertext"
+            android:text="Change Usertype"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center_horizontal"
+            android:textColor="@color/black"/>
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -122,7 +132,7 @@
             android:textAlignment="center"
             android:id="@+id/OrText"
             android:textColor="@color/purple"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="6dp"
             android:layout_marginBottom="8dp" />
 
         <com.google.android.gms.common.SignInButton

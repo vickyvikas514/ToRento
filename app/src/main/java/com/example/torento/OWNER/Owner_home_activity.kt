@@ -23,7 +23,6 @@ import com.example.torento.COMMON.descripn
 import com.example.torento.DATACLASS.Room
 import com.example.torento.DATACLASS.address1
 import com.example.torento.LOGIN.LandingPage
-import com.example.torento.LOGIN.LandingPage.Companion.num
 import com.example.torento.LOGIN.LandingPage.Companion.userid
 import com.example.torento.R
 import com.example.torento.databinding.ActivityOwnerHomeBinding

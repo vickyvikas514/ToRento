@@ -16,7 +16,6 @@ class LandingPage : AppCompatActivity() {
     companion object{
         lateinit var usertype:String
         var userid = "temp"
-        var num=0
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

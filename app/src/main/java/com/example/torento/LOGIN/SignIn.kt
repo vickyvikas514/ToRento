@@ -77,6 +77,11 @@ class SignIn : AppCompatActivity() {
         remember()
         loadingAnimation = binding.progressBar
         touchInterceptor = binding.touchInterceptor
+        binding.usertypetext.setOnClickListener{
+            val intent = Intent(this, LandingPage::class.java);
+            startActivity(intent)
+            finish()
+        }
         binding.signupText.setOnClickListener{
             val intent = Intent(this, SignUp::class.java)
             startActivity(intent)
@@ -165,23 +170,16 @@ class SignIn : AppCompatActivity() {
         }
     }
     private fun showPopup(message: String) {
-        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val view = inflater.inflate(R.layout.popup, null)
 
-        val popuptext = view.findViewById<TextView>(R.id.popuptext)
-        popuptext.text = message
+            val dialog = AlertDialog.Builder(this)
+                .setTitle("User not found")
+                .setMessage("Unable to find the user in our database with this email")
+                .setCancelable(true) // Allows dismissing the dialog by tapping outside or pressing the back button
+                .create()
 
-        popupWindow = PopupWindow(
-            view,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            true
-        )
+            dialog.show()
 
-        popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0)
-        Handler().postDelayed({
-            popupWindow.dismiss()
-        }, 2000)
+
     }
 
     private fun remember(){
