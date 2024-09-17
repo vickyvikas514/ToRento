@@ -62,22 +62,21 @@ import java.util.Locale
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-// TODO 719 pe upload BG call ho raha hai par agar dp select karni hi nhi fir yeh function call hi nhi hoga aur draft save nhi hoga
 
 class add_room : AppCompatActivity() {
     private lateinit var binding: ActivityAddRoomBinding
     private var db = Firebase.firestore
     private var storageRef = Firebase.storage
-    private lateinit var length:String
-    private lateinit var width:String
+    private var length:String = ""
+    private var width:String = ""
     private  var state:String=""
     private  var district:String=""
     private  var locality:String = ""
     private  var house_no:String = ""
     private  var pincode:String = ""
-    private lateinit var amount:String
-    private lateinit var owner_name:String
-    private lateinit var breif_description:String
+    private var amount:String =""
+    private var owner_name:String=""
+    private var breif_description:String=""
     private var dpUri : String = ""
     private var roomId:String=""
     val SHARED_PREF : String = "sharedPrefs"
@@ -536,7 +535,32 @@ class add_room : AppCompatActivity() {
         return Uri.parse(path)
     }
 
-    private suspend fun uploadBG() {
+    private suspend fun uploadBG(){
+        withContext(IO) { // Ensure this runs on IO thread
+            try {
+                if (this@add_room::dpuri.isInitialized && dpuri != "".toUri()) {
+                    //showProgressOverlay(true)
+                    // Wait for the upload to complete
+                    val reference = storageRef.getReference("images")
+                        .child(System.currentTimeMillis().toString())
+                    reference.putFile(dpuri!!).await() // Await the completion of the upload
+                    val downloadUrl = reference.downloadUrl.await()
+                    dpUri = downloadUrl.toString() // Await download URL
+                    imagesListforFirebaseUris.add(0, dpUri.toUri())
+                } else {
+                    dpuri = "".toUri()
+                    dpUri = ""
+                }
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@add_room, "Error uploading image: $e", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
+    }
+    private suspend fun uploadBGDraft() {
         withContext(IO) { // Ensure this runs on IO thread
             try {
                 if (this@add_room::dpuri.isInitialized && dpuri != "".toUri()) {
@@ -570,7 +594,7 @@ class add_room : AppCompatActivity() {
                             null
                         }
                     }
-                    val lengthValue = getLateInitOrNull("length")
+//                    val lengthValue = getLateInitOrNull("length")
                     val widthValue = getLateInitOrNull("width")
                     val ownerNameValue = getLateInitOrNull("owner_name")
                     val amountValue = getLateInitOrNull("amount")
@@ -588,13 +612,13 @@ class add_room : AppCompatActivity() {
                     // TODO trying null is the toast in uploadBG
                     Toast.makeText(this@add_room, "trying1"+ state.toString(), Toast.LENGTH_SHORT).show()
                     val updateDataDraft: Map<String, Any?> = hashMapOf(
-                        "length" to (lengthValue ?: ""),
-                        "width" to (widthValue ?: ""),
-                        "owner_name" to (ownerNameValue ?: ""),
-                        "amount" to (amountValue ?: ""),
-                        "breif_description" to (briefDescriptionValue ?: ""),
+                        "length" to length,
+                        "width" to width,
+                        "owner_name" to owner_name,
+                        "amount" to amount,
+                        "breif_description" to breif_description,
                         "roomId" to roomId,
-                        "dpuri" to (dpUriValue ?: ""),
+                        "dpuri" to dpUri,
                         "imageuri" to (imagesListforFirebaseUris ?: ""),
                         "ownerId" to ownerId,
                         "ownerDpUrl" to roomOwnerDpUrl,
@@ -747,7 +771,7 @@ class add_room : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             userkey?.let { key ->
 
-                uploadBG()
+                uploadBGDraft()
             }
 
         }
