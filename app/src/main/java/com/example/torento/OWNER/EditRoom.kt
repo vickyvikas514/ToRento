@@ -6,6 +6,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.graphics.drawable.ColorDrawable
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
@@ -164,6 +165,12 @@ class EditRoom : AppCompatActivity() {
         binding.setAddressBtn.setOnClickListener {
             showCustomDialog()
         }
+        supportActionBar?.setTitle("KAMRE")
+        actionBar?.hide()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayUseLogoEnabled(true)
+        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
+
     }
 
     private fun onLocateMeClicked() {

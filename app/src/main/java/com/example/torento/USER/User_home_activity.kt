@@ -3,6 +3,7 @@ package com.example.torento. USER
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -20,6 +21,7 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.torento.Adapter.RoomAdapter
 import com.example.torento.DATACLASS.Room
@@ -65,10 +67,11 @@ class user_home_activity : AppCompatActivity() {
         if(auth.currentUser?.isEmailVerified==false){
             showPopup()
         }else{
-            supportActionBar?.setTitle("Torento")
+            supportActionBar?.setTitle("KAMRE")
             actionBar?.hide()
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             supportActionBar?.setDisplayUseLogoEnabled(true)
+            supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
             val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
             username = sharedPreferences.getString("username", "") ?: ""
             Toast.makeText(this, username, Toast.LENGTH_SHORT).show()

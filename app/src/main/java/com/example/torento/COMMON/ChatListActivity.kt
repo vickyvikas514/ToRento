@@ -3,9 +3,11 @@ package com.example.torento.COMMON
 import ChatAdapter
 import ChatListAdapter
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -103,6 +105,12 @@ class ChatListActivity : AppCompatActivity() {
             }
 
         })
+        supportActionBar?.setTitle("KAMRE")
+        actionBar?.hide()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayUseLogoEnabled(true)
+        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
+
     }
 
     }

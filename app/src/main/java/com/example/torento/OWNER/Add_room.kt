@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.drawable.ColorDrawable
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
@@ -152,6 +153,12 @@ class add_room : AppCompatActivity() {
             }
 
         }
+        supportActionBar?.setTitle("KAMRE")
+        actionBar?.hide()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayUseLogoEnabled(true)
+        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
+
     }
 
     private fun onLocateMeClicked() {
@@ -388,7 +395,7 @@ class add_room : AppCompatActivity() {
         var Url = ""
         try {
             docRef.data?.let {
-                owner_name = it["username"].toString()
+                owner_name = it["name"].toString()
                 Url = it["imageuri"].toString()
             }
         } catch(e:Exception) {

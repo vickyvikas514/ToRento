@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -15,6 +16,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
@@ -87,10 +89,10 @@ class UpdateActivity : AppCompatActivity() {
                     if (docRefUser != null) {
                         docRefUser.update(updateData as Map<String, Any>)
                             .addOnSuccessListener {
-                              /* stopAnimation()
+                               stopAnimation()
                                val intent = Intent(this@UpdateActivity, Profile::class.java)
                                 startActivity(intent)
-                                finish()*/
+                                finish()
                                 Toast.makeText(this@UpdateActivity, "Success", Toast.LENGTH_SHORT)
                                     .show()
                             }
@@ -109,6 +111,11 @@ class UpdateActivity : AppCompatActivity() {
         binding.dpupdate.setOnClickListener {
             showImageSourceOptions()
         }
+        supportActionBar?.setTitle("KAMRE")
+        actionBar?.hide()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayUseLogoEnabled(true)
+        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
 
     }
     private fun showImageSourceOptions() {

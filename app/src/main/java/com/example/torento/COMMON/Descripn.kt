@@ -2,6 +2,7 @@ package com.example.torento.COMMON
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -9,14 +10,16 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.torento.Adapter.PicsAdapter
 import com.example.torento.LOGIN.LandingPage.Companion.usertype
 import com.example.torento.OWNER.EditRoom
 import com.example.torento.OWNER.owner_home_activity
-import com.example.torento.USER.user_home_activity
+
 import com.example.torento.R
+import com.example.torento.USER.user_home_activity
 import com.example.torento.databinding.ActivityDescripnBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -29,6 +32,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+
 
 
 // TODO discripn mai tho main photo hai hi nhi that is DP which shows in home activity
@@ -118,7 +122,11 @@ class descripn : AppCompatActivity() {
             }
         }
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
-
+        supportActionBar?.setTitle("KAMRE")
+        actionBar?.hide()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayUseLogoEnabled(true)
+        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
 
     }
     private fun isRoomLiked(): Boolean {

@@ -3,20 +3,19 @@ package com.example.torento.COMMON
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
+
 import android.widget.Toast
-import androidx.activity.result.ActivityResultCallback
-import androidx.activity.result.contract.ActivityResultContracts
+
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.example.torento.LOGIN.LandingPage
-import com.example.torento.OWNER.owner_home_activity
+
 import com.example.torento.R
-import com.example.torento.USER.user_home_activity
+
 import com.example.torento.databinding.ActivityProfileBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -58,6 +57,11 @@ class Profile : AppCompatActivity() {
         if (userkey != null) {
             set(userkey)
         }
+        supportActionBar?.setTitle("KAMRE")
+        actionBar?.hide()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayUseLogoEnabled(true)
+        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
 
 
 

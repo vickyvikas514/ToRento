@@ -108,7 +108,7 @@ class owner_home_activity : AppCompatActivity() {
                     changepage()
                 }
             }
-            supportActionBar?.setTitle("Torento")
+            supportActionBar?.setTitle("KAMRE")
             actionBar?.hide()
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             supportActionBar?.setDisplayUseLogoEnabled(true)
