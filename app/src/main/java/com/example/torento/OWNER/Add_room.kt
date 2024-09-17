@@ -153,7 +153,7 @@ class add_room : AppCompatActivity() {
             }
 
         }
-        supportActionBar?.setTitle("KAMRE")
+        supportActionBar?.setTitle("VāsAlaya")
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)

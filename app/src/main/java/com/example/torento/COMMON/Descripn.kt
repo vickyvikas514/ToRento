@@ -122,7 +122,7 @@ class descripn : AppCompatActivity() {
             }
         }
         binding.listPhoto.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
-        supportActionBar?.setTitle("KAMRE")
+        supportActionBar?.setTitle("VāsAlaya")
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)

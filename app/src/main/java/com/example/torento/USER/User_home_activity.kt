@@ -67,7 +67,7 @@ class user_home_activity : AppCompatActivity() {
         if(auth.currentUser?.isEmailVerified==false){
             showPopup()
         }else{
-            supportActionBar?.setTitle("KAMRE")
+            supportActionBar?.setTitle("VāsAlaya")
             actionBar?.hide()
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             supportActionBar?.setDisplayUseLogoEnabled(true)

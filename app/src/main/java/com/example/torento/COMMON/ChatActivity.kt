@@ -114,7 +114,7 @@ class ChatActivity : AppCompatActivity() {
                     messageEditText.text.clear()
                 }
             }
-        supportActionBar?.setTitle("KAMRE")
+        supportActionBar?.setTitle("VāsAlaya")
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)

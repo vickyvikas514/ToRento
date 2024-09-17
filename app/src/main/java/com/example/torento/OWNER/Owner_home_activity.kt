@@ -108,7 +108,7 @@ class owner_home_activity : AppCompatActivity() {
                     changepage()
                 }
             }
-            supportActionBar?.setTitle("KAMRE")
+            supportActionBar?.setTitle("VāsAlaya")
             actionBar?.hide()
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             supportActionBar?.setDisplayUseLogoEnabled(true)

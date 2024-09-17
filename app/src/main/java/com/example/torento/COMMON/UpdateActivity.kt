@@ -111,7 +111,7 @@ class UpdateActivity : AppCompatActivity() {
         binding.dpupdate.setOnClickListener {
             showImageSourceOptions()
         }
-        supportActionBar?.setTitle("KAMRE")
+        supportActionBar?.setTitle("VāsAlaya")
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)

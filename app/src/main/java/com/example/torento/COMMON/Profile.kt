@@ -57,7 +57,7 @@ class Profile : AppCompatActivity() {
         if (userkey != null) {
             set(userkey)
         }
-        supportActionBar?.setTitle("KAMRE")
+        supportActionBar?.setTitle("VāsAlaya")
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)

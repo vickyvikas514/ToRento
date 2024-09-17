@@ -165,7 +165,7 @@ class EditRoom : AppCompatActivity() {
         binding.setAddressBtn.setOnClickListener {
             showCustomDialog()
         }
-        supportActionBar?.setTitle("KAMRE")
+        supportActionBar?.setTitle("VāsAlaya")
         actionBar?.hide()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayUseLogoEnabled(true)
