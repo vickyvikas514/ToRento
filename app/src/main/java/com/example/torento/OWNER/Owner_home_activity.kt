@@ -221,7 +221,7 @@ class owner_home_activity : AppCompatActivity() {
                     GlobalScope.launch(Dispatchers.IO) {
                         try {
                             launch(Dispatchers.Main) {
-                                Toast.makeText(this@owner_home_activity, test, Toast.LENGTH_SHORT).show()
+//                                Toast.makeText(this@owner_home_activity, test, Toast.LENGTH_SHORT).show()
                                 val intent = Intent(this@owner_home_activity, descripn::class.java)
                                 intent.putExtra("documentid", documentid)
                                 intent.putExtra("usertype", "owner")

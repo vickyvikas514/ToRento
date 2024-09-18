@@ -109,7 +109,7 @@ class add_room : AppCompatActivity() {
 
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         userkey = sharedPreferences.getString("username", "")
-        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
         //Requesting location permission
         //fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -165,7 +165,7 @@ class add_room : AppCompatActivity() {
         checkLocationPermission()
     }
     private fun isLocationEnabled(): Boolean {
-        Toast.makeText(this, "check location", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this, "check location", Toast.LENGTH_SHORT).show()
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
             LocationManager.NETWORK_PROVIDER)
@@ -263,7 +263,7 @@ class add_room : AppCompatActivity() {
                         }
                     }
                 } ?: run {
-                    Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Unable to get location, Try again!!", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener {
@@ -368,7 +368,7 @@ class add_room : AppCompatActivity() {
             locality = dialogLayout.findViewById<EditText>(R.id.locality).text.toString()
             pincode = dialogLayout.findViewById<EditText>(R.id.pincode).text.toString()
             house_no = dialogLayout.findViewById<EditText>(R.id.house_no).text.toString()
-            Toast.makeText(this@add_room, locality, Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this@add_room, locality, Toast.LENGTH_SHORT).show()
             if(state.isEmpty() || district.isEmpty() || locality.isEmpty() || pincode.isEmpty() || house_no.isEmpty()){
                 Toast.makeText(this@add_room, "Please fill all the fields", Toast.LENGTH_SHORT).show()
             }else{
@@ -509,7 +509,7 @@ class add_room : AppCompatActivity() {
                 Log.d("jiji","1")
                 //binding.progressBar.visibility = View.VISIBLE
                 dpuri = uri
-                Toast.makeText(this,dpuri.toString()+"121", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this,dpuri.toString()+"121", Toast.LENGTH_SHORT).show()
             }
             //
         }
@@ -523,7 +523,7 @@ class add_room : AppCompatActivity() {
                 Log.d("jiji","1")
                 //binding.progressBar.visibility = View.VISIBLE
                 dpuri = uri
-                Toast.makeText(this,dpuri.toString()+"121", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this,dpuri.toString()+"121", Toast.LENGTH_SHORT).show()
             }
             //
         }
@@ -582,7 +582,7 @@ class add_room : AppCompatActivity() {
                 }
             } finally {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@add_room, "12345$state", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this@add_room, "12345$state", Toast.LENGTH_SHORT).show()
                     fun getLateInitOrNull(propertyName: String): String? {
                         return try {
                             val property = this::class.memberProperties.find { it.name == propertyName }
@@ -601,7 +601,7 @@ class add_room : AppCompatActivity() {
                     val briefDescriptionValue = getLateInitOrNull("breif_description")
                     val dpUriValue = getLateInitOrNull("dpUri")
                     val imagesListForFirebaseUrisValue = getLateInitOrNull("imagesListforFirebaseUris")
-                    Toast.makeText(this@add_room, "$state 987", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this@add_room, "$state 987", Toast.LENGTH_SHORT).show()
                     val addressDraft = hashMapOf(
                         "state" to (state),
                         "district" to (district),
@@ -610,7 +610,7 @@ class add_room : AppCompatActivity() {
                         "house_no" to (house_no)
                     )
                     // TODO trying null is the toast in uploadBG
-                    Toast.makeText(this@add_room, "trying1"+ state.toString(), Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this@add_room, "trying1"+ state.toString(), Toast.LENGTH_SHORT).show()
                     val updateDataDraft: Map<String, Any?> = hashMapOf(
                         "length" to length,
                         "width" to width,
@@ -779,7 +779,7 @@ class add_room : AppCompatActivity() {
     private fun saveRoomDataDraft(updateData: Map<String, Any?>) {
         showProgressOverlay(true)
         CoroutineScope(Dispatchers.Main).launch {
-            Toast.makeText(this@add_room, "1245", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this@add_room, "1245", Toast.LENGTH_SHORT).show()
             try {
                 val docref2 = db.collection(ownerId)
                 if (docref2 != null) {

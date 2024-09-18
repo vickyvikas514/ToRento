@@ -74,7 +74,7 @@ class user_home_activity : AppCompatActivity() {
             supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this,R.color.brown)))
             val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
             username = sharedPreferences.getString("username", "") ?: ""
-            Toast.makeText(this, username, Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, username, Toast.LENGTH_SHORT).show()
             /////////////////////
             DatatoRecyclerView(username,false)
         }
@@ -151,7 +151,7 @@ class user_home_activity : AppCompatActivity() {
             }
 
             else {
-                Toast.makeText(this@user_home_activity, "DocRef is NULL", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@user_home_activity, "No data found", Toast.LENGTH_SHORT).show()
             }
         } catch (e: java.lang.Exception){
             Log.e("Profile", "Error fetching data from Firestore: ${e.message}")

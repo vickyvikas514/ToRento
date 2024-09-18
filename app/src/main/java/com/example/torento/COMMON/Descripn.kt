@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
@@ -70,13 +71,7 @@ class descripn : AppCompatActivity() {
                 startActivity(intent)
             }
             binding.delete.setOnClickListener {
-                GlobalScope.launch (IO){
-                    intent.getStringExtra("ownerId")
-                        ?.let { it1 -> deleteRoom("Rooms", it1,
-                            intent.getStringExtra("documentid")!!
-                        ) }
-
-                }
+                showDeleteRoomConfirmationDialog()
             }
             binding.heartButton.visibility = View.GONE
         }else{
@@ -150,13 +145,13 @@ class descripn : AppCompatActivity() {
         intent.putExtra("documentid",documentid)
         intent.putExtra("username",username)
         intent.putExtra("usertype",usertype)
-        Toast.makeText(this,documentid, Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this,documentid, Toast.LENGTH_SHORT).show()
         startActivity(intent)
     }
     private fun changetoChatbyOwner(userId: String?, documentid: String?) {
         val intent = Intent(this@descripn, ChatListActivity::class.java)
         intent.putExtra("documentid",documentid)
-        Toast.makeText(this, userId, Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this, userId, Toast.LENGTH_SHORT).show()
         startActivity(intent)
     }
     override fun onBackPressed() {
@@ -240,7 +235,7 @@ class descripn : AppCompatActivity() {
                     val userRoomRef = db.collection(username).document(Id)
                     userRoomRef.set(data)
                         .addOnSuccessListener {
-                            Toast.makeText(this@descripn, "SAVE", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@descripn, "Saved successfully!", Toast.LENGTH_SHORT).show()
                         }
                         .addOnFailureListener { e ->
                             Log.e("descripn", "Error saving room information: $e")
@@ -290,6 +285,25 @@ class descripn : AppCompatActivity() {
                 // Handle the error
                 println("Error deleting document: $e")
             }
+    }
+    private fun showDeleteRoomConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmation")
+            .setMessage("Are you sure you want to delete the room?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                // Delete the room and navigate back
+                GlobalScope.launch (IO){
+                    intent.getStringExtra("ownerId")
+                        ?.let { it1 -> deleteRoom("Rooms", it1,
+                            intent.getStringExtra("documentid")!!
+                        ) }
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
 }

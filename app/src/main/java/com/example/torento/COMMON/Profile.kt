@@ -52,7 +52,7 @@ class Profile : AppCompatActivity() {
         binding.pphoto.setOnClickListener{
             showImageOptionsDialog()
         }
-            Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
 
         if (userkey != null) {
             set(userkey)
@@ -156,7 +156,7 @@ class Profile : AppCompatActivity() {
                    }
 
             else {
-               Toast.makeText(this, "DocRef is NULL", Toast.LENGTH_SHORT).show()
+               Toast.makeText(this, "No data found", Toast.LENGTH_SHORT).show()
            }
        } catch (e:Exception){
            Log.e("Profile", "Error fetching data from Firestore: ${e.message}")

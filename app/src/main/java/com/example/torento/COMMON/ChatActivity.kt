@@ -133,7 +133,7 @@ class ChatActivity : AppCompatActivity() {
 
                     // Get the size of the collection
                     val collectionSize = snapshot.childrenCount.toInt()
-                    Toast.makeText(this@ChatActivity, collectionSize.toString(), Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this@ChatActivity, collectionSize.toString(), Toast.LENGTH_SHORT).show()
                     callback(collectionSize)
 
                     // Now 'collectionSize' contains the number of items in the 'messages' node
@@ -165,7 +165,7 @@ class ChatActivity : AppCompatActivity() {
             }
 
             else {
-                Toast.makeText(this@ChatActivity, "DocRef is NULL", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ChatActivity, "No data found", Toast.LENGTH_SHORT).show()
             }
         } catch (e: java.lang.Exception){
             Log.e("Profile", "Error fetching data from Firestore: ${e.message}")
@@ -180,7 +180,7 @@ class ChatActivity : AppCompatActivity() {
             messagesReferenceOwner.child(documentId.toString()).child(senderId).push().setValue(messageOwner)
                 .addOnCompleteListener {
                     if (it.isSuccessful) {
-                        Toast.makeText(this, "3", Toast.LENGTH_SHORT).show()
+//                        Toast.makeText(this, "3", Toast.LENGTH_SHORT).show()
                         // Message sent successfully
                         Log.d("CHAT","Message sent successfully")
                     } else {
@@ -199,7 +199,7 @@ class ChatActivity : AppCompatActivity() {
         messagesReference.push().setValue(message)
             .addOnCompleteListener {
                 if (it.isSuccessful) {
-                    Toast.makeText(this, "4", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this, "4", Toast.LENGTH_SHORT).show()
                     // Message sent successfully
                     Log.d("CHAT","Message sent successfully")
                 } else {

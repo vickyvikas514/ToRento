@@ -50,8 +50,8 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/list_photo"
                     android:layout_width="match_parent"
-                    android:layout_height="450dp"
-                    android:scaleType="centerCrop"
+                    android:layout_height="wrap_content"
+                    android:scaleType="fitCenter"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     android:orientation="horizontal"

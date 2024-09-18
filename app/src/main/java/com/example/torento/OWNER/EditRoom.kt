@@ -80,9 +80,7 @@ class EditRoom : AppCompatActivity() {
     private var addressDialog: AlertDialog? = null
     private  var state:String=""
     private  var district:String=""
-    private  var locality:String = ""
-    private  var house_no:String = ""
-    private  var pincode:String = ""
+    private var isAddmoreClicked:Boolean = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,10 +90,10 @@ class EditRoom : AppCompatActivity() {
         binding.addroomtext.text = "Edit your room details"
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         userkey = intent.getStringExtra("ownerId").toString()
-        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
 
         Id = intent.getStringExtra("documentid").toString()
-        Toast.makeText(this@EditRoom, Id, Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this@EditRoom, Id, Toast.LENGTH_SHORT).show()
         binding.uploadbtn.text = "Save the changes"
         binding.setAddressBtn.text = "Edit your address"
         val galleryImage = registerForActivityResult(ActivityResultContracts.GetContent()) {
@@ -126,7 +124,7 @@ class EditRoom : AppCompatActivity() {
             }
             //changetohome()
         }
-        GlobalScope.launch (Dispatchers.IO){
+        GlobalScope.launch (IO){
             retreivingdataBG(Id,userkey.toString())
         }
         val pickImages =
@@ -135,8 +133,11 @@ class EditRoom : AppCompatActivity() {
                     imagesList.addAll(uris)
                     // Upload images to Firebase Storage
                     uploadImagesToFirebaseStorage()
+                }else{
+                    isAddmoreClicked = false
                 }}
         binding.AddMorePics.setOnClickListener{
+            isAddmoreClicked = true
             val options = arrayOf("Remove all the previous images and add new images", "Add some new images to the existing images")
 
             // Create a dialog for options
@@ -157,6 +158,7 @@ class EditRoom : AppCompatActivity() {
                     }
                 }
                 .setNegativeButton("Cancel") { dialog, _ ->
+                    isAddmoreClicked = false
                     dialog.dismiss()
                 }
                 .show()
@@ -178,7 +180,7 @@ class EditRoom : AppCompatActivity() {
         checkLocationPermission()
     }
     private fun isLocationEnabled(): Boolean {
-        Toast.makeText(this, "check location", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this, "check location", Toast.LENGTH_SHORT).show()
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
             LocationManager.NETWORK_PROVIDER)
@@ -319,7 +321,7 @@ class EditRoom : AppCompatActivity() {
 
     }.await()
     private fun AddSomeNewImages(){
-
+    //TODO add some new images to the existing images
     }
     private fun uploadImagesToFirebaseStorage() {
         showProgressOverlay(true)
@@ -365,22 +367,26 @@ class EditRoom : AppCompatActivity() {
             return
         }
 
-        GlobalScope.launch (Dispatchers.IO){
+        GlobalScope.launch (IO){
 
             val deferred1 = async {
                     Log.d("CHECKJIJI",length.toString())
                         changeFields(amount, breif_description, length, width,false)
             }
-            val deferred7 = async {
-            if(check==1){
-                appendImagesToFirestore()
-            }
-            else {
-                changeMorePics()
-            }
-            }
+
             deferred1.await()
-            deferred7.await()
+            if(isAddmoreClicked){
+                val deferred7 = async {
+                    if(check==1){
+                        appendImagesToFirestore()
+                    }
+                    else {
+                        changeMorePics()
+                    }
+                }
+                deferred7.await()
+            }
+
 
             withContext(Dispatchers.Main){
                 binding.progressBar.visibility = View.INVISIBLE
