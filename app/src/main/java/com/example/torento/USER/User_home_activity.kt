@@ -176,43 +176,54 @@ class user_home_activity : AppCompatActivity() {
         return true
     }
 
-   suspend fun retreivingdata(Liked:Boolean) : Pair<List<Room>, List<String>> = withContext(Dispatchers.IO){
-
-       val itemsCollection = if(Liked)db.collection(username) else db.collection("Rooms")
+    suspend fun retreivingdata(Liked: Boolean): Pair<List<Room>, List<String>> = withContext(Dispatchers.IO) {
+        val itemsCollection = if (Liked) db.collection(username) else db.collection("Rooms")
         val itemsList = mutableListOf<Room>()
         val idlist = mutableListOf<String>()
+
         if (itemsCollection != null) {
-            itemsCollection.addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    // Handle the error
-                    return@addSnapshotListener
+            val snapshot = itemsCollection.get().await() // Fetch data once instead of using addSnapshotListener
+            for (document in snapshot) {
+                val roomimage = document.getString("dpuri") ?: ""
+                val addressMap = document["address"] as? Map<String, Any>
+                if (addressMap != null) {
+                    address = address1.fromMap(addressMap)
                 }
-                snapshot?.forEach { document ->
-                    val roomimage = document.getString("dpuri")?:""
-                    val addressMap = document["address"] as? Map<String, Any>
-                    if (addressMap != null) {
-                        address = address1.fromMap(addressMap)
-                    }
-                    val roomlength = document.getString("length") ?: ""
-                    val roomwidth = document.getString("width") ?: ""
-                    val roomsize:String = roomlength+" ft"+" x "+roomwidth+" ft"
-                    val roomOwnerDpUrl:String = document.getString("ownerDpUrl")?:""
-                    val Docid:String = document.id
-                    val item = address?.let { Room( roomsize, it.locality,roomimage, roomOwnerDpUrl) }
-                    idlist.add(Docid)
-                    if (item != null) {
-                        itemsList.add(item)
-                    }
+                val roomlength = document.getString("length") ?: ""
+                val roomwidth = document.getString("width") ?: ""
+                val roomsize = "$roomlength ft x $roomwidth ft"
+                val roomOwnerUsername = document.getString("OwnerUsername") ?: ""
+
+                // Fetch room owner DP URL asynchronously
+                val roomOwnerDpUrl = fetchDp(roomOwnerUsername)
+
+                val docId = document.id
+                val item = address?.let { Room(roomsize, it.locality, roomimage, roomOwnerDpUrl) }
+                idlist.add(docId)
+                if (item != null) {
+                    itemsList.add(item)
                 }
-               }
-             }
-            kotlinx.coroutines.delay(1000)
-            return@withContext Pair(itemsList,idlist)
+            }
+        }
+
+        return@withContext Pair(itemsList, idlist)
     }
-    private fun DatatoRecyclerView(username: String?,Liked:Boolean) {
+
+    suspend private fun fetchDp(ownerUsername: String): String = withContext(Dispatchers.IO) {
+        var dpUrl = ""
+        try {
+            val docRef = db.collection("users").document(ownerUsername).get().await()
+            dpUrl = docRef.getString("imageuri").orEmpty()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return@withContext dpUrl
+    }
+
+    private fun DatatoRecyclerView(username: String?, Liked: Boolean) {
         GlobalScope.launch {
-            val (rooms, ids) = async { retreivingdata(Liked) }.await()
-            withContext(Dispatchers.Main){
+            val (rooms, ids) = retreivingdata(Liked)
+            withContext(Dispatchers.Main) {
                 val adapter = RoomAdapter(
                     applicationContext,
                     rooms,
@@ -223,26 +234,25 @@ class user_home_activity : AppCompatActivity() {
                 adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener {
                     override fun onItemClick(documentId: String, position: Int) {
                         lifecycleScope.launch {
-                            val Id = withContext(Dispatchers.IO) {
+                            val id = withContext(Dispatchers.IO) {
                                 getuserId(documentId)
                             }
 
-                            withContext(Main) {
+                            withContext(Dispatchers.Main) {
                                 val intent = Intent(this@user_home_activity, descripn::class.java)
                                 intent.putExtra("documentid", documentId)
                                 intent.putExtra("usertype", "user")
-                                intent.putExtra("ownerId", Id)
+                                intent.putExtra("ownerId", id)
                                 intent.putExtra("username", username)
                                 startActivity(intent)
                             }
                         }
-
                     }
                 })
             }
         }
-
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_bar,menu)

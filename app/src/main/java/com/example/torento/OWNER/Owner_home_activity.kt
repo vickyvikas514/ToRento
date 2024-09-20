@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.airbnb.lottie.LottieAnimationView
 import com.example.torento.Adapter.RoomAdapter
 import com.example.torento.COMMON.Profile
@@ -36,6 +37,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class owner_home_activity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
@@ -193,53 +195,72 @@ class owner_home_activity : AppCompatActivity() {
             itemsList.clear()
             idlist.clear()
 
-            snapshot?.forEach { document ->
-                val roomimage = document.getString("dpuri") ?: ""
-                val addressMap = document["address"] as? Map<String, Any>
-                if (addressMap != null) {
-                    address = address1.fromMap(addressMap)
-                }
-                val roomlength = document.getString("length") ?: ""
-                val roomwidth = document.getString("width") ?: ""
-                val roomsize = "$roomlength ft x $roomwidth ft"
-                val roomOwnerDpUrl = document.getString("ownerDpUrl") ?: ""
-                val Docid = document.id
-                val item = Room(roomsize, address.locality, roomimage, roomOwnerDpUrl)
-                idlist.add(Docid)
-                itemsList.add(item)
-            }
-
-            val adapter = RoomAdapter(
-                applicationContext,
-                itemsList,
-                idlist
-            )
-            binding.OwnerRoomlist.adapter = adapter
-            adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener {
-                override fun onItemClick(documentid: String, position: Int) {
-                    // Handle item click here
-                    GlobalScope.launch(Dispatchers.IO) {
-                        try {
-                            launch(Dispatchers.Main) {
-//                                Toast.makeText(this@owner_home_activity, test, Toast.LENGTH_SHORT).show()
-                                val intent = Intent(this@owner_home_activity, descripn::class.java)
-                                intent.putExtra("documentid", documentid)
-                                intent.putExtra("usertype", "owner")
-                                intent.putExtra("ownerId", owner_Id)
-                                intent.putExtra("username", username)
-                                startActivity(intent)
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+            lifecycleScope.launch(Dispatchers.IO) {
+                snapshot?.forEach { document ->
+                    val roomimage = document.getString("dpuri") ?: ""
+                    val addressMap = document["address"] as? Map<String, Any>
+                    if (addressMap != null) {
+                        address = address1.fromMap(addressMap)
                     }
+                    val roomlength = document.getString("length") ?: ""
+                    val roomwidth = document.getString("width") ?: ""
+                    val roomsize = "$roomlength ft x $roomwidth ft"
+                    val roomOwnerUsername = document.getString("OwnerUsername") ?: ""
+
+                    // Fetch DP URL from Firebase in a coroutine and wait for result
+                    val roomOwnerDpUrl = fetchDp(roomOwnerUsername)
+
+                    val Docid = document.id
+                    val item = Room(roomsize, address.locality, roomimage, roomOwnerDpUrl)
+                    idlist.add(Docid)
+                    itemsList.add(item)
                 }
-            })
+
+                // Switch to Main thread to update UI
+                withContext(Dispatchers.Main) {
+                    val adapter = RoomAdapter(
+                        applicationContext,
+                        itemsList,
+                        idlist
+                    )
+                    binding.OwnerRoomlist.adapter = adapter
+                    adapter.setOnItemClickListener(object : RoomAdapter.OnItemClickListener {
+                        override fun onItemClick(documentid: String, position: Int) {
+                            // Handle item click here
+                            lifecycleScope.launch(Dispatchers.Main) {
+                                try {
+                                    // Intent to navigate to another activity
+                                    val intent = Intent(this@owner_home_activity, descripn::class.java)
+                                    intent.putExtra("documentid", documentid)
+                                    intent.putExtra("usertype", "owner")
+                                    intent.putExtra("ownerId", owner_Id)
+                                    intent.putExtra("username", username)
+                                    startActivity(intent)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    })
+                }
+            }
         }
 
         binding.OwnerRoomlist.setHasFixedSize(true)
     }
-
+    suspend private fun fetchDp(OwnerUsername:String) : String{
+        return withContext(Dispatchers.IO) {
+            var dpUrl = ""
+            try {
+                val docRef = db.collection("users").document(OwnerUsername).get().await()
+                dpUrl = docRef.getString("imageuri").orEmpty()
+            } catch (e: Exception) {
+                // Log or handle exception if needed
+                e.printStackTrace()
+            }
+            dpUrl
+        }
+    }
     private fun restartApp(context: Context) {
         val packageManager = context.packageManager
         val intent = packageManager.getLaunchIntentForPackage(context.packageName)

@@ -21,11 +21,11 @@ class PicsAdapter(val context: Context, private var pics: List<String>): Recycle
     }
     override fun onBindViewHolder(holder: PicViewHolder, position: Int) {
         val pic = pics[position]
-        Toast.makeText(context, pic, Toast.LENGTH_SHORT).show()
+//        Toast.makeText(context, pic, Toast.LENGTH_SHORT).show()
         Glide.with(context).load(pic).into(holder.PicImage)
-        holder.itemView.setOnClickListener{
-            Toast.makeText(context, pic, Toast.LENGTH_SHORT).show()
-        }
+//        holder.itemView.setOnClickListener{
+//            Toast.makeText(context, pic, Toast.LENGTH_SHORT).show()
+//        }
 
     }
 
