@@ -169,7 +169,7 @@ class descripn : AppCompatActivity() {
 ////            Toast.makeText(this@descripn, Id+"456", Toast.LENGTH_SHORT).show()
 //        }
 
-           val docref =  db.collection(ownerId).document(Id)
+           val docref = db.collection(ownerId).document(Id)
                docref.get()
                .addOnSuccessListener { documentSnapshot ->
                    if (documentSnapshot.exists()) {
@@ -191,10 +191,10 @@ class descripn : AppCompatActivity() {
                        val addressString = orderedKeys.joinToString(separator = ", ") { key ->
                            addressrecieved?.get(key)?.toString() ?: "" // Use empty string if key doesn't exist
                        }
-                       binding.fullLocanDetsil.text = addressString
+                       binding.fullLocationDetail.text = addressString
                        binding.amount.text = roomData?.get("amount") as? String ?: "Nil"
                        binding.ownerName.text = roomData?.get("owner_name") as? String ?: "No owner name is found"
-                       binding.breifDescription.text = roomData?.get("breif_description") as? String ?: "Set a description"
+                       binding.briefDescription.text = roomData?.get("breif_description") as? String ?: "Set a description"
                        // Set the new adapter to the RecyclerView
                        binding.listPhoto.adapter = PicsAdapter(this,imageUriList)
 
