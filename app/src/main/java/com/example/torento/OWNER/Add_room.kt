@@ -69,7 +69,9 @@ import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.http.POST
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.util.Locale
+import java.util.Properties
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -107,15 +109,17 @@ class add_room : AppCompatActivity() {
     private var addressDialog: AlertDialog? = null
     //val apiKey = BuildConfig.apiKey
 
+
     //AI Integration
     object GeminiApiClient {
 
         private const val MODEL_ID = "gemini-1.5-flash-001"
+        //val apiKey = BuildConfig.API_KEY
 
         fun getModel(): GenerativeModel {
             return GenerativeModel(
                 modelName = MODEL_ID, // Use 'modelName' instead of 'model'
-                apiKey = "AIzaSyDQFdKSv3YWKMeQ-nKwyErDFKpI2-dDO_8", // Replace with secure storage for API keys
+                apiKey = com.example.torento.BuildConfig.API_KEY, // Replace with secure storage for API keys
                 generationConfig = generationConfig {
                     temperature = 0.7f
                     topK = 50
@@ -129,6 +133,7 @@ class add_room : AppCompatActivity() {
         }
     }
     private fun generateRoomDescription(roomDetails: String) {
+        //change prompt according to user.
         val prompt = "Describe a room with the following features: $roomDetails"
 
         CoroutineScope(IO).launch {
@@ -149,56 +154,7 @@ class add_room : AppCompatActivity() {
         }
     }
     //
-    data class AIRequest(val prompt: String, val max_tokens: Int)
-    data class AIResponse(val choices: List<Choice>)
-    data class Choice(val text: String)
-
-
-    interface AIService {
-        @Headers("Authorization: Bearer YOUR_API_KEY", "Content-Type: application/json")
-        @POST("v1/completions") // Adjust based on Gemini or OpenAI API endpoint
-        suspend fun getRoomDescription(@Body request: AIRequest): AIResponse
-    }
-    object RetrofitClient {
-        private const val BASE_URL = "https://api.openai.com/" // Change to Gemini if applicable
-
-        val instance: AIService by lazy {
-            Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(AIService::class.java)
-        }
-    }
-//    private fun setupGenerateDescription() {
-//        binding.aiGenerateDescriptionBtn.setOnClickListener {
-//            val roomDetails = "Room size: $length x $width. Amenities: Basic details provided."
-//            generateDescription(roomDetails)
-//        }
-//    }
-//    private fun generateDescription(prompt: String) {
-//        CoroutineScope(Dispatchers.IO).launch {
-//            try {
-//                val apiService = RetrofitClient.instance
-//                val response = apiService.getRoomDescription(AIRequest(prompt, max_tokens = 100))
 //
-//                val description = response.choices.firstOrNull()?.text?.trim()
-//                if (!description.isNullOrEmpty()) {
-//                    withContext(Dispatchers.Main) {
-//                        binding.RoomDescription.setText(description)
-//                    }
-//                } else {
-//                    withContext(Dispatchers.Main) {
-//                        Toast.makeText(this@add_room, "Failed to generate description", Toast.LENGTH_SHORT).show()
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                withContext(Dispatchers.Main) {
-//                    Toast.makeText(this@add_room, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        }
-//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
