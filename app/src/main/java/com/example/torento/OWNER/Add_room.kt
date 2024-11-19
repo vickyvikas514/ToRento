@@ -137,21 +137,64 @@ class add_room : AppCompatActivity() {
         val prompt = "Describe a room with the following features: $roomDetails"
 
         CoroutineScope(IO).launch {
+
             try {
                 val model = GeminiApiClient.getModel()
                 val response = model.generateContent(prompt)
 
                 withContext(Dispatchers.Main) {
+                    showProgressOverlay(false)
                     // Update UI with the generated description
                     val description = response.text ?: "No description available."
                     binding.RoomDescription.setText(description)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
+                    showProgressOverlay(false)
                     Toast.makeText(this@add_room, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
+    }
+    private fun showInputDialog() {
+        // Inflate the custom dialog layout
+        val dialogView = layoutInflater.inflate(R.layout.dialog_input, null)
+
+        // Build the dialog
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        // Get references to the EditText and Buttons in the dialog layout
+        val editText: EditText = dialogView.findViewById(R.id.dialog_edit_text)
+        val cancelButton: Button = dialogView.findViewById(R.id.dialog_cancel_button)
+        val okButton: Button = dialogView.findViewById(R.id.dialog_ok_button)
+
+        // Set button click listeners
+        cancelButton.setOnClickListener {
+            dialog.dismiss() // Close the dialog
+        }
+
+        okButton.setOnClickListener {
+            val userInput = editText.text.toString()
+            if (userInput.isNotEmpty()) {
+                // Process the entered text in the backend
+                handleUserInput(userInput)
+                dialog.dismiss() // Close the dialog
+            } else {
+                Toast.makeText(this, "Please enter some text", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Show the dialog
+        dialog.show()
+    }
+    private fun handleUserInput(input: String) {
+        showProgressOverlay(true)
+        // Add your backend processing logic here
+        //Toast.makeText(this, "Processing your description", Toast.LENGTH_SHORT).show()
+        generateRoomDescription(input)
     }
     //
 //
@@ -200,7 +243,9 @@ class add_room : AppCompatActivity() {
 
         //AI
         binding.aiGenerateDescriptionBtn.setOnClickListener {
-            generateRoomDescription("A 12x10 ft room with attached bathroom and balcony.")
+            //showProgressOverlay(true)
+            showInputDialog()
+            //generateRoomDescription("A 12x10 ft room with attached bathroom and balcony.")
         }
 
         binding.picCard.setOnClickListener{
