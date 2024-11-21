@@ -31,6 +31,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.torento.DATACLASS.Address
 import com.example.torento.DATACLASS.address1
@@ -41,6 +43,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -49,6 +52,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -81,6 +85,14 @@ class EditRoom : AppCompatActivity() {
     private  var state:String=""
     private  var district:String=""
     private var isAddmoreClicked:Boolean = false
+    private var OwnerUsername:String=""
+    private var imageuri=""
+    private var ownerDpUrl=""
+    private var ownerId=""
+    private var owner_name=""
+    private var roomId=""
+    private var uploadedImageUri : Uri= Uri.EMPTY
+    private var dpuri:Uri = Uri.EMPTY
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,10 +102,10 @@ class EditRoom : AppCompatActivity() {
         binding.addroomtext.text = "Edit your room details"
         val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
         userkey = intent.getStringExtra("ownerId").toString()
-//        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, userkey, Toast.LENGTH_SHORT).show()
 
         Id = intent.getStringExtra("documentid").toString()
-//        Toast.makeText(this@EditRoom, Id, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this@EditRoom, Id, Toast.LENGTH_SHORT).show()
         binding.uploadbtn.text = "Save the changes"
         binding.setAddressBtn.text = "Edit your address"
         val galleryImage = registerForActivityResult(ActivityResultContracts.GetContent()) {
@@ -101,13 +113,17 @@ class EditRoom : AppCompatActivity() {
             if (it != null) {
                 val dpUri = it
                 GlobalScope.launch(IO) {
-                    val uploadedImageUri = async { changeDPBG(dpUri) }.await()
-                    if (userkey != null) {
-                        savechanges(uploadedImageUri,Id,userkey).await()
-                        withContext(Dispatchers.Main){
-                            binding.progressBar.visibility = View.INVISIBLE
-                        }
+                    uploadedImageUri = async { changeDPBG(dpUri) }.await()
+                    MainScope().launch {
+                        Toast.makeText(this@EditRoom, uploadedImageUri.toString()+"777", Toast.LENGTH_SHORT).show()
                     }
+                    imagesListforFirebaseUris.add(0, uploadedImageUri)
+//                    if (userkey != null) {
+//                        savechanges(uploadedImageUri,Id,userkey).await()
+//                        withContext(Dispatchers.Main){
+//                            binding.progressBar.visibility = View.INVISIBLE
+//                        }
+//                    }
                 }
             }
         }
@@ -116,8 +132,14 @@ class EditRoom : AppCompatActivity() {
             binding.progressBar.visibility = View.VISIBLE
             galleryImage.launch("image/*") }
         binding.uploadbtn.setOnClickListener {
-            binding.progressBar.visibility = View.VISIBLE
+           showProgressOverlay(true)
             if (userkey != null) {
+//               lifecycleScope.launch(IO) {
+//                    savechanges(Id, userkey).await()
+//                    withContext(Dispatchers.Main) {
+//                        binding.progressBar.visibility = View.INVISIBLE
+//                    }
+//                }
                 updateTheEdit()
             }else{
                 Toast.makeText(this, "username is not found", Toast.LENGTH_SHORT).show()
@@ -324,7 +346,7 @@ class EditRoom : AppCompatActivity() {
     //TODO add some new images to the existing images
     }
     private fun uploadImagesToFirebaseStorage() {
-        showProgressOverlay(true)
+        //showProgressOverlay(true)
         GlobalScope.launch(Dispatchers.IO) {
             for ((index, imageUri) in imagesList.withIndex()) {
                 try {
@@ -338,7 +360,7 @@ class EditRoom : AppCompatActivity() {
                 }
             }
             withContext(Dispatchers.Main) {
-                showProgressOverlay(false)
+               // showProgressOverlay(false)
                 Toast.makeText(this@EditRoom, "All images uploaded successfully", Toast.LENGTH_SHORT).show()
             }
 
@@ -464,6 +486,12 @@ class EditRoom : AppCompatActivity() {
             binding.roomwidth.setText(width)
             breif_description = roomData["breif_description"] as? String ?: ""
             amount = roomData["amount"] as? String ?: ""
+            OwnerUsername = roomData["OwnerUsername"] as? String ?: ""
+            //imageuri = roomData["dpuri"] as? String ?: ""
+            ownerDpUrl= roomData["ownerDpUrl"] as? String ?: ""
+            ownerId = roomData["ownerId"] as? String ?: ""
+            owner_name = roomData["owner_name"] as? String ?: ""
+            roomId = roomData["roomId"] as? String ?: ""
             binding.amount.setText(amount)
             val addressMap = roomData["address"] as? Map<String, Any>
             if (addressMap != null) {
@@ -478,12 +506,22 @@ class EditRoom : AppCompatActivity() {
     }
 
     suspend fun changeFields(price:String?,descrpn:String?,length:String?,width:String?,isDraft:Boolean){
+        MainScope().launch {
+            Toast.makeText(this@EditRoom, uploadedImageUri.toString()+"999", Toast.LENGTH_SHORT).show()
+        }
         val updatedData = hashMapOf(
             "address" to address,
             "amount" to price,
             "breif_description" to descrpn,
             "length" to length,
             "width" to width,
+            "owner_name" to owner_name,
+            "ownerDpUrl" to ownerDpUrl,
+            "ownerId" to ownerId,
+            "roomId" to roomId,
+            "OwnerUsername" to OwnerUsername,
+            "dpuri" to uploadedImageUri,
+
 
         )
         if(!isDraft) {
@@ -492,16 +530,22 @@ class EditRoom : AppCompatActivity() {
             updatedData["status"] = "draft"
         }
         db.collection(userkey).document(Id).update(updatedData)
-        db.collection("Rooms").document(Id).update(updatedData)
+        db.collection("Rooms").document(Id).set(updatedData, SetOptions.merge())
     }
     suspend fun changeMorePics(){
         imagesListforFirebaseUris?.let{
             db.collection(userkey).document(Id).update("imageuri", imagesListforFirebaseUris)
-            db.collection("Rooms").document(Id).update("imageuri", imagesListforFirebaseUris)
+            val updatedData = mapOf(
+                "imageuri" to imagesListforFirebaseUris
+            )
+            db.collection("Rooms").document(Id).set(updatedData, SetOptions.merge())
         }
     }
-    suspend fun savechanges(uploadedImageUri:Uri,Id:String,userkey:String): Deferred<Unit> = GlobalScope.async{
-       db.collection("Rooms").document(Id).update("dpuri" , uploadedImageUri)
+    suspend fun savechanges(Id:String,userkey:String): Deferred<Unit> = GlobalScope.async{
+        val updatedData = mapOf(
+            "dpuri" to uploadedImageUri
+        )
+        db.collection("Rooms").document(Id).set(updatedData, SetOptions.merge())
         db.collection(userkey).document(Id).update("dpuri" , uploadedImageUri)
 
     }
@@ -593,8 +637,8 @@ class EditRoom : AppCompatActivity() {
                 imagesListforFirebaseUris.forEach {
                     existingImages.add(it.toString())
                 }
-
-                transaction.update(roomRef, "imageuri", existingImages)
+                val updatedData = mapOf("imageuri" to existingImages)
+                transaction.set(roomRef, updatedData, SetOptions.merge())
                 transaction.update(userRef, "imageuri", existingImages)
             }.await()
         } catch (e: Exception) {

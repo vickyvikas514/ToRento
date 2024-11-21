@@ -59,6 +59,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -220,6 +221,9 @@ class add_room : AppCompatActivity() {
 //            }
 
             roomOwnerDpUrl = getOwnerDp()
+            MainScope().launch {
+                Toast.makeText(this@add_room, roomOwnerDpUrl, Toast.LENGTH_SHORT).show()
+            }
         }
 
         val pickImages = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
@@ -494,16 +498,23 @@ class add_room : AppCompatActivity() {
          const val LOCATION_PERMISSION_REQUEST_CODE = 1000
     }
 
-    private suspend fun getOwnerDp():String = GlobalScope.async{
+    private suspend fun getOwnerDp():String =
+        GlobalScope.async{
 //        GlobalScope.launch(Dispatchers.Main){
 //            Toast.makeText(this@add_room, "12", Toast.LENGTH_SHORT).show()
 //        }
+
+
         val docRef = db.collection("users").document(userkey.toString()).get().await()
         var Url = ""
         try {
             docRef.data?.let {
                 owner_name = it["name"].toString()
                 Url = it["imageuri"].toString()
+//                MainScope().launch {
+//                    Toast.makeText(this@add_room, userkey.toString(), Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this@add_room, Url, Toast.LENGTH_SHORT).show()
+//                }
             }
         } catch(e:Exception) {
             Log.e("descripn", "Error fetching data from Firestore: ${e.message}")
@@ -829,6 +840,9 @@ class add_room : AppCompatActivity() {
             docref2.add(updateData)
                 .addOnSuccessListener {
                     val documentId = it.id
+//                    MainScope().launch {
+//                        Toast.makeText(this@add_room, documentId, Toast.LENGTH_SHORT).show()
+//                    }
                     roomId = documentId
                     val docRefUser = db.collection("Rooms").document(documentId)
                     if (docRefUser != null) {
@@ -842,7 +856,7 @@ class add_room : AppCompatActivity() {
                                     .addOnSuccessListener {
                                         showProgressOverlay(false)
                                         Toast.makeText(
-                                            this@add_room, "Success", Toast.LENGTH_SHORT
+                                            this@add_room, "Success123", Toast.LENGTH_SHORT
                                         )
                                             .show()
                                         backtoHome()
@@ -897,7 +911,7 @@ class add_room : AppCompatActivity() {
                     val documentReference = docref2.add(updatedDataWithStatus).await() // Await the addition of the document
                     roomId = documentReference.id
                     updatedDataWithStatus["roomId"] = roomId
-                    updatedDataWithStatus["ownerusername"] = userkey
+                    updatedDataWithStatus["OwnerUsername"] = userkey
 
                     // Update the document with roomId and owner username
                     docref2.document(roomId).update(updatedDataWithStatus).await()

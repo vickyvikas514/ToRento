@@ -63,6 +63,7 @@ class owner_home_activity : AppCompatActivity() {
         AddBtnAnimation.playAnimation()
         auth = FirebaseAuth.getInstance()
         owner_Id = auth.currentUser?.uid.toString()
+        //Toast.makeText(this, owner_Id, Toast.LENGTH_SHORT).show()
         auth.addAuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
             user?.let {
@@ -98,7 +99,7 @@ class owner_home_activity : AppCompatActivity() {
         auth.addAuthStateListener(authStateListener)
             job = Job()
             val sharedPreferences: SharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE)
-             username = sharedPreferences.getString("username", "").toString()
+            username = sharedPreferences.getString("username", "").toString()
             userid = username.toString()
             binding.addButton.setOnClickListener{
                 //made temp room
@@ -206,9 +207,13 @@ class owner_home_activity : AppCompatActivity() {
                     val roomwidth = document.getString("width") ?: ""
                     val roomsize = "$roomlength ft x $roomwidth ft"
                     val roomOwnerUsername = document.getString("OwnerUsername") ?: ""
+//                    MainScope().launch {
+//                        Toast.makeText(this@owner_home_activity, "567"+roomOwnerUsername+"765", Toast.LENGTH_SHORT).show()
+//                    }
 
                     // Fetch DP URL from Firebase in a coroutine and wait for result
                     val roomOwnerDpUrl = fetchDp(roomOwnerUsername)
+
 
                     val Docid = document.id
                     val item = Room(roomsize, address.locality, roomimage, roomOwnerDpUrl)
@@ -252,6 +257,7 @@ class owner_home_activity : AppCompatActivity() {
         return withContext(Dispatchers.IO) {
             var dpUrl = ""
             try {
+                //MainScope().launch { Toast.makeText(this@owner_home_activity, "89"+OwnerUsername, Toast.LENGTH_SHORT).show() }
                 val docRef = db.collection("users").document(OwnerUsername).get().await()
                 dpUrl = docRef.getString("imageuri").orEmpty()
             } catch (e: Exception) {
