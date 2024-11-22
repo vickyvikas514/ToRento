@@ -192,8 +192,8 @@ class descripn : AppCompatActivity() {
                            addressrecieved?.get(key)?.toString() ?: "" // Use empty string if key doesn't exist
                        }
                        binding.fullLocationDetail.text = addressString
-                       binding.amount.text = roomData?.get("amount") as? String ?: "Nil"
-                       binding.ownerName.text = roomData?.get("owner_name") as? String ?: "No owner name is found"
+                       binding.amount.text = "₹ "+roomData?.get("amount") as? String ?: "Nil"
+                       binding.ownerName.text ="Owner's name: " +roomData?.get("owner_name") as? String ?: "No owner name is found"
                        binding.briefDescription.text = roomData?.get("breif_description") as? String ?: "Set a description"
                        // Set the new adapter to the RecyclerView
                        binding.listPhoto.adapter = PicsAdapter(this,imageUriList)

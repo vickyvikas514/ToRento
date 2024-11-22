@@ -37,7 +37,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/list_photo"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="300dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     android:orientation="horizontal"
@@ -89,10 +89,22 @@
 
         <!-- Full Address -->
         <TextView
-            android:id="@+id/full_location_detail"
+            android:id="@+id/Address_Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/amount"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Full Address:"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="12dp"
+            android:fontFamily="sans-serif-medium"/>
+
+        <TextView
+            android:id="@+id/full_location_detail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/Address_Text"
             app:layout_constraintStart_toStartOf="parent"
 
             android:textColor="@color/black"
@@ -102,10 +114,22 @@
 
         <!-- Brief Description -->
         <TextView
-            android:id="@+id/briefDescription"
+            android:id="@+id/Room_description_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/full_location_detail"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Brief Description of Room"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="12dp"
+            android:fontFamily="sans-serif-medium"/>
+
+        <TextView
+            android:id="@+id/briefDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/Room_description_text"
             app:layout_constraintStart_toStartOf="parent"
             android:text="Description Here"
             android:textColor="@color/black"
